@@ -5,6 +5,8 @@ const nextConfig: NextConfig = {
   // scene initialises once (all effects still clean up correctly).
   reactStrictMode: false,
   devIndicators: false,
+  // Pin the workspace root to this project (also correct inside nested git worktrees).
+  turbopack: { root: process.cwd() },
 };
 
 export default nextConfig;
