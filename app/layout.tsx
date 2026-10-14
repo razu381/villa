@@ -1,0 +1,29 @@
+import type { Metadata, Viewport } from "next";
+import "@fontsource/instrument-serif/400.css";
+import "@fontsource/instrument-serif/400-italic.css";
+import "@fontsource-variable/instrument-sans/index.css";
+import "./globals.css";
+
+export const metadata: Metadata = {
+  title: "Vila Leku — Living in harmony",
+  description: "A contemporary village above the Lisbon coast. Leceia, Oeiras — by Phidias.",
+  openGraph: {
+    title: "Vila Leku — Living in harmony",
+    description: "A contemporary village above the Lisbon coast.",
+    images: ["/media/aerial-village.jpg"],
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#E5E3D7",
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body>{children}</body>
+    </html>
+  );
+}
