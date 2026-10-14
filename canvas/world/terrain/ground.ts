@@ -96,9 +96,6 @@ export function groundHeight(x: number, z: number) {
   return b + (terraceSharp(z) - b) * m;
 }
 
-/** Height of the podium terrace at z (sharp steps). */
-export const podiumLevel = terraceSharp;
-
 /** Rounded-rectangle perimeter of the podium offset by `d` (podium-distance units). */
 export const PODIUM_FRAME = {
   cx: (PODIUM.minX + PODIUM.maxX) / 2,

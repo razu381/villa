@@ -10,6 +10,7 @@ import { U } from "@/lib/uniforms";
 import { PLINTH, TABLE_Y } from "@/lib/village";
 import { f, inject } from "../landscape/shaderUtils";
 import { groundHeight } from "./ground";
+import { uCutZ } from "./terrainMaterial";
 
 /** Mean height of the plinth's top edge above the table (for the analytic shadow). */
 const RIM_H = (() => {
@@ -33,6 +34,7 @@ export function createTableMaterial(color = "#CEC7B8") {
   const mat = new MeshStandardMaterial({ color, roughness: 0.94, metalness: 0 });
   mat.onBeforeCompile = (shader) => {
     shader.uniforms.uSunDir = U.uSunDir;
+    shader.uniforms.uCutZ = uCutZ;
     shader.vertexShader = inject(shader.vertexShader, "#include <common>", "varying vec3 vTbWorld;");
     shader.vertexShader = inject(
       shader.vertexShader,
@@ -46,8 +48,13 @@ export function createTableMaterial(color = "#CEC7B8") {
       /* glsl */ `
       varying vec3 vTbWorld;
       uniform vec3 uSunDir;
+      uniform float uCutZ;
+      // the plinth's footprint — shortened when the section cuts a slice away
       float tb_box(vec2 p) {
-        vec2 q = abs(p - vec2(${f(C[0])}, ${f(C[1])})) - vec2(${f(H[0])}, ${f(H[1])});
+        float z1 = min(${f(PLINTH.maxZ)}, uCutZ);
+        vec2 c = vec2(${f(C[0])}, 0.5 * (${f(PLINTH.minZ)} + z1));
+        vec2 h = vec2(${f(H[0])}, max(0.5 * (z1 - ${f(PLINTH.minZ)}), 0.0));
+        vec2 q = abs(p - c) - h;
         return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0);
       }
       float tb_hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123); }
@@ -96,6 +103,6 @@ export function createTableMaterial(color = "#CEC7B8") {
     );
     shader.fragmentShader = fs;
   };
-  mat.customProgramCacheKey = () => "vl-table-v1";
+  mat.customProgramCacheKey = () => "vl-table-v2";
   return mat;
 }

@@ -37,9 +37,3 @@ export const f = (n: number) => {
   const s = String(Math.round(n * 1e5) / 1e5);
   return s.includes(".") || s.includes("e") ? s : `${s}.0`;
 };
-
-/** Hermite ease used across the landscape (calm, no overshoot). */
-export const GLSL_EASE = /* glsl */ `
-float ls_easeOut(float k) { k = clamp(k, 0.0, 1.0); return 1.0 - pow(1.0 - k, 3.0); }
-float ls_smooth(float a, float b, float x) { return smoothstep(a, b, x); }
-`;
