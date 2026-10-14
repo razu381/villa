@@ -1,264 +1,242 @@
-# Vila Leku — Immersive 3D Experience Plan
+# Vila Leku — Immersive 3D Experience Plan (v2)
 
-A plan for a Next.js + React Three Fiber experience for **Vila Leku**, the car‑free residential village by Phidias in Leceia, Oeiras (Lisbon coast). The first goal is a pitch demo good enough to win the client. The second is a production site that sells homes.
+A Next.js + React Three Fiber experience for **Vila Leku**, the car‑free village by Phidias in Leceia, Oeiras (Lisbon coast).
+
+**Brief:** gorgeous and memorable, not a precise data tool. The 3D village is an **artistic interpretation**: house count, layout and scale are composed for beauty, not copied from the site plan. One quiet line in the footer covers it: *"Artistic interpretation. Not to scale."* That freedom is the point: every camera angle, house position and tree can be art‑directed.
 
 ---
 
-## 1. North star
+## 1. The idea
 
 > **"One day at Vila Leku."**
-> Scrolling the site is living one day in the village, from dawn over the Atlantic to the lit windows at night.
-> Time of day is both the story and the navigation.
+> Scrolling is living one day in the village, from first light to lit windows at night.
+> As the day unfolds, **the village builds itself**: a line drawing becomes a model, then stone and cork, then a living place.
 
-The brand already has the pieces:
-- **"Living in harmony"**: the tagline.
-- **"building harmony"**: the Phidias end card of the film.
-- **The three‑arch symbol.** In this experience **the arch becomes the sun's path**. A small sun travels along the arch as you scroll and acts as the progress indicator, so the logo literally tells the time.
+Two stories run as one:
+- **The day:** dawn → noon → golden hour → night. It gives the experience its rhythm and emotion.
+- **The making:** drawing → model → material → life. It's Phidias' own *"building harmony"*, shown rather than said.
 
-Three words guide every decision:
+**The signature:** the brand's three‑arch symbol is the sun's path. A small sun travels along the arch as you scroll, and later you can grab it and move the sun yourself.
 
-| Calm | Tactile | Truthful |
+### Pillars
+| Calm | Tactile | Cinematic |
 |---|---|---|
-| Slow camera, generous space, one idea per screen. Nothing bounces, nothing shouts. | Limestone and cork you can almost touch: raking light, grain, sound. | A real sun for the real coordinates, real units and real availability. Luxury buyers trust precision. |
+| Slow camera, generous space, one idea per screen. Nothing bounces, nothing shouts. | Limestone and cork you can almost touch: raking light, grain, haze, sound. | Long lenses, composed frames, a colour grade shared with the film. **Every frame is a poster.** |
 
-### Art direction in one sentence
-Use 3D for **understanding**: a living architect's model in limestone white, lit by a moving sun. Use the photoreal renders and film for **desire**. Never try to make real‑time 3D compete with the offline renders.
-
----
-
-## 2. Five signature moments (what people will retell)
-
-1. **The day passes as you scroll.** Light, sky, fog, shadows and sound all move from dawn to night. The sun‑arc progress indicator is the brand symbol.
-2. **The ground opens: "Cars below. Life above."** The model's plinth is cut in section. Miniature cars glide down the ramp into the garage under the village, then the camera rises to the car‑free gardens above. Their best idea, made obvious in five seconds.
-3. **Choose your home.** Tap a house on the model and the camera cranes to it. The roof lifts and the floors separate into an exploded axonometric drawing (each level pulled apart in 3D). Tap a level to get its floor plan.
-4. **Your light.** A date and time slider puts the real sun for Leceia (≈ 38.72° N, 9.28° W, to be confirmed) on that house: winter mornings, summer sunsets, terrace shadows. Genuinely useful, and nobody else does it.
-5. **Silent Focus.** In the Village Heart chapter, the cowork room makes the site go quiet. The ambient sound fades to nothing, the interface recedes, and one line of text remains.
-
-**Bonus, the invitation.** After booking a private visit, the confirmation is an invitation card showing *their* chosen house lit at the exact hour of their visit. It's a snapshot of the 3D model with the sun set to that time.
+### The quality bar: "every frame a poster"
+Pause anywhere mid‑scroll and take a screenshot. It should look composed, lit and finished, never mid‑transition chaos. Every chapter is designed as **key frames first** (style frames in week 1), and motion only travels between approved frames.
 
 ---
 
-## 3. The journey — chapter by chapter
+## 2. Experience rules
 
-| # | Time | Chapter | What you see / do | Medium | Sound (opt‑in) |
-|---|---|---|---|---|---|
-| 0 | Pre‑dawn | **Threshold** | The three arches draw themselves in a hairline stroke with a quiet % counter. Choice: *Enter with sound* / *Enter in silence*. | SVG | — |
-| 1 | Dawn | **From the Atlantic** | A short hero loop from the film (coastline, the white line tracing the coast). The wordmark rises in limestone white. Scrolling freezes the frame, which dissolves into a 3D relief of the coast styled like their illustrated map. The camera descends along the same white line to Leceia, where one point of light marks the village. | Video → 3D terrain | Sea, wind, first birds |
-| 2 | Morning | **Arrival** | An **arch mask** opens (the brand's signature transition) and we pass through the gate. The whole village appears as an architect's model on a limestone plinth, with tilt‑shift depth of field so it reads as a miniature. A slow crane orbit follows the scroll. *"A contemporary stronghold."* | 3D | Birdsong, gravel steps |
-| 3 | Midday | **Cars below. Life above.** | ★ The plinth is cut in section, revealing earth strata in cork tones and the garage. Cars enter from the street ramp (as in the film). Lifts and stairs rise into the homes. The camera surfaces as pedestrian paths, gardens and the playground light up. Three notes: car‑free living, elevated living, buried services. | 3D | Cicadas (Portuguese summer noon) |
-| 4 | Afternoon | **Made to age with the land** | A 3D material board of limestone and cork samples. Scroll moves a raking light across them so the grain comes alive. Then the model's roofs reveal solar arrays and fine flowing lines trace water recycling into the gardens. *Autonomy · Durability*. | 3D + macro photos | Breeze in olive trees |
-| 5 | Late afternoon | **The village heart** | Three rooms in a horizontal sequence, each framed in an arch: **Botanical Playground** (birdsong), **Boutique Fitness**, **Silent Focus** (★ silence). | Renders + film clips | Layered, then silence |
-| 6 | Golden hour | **Find your place** | The model returns with units lit by status: available = warm glow, sold = matte, the **V4 2028 phase drawn as ghosted wireframe volumes** ("not yet built"). ★ Choose your home → exploded floors → floor plans → ★ *Your light* sun study. Spec panel: V3 Townhouse / V4 Premium Villa. | 3D + 2D plans | Swallows, warm hush |
-| 7 | Sunset | **The view** | From the selected terrace: the river at sunset (film footage, or a 360° view if available). The camera lifts off and pulls back onto the terrain. Drive‑time lines are drawn to Lisbon (15 min), Cascais (15 min) and the airport (25 min). Filters: City · Leisure · Education · Business. *"Close to everything. Far from the noise."* | Film → 3D terrain | Distant city hum fades |
-| 8 | Night | **An invitation** | The village at night: warm windows, path lights, stars. *"Come experience Vila Leku."* A three‑step private‑visit invitation, the advisor's portrait and direct line, and the brochure. Footer: FCM · BPI · Porta da Frente · Phidias, *building harmony*. | 3D + DOM | Crickets, 3‑note motif |
+1. **The day only moves forward.** While you scroll the journey, the sun advances and never jumps back, so the arch indicator always tells the truth.
+2. **Interactive moments pause the day.** When you explore a house or hold the sun, scroll‑driven motion stops, the arch's sun dims to "paused", and the scene uses its own lighting. Scroll again and the day resumes.
+3. **Three layers, three looks.** The visitor always knows what is clickable:
 
-**Pacing:** about 4–6 minutes for the full journey. A **"Skip to residences"** link and a **chapter index** (click the sun arc) are always one tap away. Nobody is ever trapped in a cinematic.
+   | Layer | What | Visual rule |
+   |---|---|---|
+   | Atmosphere | Light, sky, landscape, transitions, sound | **Never clickable**, no affordances |
+   | Understanding | Section cut, annotations, map | **Hairline annotations** that reveal on hover/tap |
+   | Action | Choose a house, hold the sun, book a visit | **The only solid buttons** and the only labelled cursor (*Open*, *Drag*) |
+
+4. **Stop to read.** When text is on screen, the camera settles. Words never sit over moving imagery.
+5. **Never trapped.** "Skip to the homes" and a chapter index (tap the arch) are always one tap away. Touch scrolling stays native.
+6. **Sound is off by default.** There is no entry gate, just a visible toggle (a thin animated waveform). Every moment works muted. Presenters turn it on in the pitch.
 
 ---
 
-## 4. Art direction
+## 3. Five signature moments
 
-### 4.1 The 3D look — "living architect's model"
-- **Model:** limestone‑white massing with crisp edges and softly baked ambient occlusion (shading baked into the textures). Cork‑brown accents on the facades. Dark tinted glass, not refractive.
-- **Plinth:** the village sits on a cut block of terrain, and its cut face shows earth layers. That face is the stage for the Chapter 3 section reveal.
-- **Trees:** stylised sage forms like model‑maker's foam, with a subtle wind sway in a shader. Use instancing (one draw call for every tree).
-- **Water (Tagus/Atlantic):** a satin plane with soft specular light. No busy waves.
-- **Camera:** always a crane or dolly. It never cuts and never snaps. Heavy damping.
-- **Post‑processing:** tilt‑shift depth of field (the miniature effect), gentle bloom only for night windows, vignette, and a fine film grain shared with the HTML layer so the 3D, renders and film feel like one medium.
+### ① The village builds itself (dawn → midday)
+A blank limestone‑paper ground. **Contour lines** of the hill draw themselves in hairline strokes, then the **architect's line drawing** of the houses traces itself in. Volumes **rise from their plans** as a white model, staggered house by house, while foam‑like trees fade in. A slow band of sunlight then **sweeps across the village and leaves real materials behind**: cork, limestone, glass. Finally foliage takes colour and starts to sway, and the pools fill with light. *building harmony.*
 
-### 4.2 Palette (sampled from the current site and film)
+### ② Cars below. Life above. (midday)
+The ground is **cut in section** like a slice of cake. The cut face shows earth layers in cork tones and the garage beneath. Tiny cars glide down the ramp and disappear under the village, then the camera rises to the car‑free gardens above as the paths light up. The idea becomes obvious in five seconds.
 
+### ③ Two ways to live (golden hour)
+Two homes, presented like jewels on a plinth: the **V3 Townhouse** and the **V4 Villa**. Choose one and the camera cranes in. The roof lifts and the floors separate into an exploded drawing. The floor plan draws itself on each level. Specs come from the site: bedrooms, bathrooms, m², garden, pool, elevator.
+
+### ④ Hold the sun (golden hour, interactive)
+The sun on the arch **becomes a handle**. Drag it, or use the arrow keys, and the day sweeps across the chosen house:
+- morning light rakes the cork
+- noon shadows tuck under the terrace
+- gold floods through the floors of the exploded view
+- past sunset, the windows glow on
+
+No numbers, just *dawn · noon · dusk* in wide‑tracked lowercase. It's the brand symbol turned into the most delightful control on the site.
+
+### ⑤ The village switches on (night)
+Windows light up one by one, warm path lights follow, and stars come out. *"Come experience Vila Leku."* The private‑visit form appears as an **invitation card**. After booking, the confirmation shows the visitor's chosen home lit at the hour of their visit.
+
+*Phase 2 delight:* **Silent Focus.** In the Village Heart chapter, the cowork room makes the site go quiet: the interface fades, motion stops and one line of text remains. If sound is on, it fades to nothing.
+
+---
+
+## 4. The journey
+
+| # | Time | Chapter | What happens | Demo |
+|---|---|---|---|---|
+| 0 | First light | **Hero** | A short film loop (coast at dawn) with the wordmark in limestone white. The 3D world loads silently behind it. | ✅ |
+| 1 | Dawn | **The drawing** | **Match cut:** the film's aerial frame dissolves into the 3D camera at the same angle. Contours and line drawing draw in. | ✅ |
+| 2 | Morning | **The model** | Houses rise as a white model. A slow crane orbit. *"A contemporary stronghold."* | ✅ |
+| 3 | Midday | **The making** | A sun sweep leaves cork and limestone behind. Short notes: *Autonomy · Durability*. | ✅ |
+| 4 | Midday | **Cars below. Life above.** | ② The section cut. | ✅ |
+| 5 | Afternoon | **Village heart** | Renders and film clips framed in arches: Botanical Playground, Boutique Fitness, **Silent Focus**. | Phase 2 |
+| 6 | Golden hour | **Two ways to live** | ③ + ④ Exploded homes and holding the sun. | ✅ |
+| 7 | Sunset | **The view** | Terrace sunset (film). The camera lifts off onto a 3D relief of the coast in their illustrated‑map style, with drive‑time lines to Lisbon, Cascais and the airport. | Phase 2 |
+| 8 | Night | **Invitation** | ⑤ The village switches on, then the invitation form. | ✅ |
+
+Full journey: about 4–5 minutes. Demo journey: about 2–3 minutes.
+
+---
+
+## 5. Art direction
+
+### 5.1 The 3D look: "a living architect's model"
+It starts as a pure white model and **matures into a softly stylised, material‑rich miniature**. It's never photoreal, so it never competes with the renders. Instead it complements them.
+
+- **Lens:** long focal lengths (a 25–32° field of view) for elegant, undistorted architecture. Slow crane and dolly moves. The camera never cuts and never snaps.
+- **Light:**
+  - one sun with soft shadows
+  - ambient occlusion in every crevice
+  - sky and environment lighting tinted by time of day
+  - **height fog** for morning haze
+  - **dust motes** drifting through sunbeams
+  - gentle bloom only on the sun, glowing windows and path lights
+- **Materials:**
+  - **Limestone:** warm off‑white with fine grain.
+  - **Cork:** deep granular brown that catches raking light.
+  - **Glass:** dark and tinted, reflective but not refractive.
+  - **Water:** satin with a caustic shimmer.
+  - Mostly procedural, so it's sharp up close and tiny to download.
+- **Nature:**
+  - Trees start as model‑maker's foam spheres and bloom into soft stylised foliage with wind sway.
+  - Lavender and grasses, like in the film.
+  - A few birds at dawn and dusk.
+- **Miniature feel:** a subtle tilt‑shift depth of field in the model chapters, switched off in close‑ups.
+- **One colour grade:** a LUT (colour‑grading preset) sampled from the film is applied to the 3D render, so footage, renders and 3D feel like one piece. A fine film grain sits over everything, HTML included.
+
+### 5.2 Palette (sampled from the current site)
 | Token | Hex | Use |
 |---|---|---|
-| Limestone | `#E5E3D7` | Main background, the model |
+| Limestone | `#E5E3D7` | Main background, the white model |
 | Stone | `#D2CFBC` | Secondary surfaces |
-| Taupe | `#94917E` | Hairlines, quiet UI |
-| Sage | `#A69E79` | Accents, foliage |
-| Olive | `#474F1F` | Wordmark, primary text accent |
-| Forest | `#515443` | Deep surfaces, footer |
-| Cork | *sample from facade texture* | Material accents, earth strata |
-| Ink (proposed) | `#1C1E17` | Night chapter |
-| Sun (proposed) | `#C9A46A` | Golden hour, selection, the sun dot |
+| Taupe | `#94917E` | Hairlines, quiet interface |
+| Sage | `#A69E79` | Foliage, accents |
+| Olive | `#474F1F` | Wordmark, text accent |
+| Forest | `#515443` | Deep surfaces |
+| Cork | *sample from facade render* | Material, earth layers |
+| Ink (new) | `#1C1E17` | Night |
+| Sun (new) | `#C9A46A` | The sun dot, golden hour, selection |
 
-The 3D lighting colour temperature drifts with the time of day: cool dawn, neutral noon, amber golden hour, blue‑ink night. The HTML layer follows the same palette.
+### 5.3 Typography
+- **Display:** one refined serif. Licensed options: PP Editorial New, Canela or Saol. Free option: Instrument Serif.
+- **Text:** the brand sans **Normalidad**, 17–18px, left‑aligned, never justified.
+- **Captions:** wide‑tracked lowercase, like the film's end card *"b u i l d i n g  h a r m o n y"*.
+- **Script:** *"Living in harmony"* once, as a signature.
 
-### 4.3 Typography
-- **Display:** one refined serif for big moments. Licensed options: PP Editorial New, Canela or Saol. Free fallback: Instrument Serif.
-- **Text and interface:** keep the brand sans **Normalidad** (check the web licence). Body text 17–18px, left‑aligned, never justified.
-- **Captions and eyebrows:** wide‑tracked lowercase, like the film's *"b u i l d i n g  h a r m o n y"*.
-- **Script:** *"Living in harmony"* appears **once**, as a signature. Nowhere else.
+### 5.4 Motion
+- One easing family (quart/expo out): 1.2–1.6s for the world, 0.6–0.8s for the interface. No springs or bounces.
+- Text reveals line by line through masks.
+- Images reveal through **arch‑shaped masks**, the recurring motif.
+- Chapter transitions: **arch wipes** and **match cuts**, never hard cuts.
 
-### 4.4 Motion principles
-- **Easing:** one family only (quart/expo out). Large moves take 1.2–1.6s and interface moves 0.6–0.8s. No springs or bounces.
-- **Text:** reveals line by line through masks (GSAP SplitText).
-- **Images:** reveal through **arch‑shaped masks**, the brand's recurring motif.
-- **Parallax:** at most 8–10%. Smooth scroll stays light so it still feels native.
-- **Cursor:** native everywhere. Inside 3D zones only, a hairline ring with a label (*Drag*, *Open*).
+### 5.5 Sound (off by default)
+- An ambient bed that changes with the day: sea and wind at dawn, birds in the morning, cicadas at noon, swallows at golden hour, crickets at night.
+- A **3‑note motif** (three arches) when the village finishes building and when a visit is booked.
+- Interface sounds barely there. About 1.5 MB in total, streamed.
 
-### 4.5 Sound design
-- **Opt‑in only**, and the choice is remembered. A thin animated waveform is the toggle.
-- **Ambient beds per time of day** crossfade with the scroll: dawn sea, morning birds, noon cicadas, olive breeze, swallows, night crickets.
-- **A 3‑note motif** (three arches) on entering and on booking a visit. Interface sounds are barely there: soft stone or paper taps.
-- About 1.5 MB of audio in total, streamed. Sound ducks when the tab is hidden. If the client owns the rights, the film's soundtrack can supply the motif.
-
-### 4.6 Luxury guardrails — never do these
-Bouncy easing · auto‑playing sound · loaders longer than 3s · carousel arrows · stock icons · urgency banners or countdowns · text over busy imagery without a scrim · more than one idea per screen · cursor trails · trapping the user in a scroll sequence.
+### 5.6 Never do these
+Bouncy easing · auto‑playing sound · loaders over 3s · carousel arrows · stock icons · urgency banners · text over moving imagery · cursor trails · trapping the scroll · any frame that wouldn't survive a screenshot.
 
 ---
 
-## 5. Information architecture
+## 6. How each moment is built
 
-```
-/[locale]                  The journey (chapters 0–8)
-/[locale]/residences       All units: model + accessible list, filters, status
-/[locale]/residences/[slug] A unit or typology (V3, V4): camera flies in, exploded floors, plans, sun study
-/[locale]/village          Concept, materials, autonomy, village heart (deep‑linkable)
-/[locale]/location         Terrain map, drive times, categories
-/[locale]/visit            Private visit invitation + brochure
-/[locale]/film             The full film, streamed on demand
-/[locale]/legal/*          Privacy, cookies, terms
-```
-Languages: `en` and `pt`, with hreflang links between them. The 3D canvas **persists across routes**, so going from the journey to a residence page is a camera move, not a page reload.
-
----
-
-## 6. Technical architecture
-
-### 6.1 Stack
-| Concern | Choice |
+| Moment | Technique |
 |---|---|
-| Framework | **Next.js** (latest stable, App Router, TypeScript), React 19 |
-| 3D | **three**, **@react-three/fiber** v9, **@react-three/drei**, **@react-three/postprocessing** |
-| Scroll | **Lenis** (`lenis/react`) synced with **GSAP ScrollTrigger**. GSAP and all its plugins, SplitText included, are now free. |
-| State | **zustand**. 3D reads it each frame without triggering React re‑renders. |
-| Sun | **suncalc** (real sun position for the site's coordinates and orientation) |
-| Device tiers | **detect-gpu** + drei `PerformanceMonitor` |
-| Styling | Tailwind CSS + CSS variables (palette tokens) |
-| i18n | next-intl |
-| CMS | Sanity (or Payload) for units, availability, copy, contacts |
-| Leads | Server action → zod validation → email (Resend) + the client's CRM; booking via Cal.com or their existing Google appointment page |
-| Video | Hero loops as AV1/HEVC + H.264, plus mobile cuts and posters. Full film streamed adaptively (Mux, Cloudflare Stream or Bunny). |
-| Analytics | Plausible or Umami (privacy‑friendly) with custom events |
-| Hosting | Vercel (preview links for the pitch) |
+| **Hero → 3D match cut** | Edit a 10–15s loop from the film that ends on an aerial. The 3D camera's first frame is composed to match it, and a 600ms crossfade with a slight blur hides the seam. The film also hides the 3D loading time. |
+| **The village builds itself** | One `uBuild` value per stage drives a custom shader layered on the standard material. (a) **Contours:** lines generated from terrain height in the shader. (b) **Line drawing:** house edges drawn progressively with animated dashed lines. (c) **Rise:** each house's height scales up from the ground with a per‑house delay. (d) **Material sweep:** a soft world‑space front with a noisy edge and a thin glowing seam; white on one side, materials on the other. (e) **Life:** foliage colour and wind fade in, water fills. |
+| **Cars below** | An animated cutting plane slices the model, with a strata‑shaded cap filling the cut face. The garage is a simple void. Instanced cars follow a curved path down the ramp. |
+| **Two ways to live** | Each home is split into floors in Blender. Exploding them is a GSAP timeline (roof lifts, floors part), and the floor plan is an SVG drawn onto each floor. Specs are HTML. |
+| **Hold the sun** | The `SunArc` SVG becomes a draggable control (pointer + arrow keys). It drives `dayProgress`, which sets sun direction, sky, fog, shadows and window glow from one source. |
+| **Village switches on** | Window glow staggered randomly. Path lights faked with glowing sprites plus bloom (no real point lights, so it stays cheap). Stars as points. |
+| **Modular village** | Houses are 2–3 modular pieces from Blender (V3 module, V4 module, garden/terrace), **placed by a layout array in code**. We can recompose the village for a better frame in seconds, and instancing keeps it fast and small. |
 
-### 6.2 Runtime architecture
+### Stack
+- **Framework:** Next.js (App Router, TypeScript), React 19.
+- **3D:** three, @react-three/fiber, @react-three/drei, @react-three/postprocessing (AO, bloom, depth of field, LUT, grain), three-custom-shader-material.
+- **Scroll:** Lenis (smooths mouse‑wheel scrolling only; touch stays native) synced with GSAP ScrollTrigger and SplitText. GSAP is free, plugins included.
+- **State:** zustand. The 3D reads it every frame without React re‑renders.
+- **Styling:** Tailwind + CSS variables for the palette.
+- **Assets:** Blender → glTF → gltf-transform (meshopt compression, KTX2 textures) → `gltfjsx` typed components.
+- **Hosting:** Vercel preview link for the pitch.
+
+### Runtime shape
 ```
-app/[locale]/layout.tsx
- ├─ <SmoothScroll>         Lenis → ScrollTrigger.update (one shared GSAP ticker)
- ├─ <Experience>           ONE fixed full-screen <Canvas>, loaded lazily after the main image
- │    ├─ <TimeOfDay>       one source of truth: sun direction, sky, fog, light temperature, window glow
- │    ├─ <CameraRig>       camera paths per chapter (authored), damped scrubbing; orbit mode in Residences
- │    ├─ <World>           Terrain · Village · SectionCut · Residence(s) · Trees · Cars
- │    └─ <Post>            tilt-shift DoF · AO · bloom (night) · vignette · grain · SMAA (per tier)
- ├─ <Chrome>               header · sun-arc progress / chapter index · sound toggle · labelled cursor
- └─ {children}             HTML chapters: real text that registers ScrollTriggers → store
+app/layout.tsx
+ ├─ <SmoothScroll>     Lenis ⇄ ScrollTrigger on one GSAP ticker
+ ├─ <Experience>       ONE fixed <Canvas>, loaded lazily behind the hero film
+ │   ├─ <Day>          dayProgress → sun, sky, fog, light colour, window glow (single source)
+ │   ├─ <CameraRig>    authored key frames per chapter, damped scroll scrub; free orbit in "Two ways to live"
+ │   ├─ <Village>      modular houses + terrain + trees + water + cars (build stages via uBuild)
+ │   └─ <Post>         AO · tilt‑shift · bloom · LUT · grain (per device tier)
+ ├─ <Chrome>           header · SunArc (indicator → handle) · sound toggle · labelled cursor
+ └─ chapters           real HTML text; each writes {chapter, progress} to the store
 ```
-- **Chapters are normal HTML sections.** Each one writes `{chapter, progress}` into `useJourney`. The 3D world reads it in `useFrame` through `getState()`, so nothing re‑renders per frame.
-- **Camera choreography:** author camera paths in Blender and export them as glTF animations, then scrub the animation with scroll progress. A 3D artist can art‑direct the shots without code changes. Fallback: Catmull‑Rom curves plus look‑at targets in code.
-- **Time of day:** a single `sunDirection` and `dayProgress` drive every material, so the light is always consistent. The sun study simply overrides `dayProgress` with `suncalc(date, time, lat, lng)`.
-- **Section cut:** clipping planes with stencil caps for a solid cut look, or pre‑modelled "cut" meshes in Blender, whichever reads cleaner on mobile.
-- **Units:** each house is a named node in the model (`UNIT_07`) linked to a CMS record. Status drives its material. The accessible HTML list of units drives the same selection, so the keyboard works.
-- **Rendering control:** render while a 3D chapter is visible, pause when HTML covers the canvas or the tab is hidden.
 
-### 6.3 3D asset pipeline
-1. **Source:** the architects' model (Revit, ArchiCAD, SketchUp or 3ds Max). Without it, build a massing model from the film's aerials and the renders (the houses are simple stacked volumes in roughly four staggered terraces), labelled *illustrative*.
-2. **Blender:** clean up, decimate, merge by material, and split nodes per unit and per floor (needed for the exploded view). Unwrap UVs and bake AO and soft lighting.
-3. **Terrain:** public elevation data (Copernicus GLO‑30) for Lisbon–Cascais → heightmap → displaced, decimated mesh, draped with a higher‑resolution redraw of their illustrated map.
-4. **Export and optimise:** glTF → `gltf-transform` (dedupe, prune, weld, meshopt compression) → KTX2 textures (ETC1S for colour, UASTC for normals) → `gltfjsx --types` to generate typed components.
-
-### 6.4 Performance budgets
-| Item | Budget |
+### Devices and performance
+| Tier | Experience |
 |---|---|
-| First content (main image) | < 2.0s on 4G; LCP ≤ 2.5s, CLS 0, INP < 200ms |
-| Hero loop | ≤ 4 MB desktop / ≤ 2 MB mobile (currently **132 MB**) |
-| JS (excluding three) | ≤ 200 KB gzip on first load; 3D bundle loaded lazily |
-| Village model | ≤ 3 MB · each residence ≤ 1.5 MB · terrain ≤ 1.5 MB |
-| Frame rate | 60 fps on recent laptops; ≥ 30 fps on iPhone 13 / mid Android |
+| High (recent laptops) | Full post‑processing, soft shadows, pixel ratio up to 2 |
+| Mid (most phones) | Pixel ratio 1.25–1.5, baked AO, no depth of field, fewer motes |
+| Low / no WebGL2 | **Cinematic fallback:** the same chapters as short pre‑rendered videos from the same scene |
+| Reduced motion | No scroll‑scrubbed camera. Chapters crossfade between key frames. |
 
-### 6.5 Device tiers and fallbacks
-| Tier | Detection | Experience |
-|---|---|---|
-| High | detect‑gpu tier 3 | Pixel ratio up to 2, live sun shadows, tilt‑shift, AO, full post‑processing |
-| Mid | tier 2 / battery saver | Pixel ratio 1.25–1.5, baked AO only, no depth of field |
-| Low / no WebGL2 / Save‑Data | tier ≤ 1 | **Cinematic fallback:** each 3D chapter as a pre‑rendered video from the same Blender cameras (same story, no WebGL). Residences via an interactive SVG site plan. |
-| Reduced motion | `prefers-reduced-motion` | No scroll‑scrubbed camera. Chapters crossfade, no parallax, posters instead of loops. |
-
-### 6.6 Accessibility and SEO
-- All narrative content is real HTML text. The canvas is `aria-hidden` and purely an enhancement.
-- WCAG AA contrast (scrims over imagery), visible focus, keyboard‑operable unit selection, captions on the film, alt text on every image.
-- Metadata rendered on the server, OG images per residence, JSON‑LD structured data for the residences, sitemap, hreflang EN/PT.
-
-### 6.7 Analytics the sales team will love
-Track these events: `chapter_reached`, `sound_on`, `unit_opened(unitId)`, `sun_study_used`, `film_played`, `brochure_requested`, `visit_requested(unitId)`. Then send the developer a weekly **"most‑explored units"** report. That's a concrete business reason to choose this over the current site.
-
-### 6.8 Proposed repo structure
-```
-app/[locale]/{layout,page}.tsx, residences/[slug], village, location, visit, film, legal
-components/chrome/     Header, SunArc, SoundToggle, Cursor, ArchMask
-components/chapters/   Threshold, Dawn, Arrival, Stronghold, Materials, VillageHeart, Residences, View, Invitation
-components/ui/         Reveal, SplitLines, ArchFrame, Button
-canvas/                Experience, Post, tiers
-canvas/world/          Terrain, Village, SectionCut, Residence, Trees, Cars, Sky
-canvas/rigs/           CameraRig (rails), OrbitRig (residences)
-canvas/materials/      limestone, cork, foliage-wind
-lib/                   journey-store, scroll (Lenis+ScrollTrigger), sun (suncalc), audio, analytics
-sanity/                schemas: residenceType, unit, chapter, settings
-pipeline/              gltf-transform scripts, Blender export notes
-public/                models (.glb), textures (.ktx2), video, audio
-```
+- **Frame rate:** 60 fps on recent laptops, ≥ 30 fps on an iPhone 13 or mid‑range Android.
+- **Download:** hero loop ≤ 4 MB desktop / ≤ 2 MB mobile; whole demo ≤ 10 MB.
+- **iOS Safari memory:** one persistent canvas holds every loaded asset in GPU memory, and Safari can kill the 3D context. Use KTX2 textures, dispose of chapters far behind, and recover gracefully if the context is lost.
+- **Idle cost:** render only when something moves. Pause when HTML covers the canvas or the tab is hidden.
 
 ---
 
-## 7. What we need from the client
-
-- [ ] Architects' 3D model (any format) + **site plan with unit numbers and north arrow**
-- [ ] Floor plans per typology (V3 Townhouse, V4 Premium Villa) and per unit if they differ
-- [ ] Unit list: number, type, status, phase (V4 = 2028), price policy (*price on request*?)
-- [ ] Original high‑resolution renders and the **film master** (+ soundtrack rights)
-- [ ] Exact coordinates and orientation (for the sun study)
-- [ ] Real contact details: advisor (photo, phone, WhatsApp, email), CRM, calendar
-- [ ] Brochure PDF, legal texts, cookie policy
-- [ ] Font licences (Normalidad web licence)
-- [ ] Copy approval EN/PT
+## 7. Assets
+**Needed:** high‑resolution renders, the **film master** (to edit the hero loop and match cut), vector logo, arch symbol and wordmark (SVG), brand font files, and the soundtrack if they own it.
+**Nice to have:** any architect's model or site plan as *reference* for proportions. Not required.
 
 ---
 
-## 8. Phases
+## 8. Pitch demo — 2 weeks
 
-### Phase 1 — Pitch demo (≈ 2 weeks, one front‑end dev + Blender time)
-**Scope:** chapters 0 → 1 → 2 → 3 → 6 → 8 (threshold, hero loop and descent, model orbit, section cut, choose your home with exploded floors and sun study, invitation form). Also the sun‑arc progress, two sound layers, basic device tiers and a reduced‑motion path. English only, phone‑ready, deployed to a preview link.
+**Scope:** chapters 0 → 1 → 2 → 3 → 4 → 6 → 8 (see the journey table). That's moments ①②③④⑤, plus the arch indicator, one sound bed with the motif, device tiers and reduced motion. English only, works on phones, live on a preview link.
 
-| Week | Work |
+| Days | Work |
 |---|---|
-| 1 | Scaffold (Next, R3F, Lenis+GSAP, store, persistent canvas). Massing model v1 + terrain in Blender. Look development (light, materials, tilt‑shift). Time‑of‑day system. Hero loop encode. Threshold + sun arc. |
-| 2 | Section cut. Unit selection + exploded floors + sun study. Invitation form. Sound. Mobile pass + tiers. Polish. Deploy. **Record a backup screen‑capture video** in case the meeting room's Wi‑Fi fails. |
+| 1–2 | **Style frames.** Model the modular kit in Blender. Compose and light the 6 key frames (dawn drawing, white model, materials, section cut, exploded home, night). Approve the look before any motion. |
+| 3–5 | Scaffold Next + R3F + Lenis/GSAP + store. The day system. Camera key frames and scroll scrub. SunArc indicator. Hero loop edit and match cut. |
+| 6–7 | **The village builds itself** (all stages). |
+| 8 | **Cars below** section cut. |
+| 9 | **Two ways to live** + **Hold the sun**. |
+| 10 | **Night** + invitation form. Sound. Mobile pass, device tiers, reduced motion. |
+| 11–12 | Polish to "every frame a poster". Performance pass on real devices. Deploy. **Record a backup video walkthrough** in case the meeting room's Wi‑Fi fails. |
 
-**Acceptance:** runs at the budgets above on a recent MacBook and an iPhone 13. The whole demo is ≤ 10 MB. Works in Safari, Chrome and Firefox. The reduced‑motion path works.
+**If time runs short, cut in this order:** the line‑drawing stage (fade the model in instead) → sound → tilt‑shift. Never cut polish on ①, ② or ③.
 
-**The pitch itself:** open it on *their* phone. Show the hard numbers side by side: page weight (132 MB → ~5 MB), the mobile overflow fixed, and leads captured versus none today. Offer the two tiers: an Elementor upgrade with the 3D component dropped in, or the full Next.js flagship.
-
-### Phase 2 — Full build (≈ 6–8 weeks after sign‑off)
-Real CAD model, all chapters, CMS + live unit availability, residence pages, location chapter, PT translation, fallback videos rendered in Blender, CRM and booking integration, analytics, legal and cookies.
-
-### Phase 3 — Launch and after
-Testing on a range of real devices, accessibility audit, redirects from the WordPress URLs (keep `/pt/`), monitoring, handover docs. Ongoing: unit status updates and seasonal content (e.g. a construction progress chapter).
+**In the pitch:** open it on *their* phone, with sound on. Then show the contrast: 132 MB hero → ~4 MB, no sideways scrolling, a real enquiry form.
 
 ---
 
-## 9. Risks and mitigations
+## 9. Phase 2 — the full site
+Village heart with **Silent Focus** · **The view** with the 3D coastline relief and drive times · residence pages per typology · Portuguese · full sound design · cinematic video fallbacks · CMS for copy and contacts · enquiry and booking integration · analytics · legal and cookies · accessibility audit.
 
+---
+
+## 10. Risks
 | Risk | Mitigation |
 |---|---|
-| No CAD model available | Build the massing model from aerials and renders, labelled *illustrative*. The model style forgives approximation. |
-| Real‑time 3D looks cheaper than the renders | The model style is deliberate. Photoreal stays with the renders and film. |
-| Mobile GPU and heat limits | Device tiers, adaptive pixel ratio, pausing rendering when hidden, cinematic video fallback |
-| Scroll fatigue / feeling trapped | Light Lenis, "Skip to residences", chapter index, 4–6 min total |
-| Sun study taken as a promise | Accurate coordinates and an *indicative* note |
-| Client's team can't edit | Sanity for units and copy. Alternatively keep WordPress as the editing tool and pull content from it (WPGraphQL). |
-| Pitch day network failure | Locally served build plus a recorded video walkthrough |
-
----
-
-## 10. Next steps
-1. Confirm the asset list (section 7). The single most valuable item is the architects' model plus the site plan.
-2. Scaffold the Next.js project in this repo and start Week 1.
+| Real‑time 3D looks cheaper than the renders | Stylised model look by design. Photoreal stays with film and renders. Shared LUT and grain. |
+| Too many effects, visual fatigue | Five moments only. Rules 1–4. Style frames approved before motion. |
+| Phone performance and memory | Device tiers, KTX2 textures, disposal, context‑loss recovery, video fallback |
+| Two weeks is tight | Fixed cut order (section 8). Modular kit instead of bespoke modelling. |
+| Pitch‑day network | Locally served build plus recorded video |
