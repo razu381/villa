@@ -139,7 +139,7 @@ export const PLANTING: { lavender: Tuft[]; grass: Tuft[] } = (() => {
           const L = 1.5 + rand() * 1.1;
           const cx = ax + dx * (s + L / 2);
           const cz = az + dz * (s + L / 2);
-          s += L * 0.82;
+          s += L * 0.7;
           // a slow noise decides which stretches are planted
           const drift = fbm(cx / 11 + side * 3.1, cz / 11, 2);
           if (drift < -0.18) continue;
@@ -152,27 +152,6 @@ export const PLANTING: { lavender: Tuft[]; grass: Tuft[] } = (() => {
           else grass.push({ ...t, len: undefined, s: 0.75 + rand() * 0.3, rot: rand() * Math.PI * 2 });
         }
       }
-    }
-  }
-  // A few tight beds of grasses in the gardens (never a scatter — calm lawns).
-  let tries = 0;
-  let beds = 0;
-  while (beds < 26 && tries < 4000) {
-    tries++;
-    const cx = PODIUM.minX + 6 + rand() * (PODIUM.maxX - PODIUM.minX - 12);
-    const cz = PODIUM.minZ + 6 + rand() * (PODIUM.maxZ - PODIUM.minZ - 12);
-    if (!ok(cx, cz)) continue;
-    beds++;
-    const n = 6 + Math.floor(rand() * 7);
-    const lav = rand() < 0.4;
-    for (let k = 0; k < n; k++) {
-      const a = rand() * Math.PI * 2;
-      const r = Math.sqrt(rand()) * 1.5;
-      const x = cx + Math.cos(a) * r * 1.4;
-      const z = cz + Math.sin(a) * r * 0.8;
-      if (!ok(x, z)) continue;
-      const t = { x, z, y: groundHeight(x, z), s: 0.6 + rand() * 0.4, rot: rand() * Math.PI * 2, delay: rand(), tone: rand() };
-      (lav ? lavender : grass).push(t);
     }
   }
   return { lavender, grass };

@@ -95,7 +95,7 @@ varying vec2 vPool2;
 #define C_TILE ${lin("#D8D6C8")}
 #define C_TILE_DEEP ${lin("#C9CCC0")}
 #define C_WATER ${lin("#79A8A6")}
-#define C_GLOW ${lin("#7FD0D4")}
+#define C_GLOW ${lin("#86C9C6")}
 
 float pl_box(vec2 p, vec2 c, vec2 h) { vec2 q = abs(p - c) - h; return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0); }
 
@@ -148,13 +148,15 @@ vec3 pl_basin(vec3 P, vec3 n, vec2 c, vec2 h, float y0, float D, float under) {
   // soft ambient occlusion in the basin corners and towards the floor
   vec2 e = h - abs(P.xz - c);
   float corner = smoothstep(0.0, 0.6, min(e.x, e.y));
-  col *= mix(0.72, 1.0, corner) * mix(1.0, 0.82, depthK);
+  float deepK = smoothstep(0.15, 1.0, D);
+  col *= mix(1.0, mix(0.72, 1.0, corner), deepK) * mix(1.0, 0.82, depthK * deepK);
   if (n.y > 0.5) col += uSunColor * uSunI * 0.16 * pl_caustic(P.xz) * sh * under * RECIPROCAL_PI;
   return col;
 }
 
 void main() {
   #include <clipping_planes_fragment>
+  if (uRise < 0.1) discard; // nothing is dug before the model rises
   vec2 c = vPool.xy;
   vec2 h = vPool.zw;
   float y0 = vPool2.x;
@@ -189,9 +191,13 @@ void main() {
     vec3 body = pl_light(C_WATER, vec3(0.0, 1.0, 0.0), 1.0) * 0.55;
     vec3 refr = basin * absorb + body * (1.0 - absorb);
     // underwater lights at night
+    // underwater lights at night: lamps along the long walls, light falling off with depth
     vec2 e = h - abs(B.xz - c);
-    float wallNear = 1.0 - smoothstep(0.0, 1.2, min(e.x, e.y));
-    refr += C_GLOW * uNight * (0.9 + 1.4 * wallNear) * fill;
+    float wallNear = 1.0 - smoothstep(0.0, 1.4, min(e.x, e.y));
+    float lamps = 0.55 + 0.45 * pow(abs(sin((B.x + B.z) * 1.1)), 3.0);
+    float deep = clamp((y0 - B.y) / max(D, 0.01), 0.0, 1.0);
+    refr = mix(refr, refr * 0.35, uNight);
+    refr += C_GLOW * uNight * fill * (0.22 + 0.95 * wallNear * lamps) * mix(1.0, 0.6, deep) * exp(-tB * 0.25);
     col = mix(refr, sky * mix(1.0, 0.35, uNight), F * mix(1.0, 0.5, uNight)) + uSunColor * glint;
     // the waterline: a thin wet darkening on the walls just above
   } else {

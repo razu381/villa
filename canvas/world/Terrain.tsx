@@ -10,11 +10,13 @@
  * - Sides: earth strata over limestone bedrock, with a thin limestone rim.
  * - Closed solid: poché (pocheEarth) when the section plane cuts it.
  */
+import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo } from "react";
+import { sectionPlane } from "@/lib/uniforms";
 import { TABLE_Y } from "@/lib/village";
 import { buildPlinthGeometry } from "./terrain/plinthGeometry";
 import { createTableMaterial } from "./terrain/tableMaterial";
-import { createTerrainMaterial } from "./terrain/terrainMaterial";
+import { createTerrainMaterial, uCutZ } from "./terrain/terrainMaterial";
 
 export function Terrain() {
   const geo = useMemo(() => buildPlinthGeometry(), []);
@@ -28,6 +30,10 @@ export function Terrain() {
     },
     [geo, mat, tableMat],
   );
+  useFrame(() => {
+    // plane: normal (0,0,-1), constant c → the cut face is z = c
+    uCutZ.value = sectionPlane.constant;
+  });
   return (
     <group>
       <mesh geometry={geo} material={mat} receiveShadow />

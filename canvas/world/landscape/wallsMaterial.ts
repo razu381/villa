@@ -21,32 +21,40 @@ varying vec3 vWl;
 varying vec3 vWlN;
 
 vec3 wl_masonry(vec2 uv) {
-  float rowH = 0.44;
-  float vy = uv.y / rowH;
-  float r = floor(vy);
-  float fy = fract(vy);
-  float cell = 0.55;
+  // irregular courses: each course boundary is jittered, so heights vary 0.28–0.6 m
+  float rowH = 0.42;
+  float k = floor(uv.y / rowH);
+  float bk = k * rowH + (vl_hash(vec2(k, 2.9)) - 0.5) * rowH * 0.5;
+  float r = uv.y < bk ? k - 1.0 : k;
+  float b0 = r * rowH + (vl_hash(vec2(r, 2.9)) - 0.5) * rowH * 0.5;
+  float b1 = (r + 1.0) * rowH + (vl_hash(vec2(r + 1.0, 2.9)) - 0.5) * rowH * 0.5;
+  float hR = b1 - b0;
+  float fy = clamp((uv.y - b0) / hR, 0.0, 1.0);
+  // irregular stone lengths: cells merge randomly, joints wander a little
+  float cell = 0.36 + 0.22 * vl_hash(vec2(r, 5.1));
   float ux = (uv.x + vl_hash(vec2(r, 7.3)) * 4.0) / cell;
   float ci = floor(ux);
   float fx = fract(ux);
-  float jl = step(0.45, vl_hash(vec2(ci, r)));
-  float jr = step(0.45, vl_hash(vec2(ci + 1.0, r)));
+  float jl = step(0.42, vl_hash(vec2(ci, r)));
+  float jr = step(0.42, vl_hash(vec2(ci + 1.0, r)));
   float b = ci;
-  if (jl < 0.5) { b -= 1.0; if (step(0.45, vl_hash(vec2(ci - 1.0, r))) < 0.5) b -= 1.0; }
+  if (jl < 0.5) { b -= 1.0; if (step(0.42, vl_hash(vec2(ci - 1.0, r))) < 0.5) b -= 1.0; }
   float id = vl_hash(vec2(b, r) + 0.37);
   float id2 = vl_hash(vec2(b, r) + 3.1);
   float dxl = jl > 0.5 ? fx * cell : 1.0;
   float dxr = jr > 0.5 ? (1.0 - fx) * cell : 1.0;
-  float dy = min(fy, 1.0 - fy) * rowH;
+  float dy = min(fy, 1.0 - fy) * hR;
   float d = min(min(dxl, dxr), dy);
   float fw = fwidth(uv.x) + fwidth(uv.y);
-  float joint = 1.0 - smoothstep(0.012, 0.012 + fw * 1.2, d);
+  float joint = 1.0 - smoothstep(0.01, 0.01 + fw * 1.2, d);
   float vis = 1.0 - smoothstep(0.02, 0.06, fw);
-  float tv = mix(1.0, 0.92 + 0.15 * id, smoothstep(0.12, 0.03, fw));
-  vec3 c = mix(C_MASON, C_MASON_WARM, id2 * 0.6) * tv;
-  c *= mix(1.0, 0.92 + 0.12 * fy, vis);                    // rounded courses: lit tops
-  c *= 0.93 + 0.12 * vl_vnoise(uv * vec2(6.0, 9.0) + id * 13.0);
-  c *= 1.0 - joint * 0.3 * vis - 0.04 * (1.0 - vis);       // joints (tone kept when sub-pixel)
+  float tv = mix(1.0, 0.88 + 0.22 * id, smoothstep(0.12, 0.03, fw));
+  vec3 c = mix(C_MASON, C_MASON_WARM, id2 * 0.7) * tv;
+  // each stone is slightly pillowed: lit top edge, shaded foot
+  float pillow = smoothstep(0.0, 0.3, fy) * (1.0 - 0.35 * smoothstep(0.75, 1.0, fy));
+  c *= mix(1.0, 0.9 + 0.12 * pillow, vis);
+  c *= 0.92 + 0.13 * vl_vnoise(uv * vec2(6.0, 9.0) + id * 13.0);
+  c *= 1.0 - joint * 0.4 * vis - 0.05 * (1.0 - vis);
   return c;
 }
 vec3 wl_slab(vec2 uv, vec3 base, float L) {

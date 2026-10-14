@@ -6,6 +6,7 @@
  * and night path lights. Everything in the village is clipped by the section.
  */
 import { PathLights } from "./landscape/PathLights";
+import { Pavilion } from "./landscape/Pavilion";
 import { Planting } from "./landscape/Planting";
 import { Playground } from "./landscape/Playground";
 import { Pools } from "./landscape/Pools";
@@ -17,6 +18,7 @@ export function Landscape() {
     <group>
       <Walls />
       <Pools />
+      <Pavilion />
       <Playground />
       <Trees />
       <Planting />

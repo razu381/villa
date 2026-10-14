@@ -9,18 +9,30 @@
  *   - after the sweep mix:  contact AO, contours and plan lines (model + material)
  */
 import { MeshStandardMaterial } from "three";
+import { PLINTH, SECTION_Z } from "@/lib/village";
+import { groundHeight } from "./ground";
+import { AO_RES, buildAoTexture } from "./aoTexture";
 import { patchVillageMaterial } from "@/lib/materials";
 import { PALETTE } from "@/lib/palette";
 import { U } from "@/lib/uniforms";
 import { extendMaterial, f, inject } from "../landscape/shaderUtils";
 import { SITE_GLSL, lin, siteUniforms } from "./siteGlsl";
 
+/** Ground profile along the section line (for the topsoil band on the cut face). */
+const PROFILE_N = 111;
+const PROFILE = Array.from({ length: PROFILE_N }, (_, i) => groundHeight(PLINTH.minX + ((PLINTH.maxX - PLINTH.minX) * i) / (PROFILE_N - 1), SECTION_Z));
+/** World z of the section cut, written per frame by Terrain.tsx from sectionPlane. */
+export const uCutZ = { value: 1e4 };
+let _ao: ReturnType<typeof buildAoTexture> | null = null;
+const aoTex = () => (_ao ??= buildAoTexture());
+
 /** Village heart (contours draw outward from here). */
 const HEART = [-10, -6];
 
 const GROUND_GLSL = /* glsl */ `
-#define C_DRY ${lin("#ADA27A")}
-#define C_DRY_PALE ${lin("#C2B48C")}
+#define C_DRY ${lin("#A99F78")}
+#define C_UNDER ${lin("#6E7550")}
+#define C_DRY_PALE ${lin("#BDB18B")}
 #define C_GRASS ${lin("#878B60")}
 #define C_EARTH ${lin("#9A8466")}
 #define C_LAWN ${lin("#8E9867")}
@@ -47,6 +59,11 @@ varying vec3 vTrN;
 uniform float uContours;
 uniform float uLines;
 uniform float uRise;
+uniform float uCutZ;
+uniform float uFoam;
+uniform sampler2D uTrAO;
+uniform float uTrProfile[${PROFILE_N}];
+#define C_POCHE ${lin(PALETTE.pocheEarth)}
 ${SITE_GLSL}
 
 /** Antialiased line at integer values of v, ~px pixels wide; fades when too dense. */
@@ -74,6 +91,11 @@ vec3 tr_paving(vec2 l, vec3 base, float L, float W) {
   return c * (1.0 - joint * 0.2 * vis);
 }
 
+vec2 tr_aoUv(vec2 xz) {
+  return vec2(((xz.x - ${f(PLINTH.minX)}) / ${f(AO_RES)} + 0.5) / ${f(Math.round((PLINTH.maxX - PLINTH.minX) / AO_RES) + 1)},
+              ((xz.y - ${f(PLINTH.minZ)}) / ${f(AO_RES)} + 0.5) / ${f(Math.round((PLINTH.maxZ - PLINTH.minZ) / AO_RES) + 1)});
+}
+
 vec3 tr_ground(vec3 p, vec3 n) {
   vec2 xz = p.xz;
   float n1 = vl_vnoise(xz * 0.021 + 11.0);
@@ -83,12 +105,16 @@ vec3 tr_ground(vec3 p, vec3 n) {
   float n5 = vl_vnoise(xz * 3.7);
 
   // Natural hillside: dry grasses with greener hollows, earth on the steeper ground.
-  float green = smoothstep(0.42, 0.8, n1 * 0.6 + n2 * 0.4);
-  vec3 c = mix(C_DRY, C_GRASS, green * 0.85);
+  float green = smoothstep(0.36, 0.76, n1 * 0.6 + n2 * 0.4);
+  vec3 c = mix(C_DRY, C_GRASS, green * 0.9);
   c = mix(c, C_DRY_PALE, smoothstep(0.58, 0.9, n2 * 0.5 + n3 * 0.5) * (1.0 - green) * 0.55);
   float slope = 1.0 - n.y;
   c = mix(c, C_EARTH, smoothstep(0.07, 0.3, slope + (n3 - 0.5) * 0.16) * 0.7);
   c *= 0.9 + 0.2 * (n4 * 0.6 + n5 * 0.4);
+  // understorey: greener, darker ground gathers under and around the trees
+  vec4 aoG = texture2D(uTrAO, tr_aoUv(xz));
+  float under = clamp((1.0 - aoG.r) * 2.6 + (1.0 - aoG.b) * 1.8, 0.0, 1.0);
+  c = mix(c, C_UNDER * (0.92 + 0.16 * n4), under * 0.6);
 
   float pd = tr_podium(xz);
 
@@ -112,7 +138,10 @@ vec3 tr_ground(vec3 p, vec3 n) {
   // Podium gardens: lush lawn and planting beds (not inside the portal recess).
   float onPod = (1.0 - smoothstep(0.1, 0.3, pd)) * (1.0 - onDrive);
   vec3 lawn = mix(C_LAWN, C_LAWN_DEEP, smoothstep(0.3, 0.85, n2 * 0.6 + n3 * 0.4) * 0.7);
-  lawn *= 0.95 + 0.07 * n5 + 0.04 * n4;
+  lawn *= 0.94 + 0.08 * n5 + 0.05 * n4;
+  // mown bands: barely there, faded out before they could alias
+  float mow = smoothstep(-0.25, 0.25, sin(p.x * 1.9635));
+  lawn *= 1.0 + (mow - 0.5) * 0.045 * (1.0 - smoothstep(0.12, 0.35, fwidth(p.x)));
   vec3 pc = lawn;
 
   // Playground: soft sand garden.
@@ -172,6 +201,33 @@ vec3 tr_strata(vec3 p, float top, vec3 n) {
 }
 `;
 
+/** Earth strata on the section plane, in poché tones (back faces seen through the cut). */
+const POCHE_CODE = /* glsl */ `
+  if (!gl_FrontFacing) {
+    vec3 cam = cameraPosition;
+    vec3 d = vVlWorld - cam;
+    float s = (uCutZ - cam.z) / (abs(d.z) > 1e-4 ? d.z : 1e-4);
+    vec3 P = cam + d * clamp(s, 0.0, 1.0);
+    float fx = clamp((P.x - ${f(PLINTH.minX)}) / ${f(PLINTH.maxX - PLINTH.minX)} * ${f(PROFILE_N - 1)}, 0.0, ${f(PROFILE_N - 1.001)});
+    int i0 = int(floor(fx));
+    float top = mix(uTrProfile[i0], uTrProfile[i0 + 1], fract(fx));
+    float below = top - P.y;
+    float w = (vl_vnoise(vec2(P.x * 0.05, 2.0)) - 0.5) * 1.6 + (vl_vnoise(vec2(P.x * 0.2, 5.0)) - 0.5) * 0.4;
+    float yy = (P.y + w) / 1.25;
+    float bi = floor(yy);
+    float bf = fract(yy);
+    float hb = vl_hash(vec2(bi, 3.7));
+    vec3 c = C_POCHE * (0.9 + 0.2 * hb);
+    float rock = smoothstep(-2.0, -11.0, P.y + (hb - 0.5) * 2.0);
+    c = mix(c, C_POCHE * vec3(1.32, 1.3, 1.26), rock * 0.75);
+    float fw = fwidth(yy) + 1e-5;
+    c *= 1.0 - 0.18 * (1.0 - smoothstep(0.0, 1.3 * fw + 0.01, min(bf, 1.0 - bf)));
+    c *= 0.93 + 0.12 * vl_vnoise(P.xy * vec2(2.2, 3.0));
+    c = mix(c, C_POCHE * 0.62, 1.0 - smoothstep(0.35, 0.95, below + w * 0.3));
+    gl_FragColor = vec4(c * mix(1.0, 0.45, uNight), 1.0);
+  }
+`;
+
 const COLOR_CODE = /* glsl */ `
   {
     vec3 trN = normalize(vTrN);
@@ -200,10 +256,12 @@ const POST_CODE = /* glsl */ `
           ao *= 1.0 - 0.26 * exp(-max(dz - TR_TW_HALF, 0.0) / 0.9) * step(TR_TW_HALF - 0.05, dz);
           ao *= 1.0 - 0.16 * exp(-max(-dz - TR_TW_HALF, 0.0) / 0.6) * step(dz, -TR_TW_HALF + 0.05);
         }
-        // houses
-        float hd = tr_houses(p.xz);
-        ao *= 1.0 - 0.3 * exp(-max(hd, 0.0) / 1.1) * smoothstep(0.25, 1.0, uRise) * step(0.0, hd);
       }
+      // baked contact shading: trees (with the foam), houses (as they rise), shrubs (life)
+      vec4 aoT = texture2D(uTrAO, tr_aoUv(p.xz));
+      ao *= mix(1.0, aoT.r, smoothstep(0.0, 0.8, uFoam));
+      ao *= mix(1.0, aoT.g, smoothstep(0.25, 1.0, uRise));
+      ao *= mix(1.0, aoT.b, uLife);
       // the garage portal recess falls into darkness
       float pdx = abs(p.x - TR_PORTAL_CX);
       if (pdx < TR_PORTAL_HALF + 0.3 && p.z > TR_PODIUM_MAXZ + TR_PORTAL_BACK - 0.3 && p.z < TR_PODIUM_MAXZ + 3.0) {
@@ -256,8 +314,16 @@ export function createTerrainMaterial() {
     poche: PALETTE.pocheEarth,
     modelRoughness: 0.95,
   });
-  return extendMaterial(mat, "terrain-v1", (shader) => {
-    Object.assign(shader.uniforms, siteUniforms(), { uContours: U.uContours, uLines: U.uLines, uRise: U.uRise });
+  return extendMaterial(mat, "terrain-v2", (shader) => {
+    Object.assign(shader.uniforms, siteUniforms(), {
+      uContours: U.uContours,
+      uLines: U.uLines,
+      uRise: U.uRise,
+      uCutZ,
+      uTrProfile: { value: PROFILE },
+      uFoam: U.uFoam,
+      uTrAO: { value: aoTex() },
+    });
     let vs = shader.vertexShader;
     vs = inject(vs, "#include <common>", "attribute vec3 aTerr;\nvarying vec3 vTrTerr;\nvarying vec3 vTrN;");
     vs = inject(vs, "#include <begin_vertex>", "vTrTerr = aTerr;\nvTrN = normal;");
@@ -267,6 +333,7 @@ export function createTerrainMaterial() {
     // GROUND_GLSL needs VL_GLSL (declared by the patch inside the common replacement) → append after it.
     fs = inject(fs, "#include <color_fragment>", COLOR_CODE, "after");
     fs = inject(fs, "#include <roughnessmap_fragment>", POST_CODE, "before");
+    fs = inject(fs, "#include <tonemapping_fragment>", POCHE_CODE, "before");
     fs = fs.replace("void main() {", `${GROUND_GLSL}\nvoid main() {`);
     shader.fragmentShader = fs;
   });

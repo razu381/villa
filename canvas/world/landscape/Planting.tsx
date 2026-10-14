@@ -59,7 +59,8 @@ function clumpGeometry(kind: Kind) {
     if (kind === 0 && y > 0.2) py += (j - 0.88) * 1.1; // flower spikes break the silhouette
     py = py * 0.5 + 0.38;
     pos.push(px, Math.max(py, -0.05), pz);
-    const n = new Vector3(x, y * 1.4 + 0.3, z).normalize();
+    // soft, up-biased normals: beds read as a planted band, not as stones
+    const n = kind === 2 ? new Vector3(x, y * 1.4 + 0.3, z).normalize() : new Vector3(x * 0.45, 1.0 + Math.max(0, y) * 0.3, z * 0.45).normalize();
     nor.push(n.x, n.y, n.z);
     h.push(Math.max(0, Math.min(1, (py + 0.05) / 0.95)));
   }
@@ -91,11 +92,11 @@ const VERT_BODY = /* glsl */ `
   vPlI = aInst;
 `;
 const FRAG = /* glsl */ `
-#define C_LAV_BASE ${lin("#8C9277")}
-#define C_LAV_TOP ${lin("#9A8DB2")}
-#define C_LAV_TOP2 ${lin("#A99CC0")}
-#define C_GRASS_BASE ${lin("#8E8F62")}
-#define C_GRASS_TOP ${lin("#C6B587")}
+#define C_LAV_BASE ${lin("#86906F")}
+#define C_LAV_TOP ${lin("#9B8BB8")}
+#define C_LAV_TOP2 ${lin("#AD9FC7")}
+#define C_GRASS_BASE ${lin("#7F8A5A")}
+#define C_GRASS_TOP ${lin("#B8B07E")}
 #define C_SHRUB_A ${lin("#56603F")}
 #define C_SHRUB_B ${lin("#66704A")}
 #define C_SHRUB_C ${lin("#7D8466")}
@@ -107,11 +108,13 @@ const COLOR = /* glsl */ `
     float tone = vPlI.y;
     float kind = vPlI.z;
     vec3 c;
-    if (kind < 0.5) c = mix(C_LAV_BASE, mix(C_LAV_TOP, C_LAV_TOP2, tone), smoothstep(0.42, 0.75, vPlH));
+    if (kind < 0.5) c = mix(C_LAV_BASE, mix(C_LAV_TOP, C_LAV_TOP2, tone), smoothstep(0.3, 0.62, vPlH));
     else if (kind < 1.5) c = mix(C_GRASS_BASE, C_GRASS_TOP, smoothstep(0.2, 0.85, vPlH) * (0.7 + 0.3 * tone));
     else c = mix(mix(C_SHRUB_A, C_SHRUB_B, tone), C_SHRUB_C, smoothstep(0.8, 1.0, tone));
     c *= 0.8 + 0.25 * smoothstep(0.0, 0.8, vPlH);
     c *= 0.9 + 0.2 * vl_vnoise(vVlWorld.xz * 4.0 + vVlWorld.y * 3.0);
+    // flowers lose their colour after dusk (no saturated indigo under the moon)
+    c = mix(c, vec3(dot(c, vec3(0.3, 0.59, 0.11))), uNight * 0.6);
     diffuseColor.rgb = c;
   }
 `;

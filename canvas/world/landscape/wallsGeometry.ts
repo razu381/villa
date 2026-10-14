@@ -17,7 +17,7 @@ import { CROSSINGS, POOLS, STAIR } from "./layout";
 export const KIND = { masonry: 0, coping: 1, dressed: 2, recess: 3, light: 4 } as const;
 type V3 = [number, number, number];
 
-class Builder {
+export class Builder {
   pos: number[] = [];
   nor: number[] = [];
   wall: number[] = [];
