@@ -6,6 +6,7 @@
  *                         [--q "home=v4&sun=0.3"] [--out shots] [--wait 1500] [--name prefix] [--info]
  *   --q "cam=x,y,z,tx,ty,tz,fov"  pins the camera for close-up inspection
  *   --info                         prints renderer stats (draw calls, triangles, programs)
+ *   --base https://x.vercel.app    screenshot a deployed build instead of localhost
  *
  * Loads http://localhost:PORT/?t=<t>&snap=1&<q> for each t, waits for
  * window.__VL_READY, waits --wait ms more, saves PNGs and prints console errors.
@@ -35,6 +36,8 @@ const out = opt("out", "shots");
 const wait = parseInt(opt("wait", "1500"), 10);
 const prefix = opt("name", mobile ? "m" : "d");
 const pathName = opt("path", "/");
+// --base https://example.vercel.app  screenshots a deployed build instead of localhost.
+const base = opt("base", `http://localhost:${port}`);
 fs.mkdirSync(out, { recursive: true });
 
 const browser = await chromium.launch({
@@ -50,7 +53,7 @@ for (const t of ts) {
     if (m.type() === "error" || m.type() === "warning") errors.push(`[${m.type()}] ${m.text().slice(0, 400)}`);
   });
   page.on("pageerror", (e) => errors.push(`[pageerror] ${String(e).slice(0, 600)}`));
-  const url = `http://localhost:${port}${pathName}?t=${t}&snap=1${extra ? "&" + extra : ""}`;
+  const url = `${base}${pathName}?t=${t}&snap=1${extra ? "&" + extra : ""}`;
   const t0 = Date.now();
   try {
     await page.goto(url, { waitUntil: "domcontentloaded", timeout: 180000 });
