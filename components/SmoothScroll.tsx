@@ -23,6 +23,7 @@ declare global {
  *   ?snap=1       skip all damping (deterministic frames)
  *   ?home=v3|v4   explore mode on a home     ?sun=0.0–1.0  hold the sun
  *   ?rm=1         force reduced motion       ?tier=high|mid|low
+ *   ?invite=demo  the invitation card, pre-filled (components/night/Invitation)
  */
 export function SmoothScroll() {
   useEffect(() => {

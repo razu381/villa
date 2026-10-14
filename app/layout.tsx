@@ -5,6 +5,7 @@ import "@fontsource-variable/instrument-sans/index.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000"),
   title: "Vila Leku — Living in harmony",
   description: "A contemporary village above the Lisbon coast. Leceia, Oeiras — by Phidias.",
   openGraph: {
@@ -17,7 +18,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#E5E3D7",
+  // The first frame is the film; ToneSync retints this as the day unfolds.
+  themeColor: "#2a2b22",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

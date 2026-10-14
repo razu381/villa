@@ -1,10 +1,65 @@
 "use client";
 
+import { useRef } from "react";
 import { COPY } from "@/lib/content";
+import { UI } from "@/lib/ui-copy";
+import { useReveal } from "@/lib/ui-reveal";
+import { useCompact } from "@/lib/ui-media";
+import { Pin } from "../ui/Pin";
 import { ChapterText } from "./ChapterText";
 
-/** PLACEHOLDER — DOM module owns the real chapter design. */
+/** Noon — the section cut. Cars below, life above, as a refined legend. */
 export function CarsChapter() {
   const c = COPY.cars;
-  return <ChapterText eyebrow={c.eyebrow} title={c.title} body={c.body} dark={false} />;
+  const compact = useCompact();
+  return (
+    <Pin>
+      <ChapterText eyebrow={c.eyebrow} title={c.title} body={c.body} from={4.06} to={compact ? 4.4 : 4.96} />
+      <Legend from={compact ? 4.43 : 4.3} />
+    </Pin>
+  );
+}
+
+function Marker({ kind }: { kind: "dashed" | "line" | "circle" }) {
+  return (
+    <svg className="vl-legend__marker" viewBox="0 0 40 12" aria-hidden="true">
+      {kind === "dashed" && <path d="M0 6 H40" strokeDasharray="3 3" />}
+      {kind === "line" && <path d="M0 6 H40" />}
+      {kind === "circle" && (
+        <>
+          <path d="M0 6 H28" />
+          <circle cx="34" cy="6" r="4.5" />
+        </>
+      )}
+    </svg>
+  );
+}
+
+function Legend({ from }: { from: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useReveal(ref, { when: (s) => s.t >= from && s.t < 4.94, delay: 0.05 });
+  return (
+    <div ref={ref} className="vl-legend">
+      <div className="vl-haze vl-haze--right" data-r="scrim" aria-hidden="true" />
+      <p className="vl-eyebrow vl-legend__eyebrow" data-r="fade">
+        <span className="vl-eyebrow__rule" aria-hidden="true" />
+        in section
+      </p>
+      <ul className="vl-legend__list" aria-label="Section legend">
+        {UI.cars.legend.map((item, i) => (
+          <li key={item.title} className="vl-legend__item">
+            <span data-r="rule" data-r-at={String(i * 0.2)} className="vl-legend__mk">
+              <Marker kind={item.marker} />
+            </span>
+            <span className="vl-legend__title" data-r="fade" data-r-at={String(0.25 + i * 0.2)}>
+              {item.title}
+            </span>
+            <span className="vl-legend__where" data-r="fade" data-r-at={String(0.4 + i * 0.2)}>
+              {item.where}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }
