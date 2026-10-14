@@ -1,47 +1,70 @@
 /**
  * Vila Leku architecture — a pure, reusable house builder.
  *
- *   buildHouse(spec)        → { parts, levels, height }   house-local geometry
- *   buildHouseLines(spec)   → BufferGeometry               the architect's line drawing
- *   getHouseMaterials()     → cached patched materials per material key
- *   getHouseDepthMaterial() → shadow material (customDepthMaterial) matching the shader rise
- *   getHouseLineMaterial()  → hairline material for buildHouseLines() geometry
- *   buildHouseMask(spec) + getHouseMaskMaterial() → depth-only hidden-line mask for the drawing
- *   riseAmount(spec, uRise) → this house's rise 0..1 (CPU mirror of the shader)
+ *   buildHouse(spec, opts?)  → { parts, levels, height, spill }   house-local geometry
+ *   getHouseMaterials()      → cached patched materials, one per HouseMaterialKey
+ *   getHouseDepthMaterial()  → customDepthMaterial so shadows follow the shader rise
+ *   riseAmount(spec, uRise)  → this house's rise 0..1 (CPU mirror of the shader)
+ *   buildHouseLines(spec) + getHouseLineMaterial()  → the architect's hairline drawing
+ *   buildHouseMask(spec)  + getHouseMaskMaterial()  → depth-only hidden-line mask for it
+ *   HouseBuild.spill      + getHouseSpillMaterial() → warm night light on terraces / garden
+ *   buildVillageHouses()     → every non-featured house + the pavilion merged per material
  *
  * The language (from the client's renders): stacked boxes — a limestone ground
  * floor and a cork-clad upper volume shifted along z (cantilevers over the
- * garden or a roof terrace behind glass), deep window recesses with slim
- * bronze frames, big ground-floor glazing to the south garden, flat gravel
- * roofs behind parapets with solar arrays and skylights, limestone garden
- * walls between townhouse units. V4 villas: an L of limestone (bar + wing
- * around the pool terrace), a cork upper box cantilevering over the terrace,
- * a deck with glass balustrades and a limestone elevator core.
+ * garden, or a roof terrace behind glass), deep window recesses with slim
+ * bronze frames and sills, big ground-floor glazing to the south garden, flat
+ * gravel roofs behind parapets with pale copings, solar arrays and skylights,
+ * limestone garden walls between townhouse units. V4 villas: an L of limestone
+ * (bar + wing around the pool terrace), a cork upper box cantilevering west
+ * and south over the terrace, a timber deck with glass balustrades and a
+ * limestone elevator core. Per-house variation (window rhythm, solar layout,
+ * skylights, roof hatch, villa handedness) comes from spec.seed / upperShift.
  *
  * Coordinates: house-local metres. Origin at the footprint centre on the pad
  * (ground y = 0), facing +Z (south, the garden). Volumes sink SINK below 0 so
- * they seat into any terrain. Every volume is a closed shell (the section cut
- * shows poché on back faces).
+ * they seat into any terrain. Every volume is a closed shell and holds a room
+ * cavity (inward-facing plaster/oak faces with holes behind each window), so
+ * the section cut reads as poché walls and slabs around lit rooms, with the
+ * windows seen from inside as daylight.
  *
- * HOMES MODULE — how to use this for the exploded featured houses:
- *   const { parts, levels } = buildHouse(FEATURED.v4);
+ * HOMES MODULE — rebuilding a featured house with separable floors:
+ *   const { parts, levels, spill } = buildHouse(FEATURED.v4);
  *   const mats = getHouseMaterials();
- *   // one <group> per level (0 ground · 1 upper floor + terrace · 2 roof),
- *   // placed at (spec.x, spec.y, spec.z) rotated spec.rotY; lift groups apart to explode.
+ *   // one <group> per level (0 ground · 1 upper floor + its terrace · 2 roof:
+ *   // parapets, gravel, solar, skylights, lift overrun), all at
+ *   // (spec.x, spec.y, spec.z) rotated spec.rotY; lift the level groups apart to explode.
  *   parts.map(p => <mesh geometry={p.geometry} material={mats[p.material]}
- *                        customDepthMaterial={getHouseDepthMaterial()} castShadow={p.material !== "glass"} receiveShadow />)
- * The rise (U.uRise + spec.delay), the material sweep, poché, section clip and
+ *     customDepthMaterial={getHouseDepthMaterial()} castShadow={p.material !== "glass"} receiveShadow />)
+ * Each level is closed on its own; level n+1 starts LEVEL_OVERLAP below the
+ * top of level n (levels[i].y0 / y1 give floor and top heights + plan footprints).
+ * The rise (U.uRise + spec.delay), material sweep, poché, section clip and
  * night windows (U.uWindows + spec.lightDelay) all run in the shaders from the
- * aHouse / aWin attributes baked here — so do NOT also scale the group by
- * riseAmount(); pass { animate: false } if you want the house always fully risen.
+ * aHouse / aWin attributes baked here — do NOT also scale by riseAmount();
+ * pass { animate: false } for a house that is always fully risen.
  */
 
 import { type BufferGeometry, Matrix4 } from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { mulberry32 } from "@/lib/noise";
 import { clamp01, easeOutQuart } from "@/lib/timeline";
-import { HOUSES, TERRACES, VILLAGE_HEART, heightAt, type HouseSpec } from "@/lib/village";
-import { LineCollector, MaskBuilder, MeshBuilder, ROLE, facade, faceOf, onFace, wallWithHoles, type FaceFrame, type Rect, type Face, type FacadeTargets, type Opening, type Vec3 } from "./kit";
+import { HOUSES, VILLAGE_HEART, heightAt, type HouseSpec } from "@/lib/village";
+import {
+  LineCollector,
+  MaskBuilder,
+  MeshBuilder,
+  ROLE,
+  facade,
+  faceOf,
+  onFace,
+  wallWithHoles,
+  type Face,
+  type FacadeTargets,
+  type FaceFrame,
+  type Opening,
+  type Rect,
+  type Vec3,
+} from "./kit";
 import {
   HOUSE_LINE_RES,
   HOUSE_MATERIAL_KEYS,
@@ -111,8 +134,9 @@ export interface BuildHouseOptions {
 export const SINK = 0.45;
 /**
  * Stacked levels overlap by this much (each level stays a closed shell for the
- * exploded view; no slit shows in the section). Upper faces sit 1 cm behind
- * flush lower faces so nothing is ever coplanar.
+ * exploded view; no slit shows in the section). Where an upper face would be
+ * flush with a lower face of another material it sits 1 cm behind it, so no
+ * two different surfaces are ever coplanar.
  */
 export const LEVEL_OVERLAP = 0.06;
 /**
@@ -323,9 +347,9 @@ function roof(
   const L: HouseLevel = 2;
   const top = y + ph;
   // Parapets — N and S full width; E and W between them. They reach a few cm
-  // down into the volume (closed shells, no slit in the section) and sit 1 cm
-  // behind the facade (never coplanar with it).
-  const e = 0.01;
+  // down into the volume (closed shells, no slit in the section), flush with the
+  // facade: the overlap band is the same material and shading, so it is seamless.
+  const e = 0;
   const dn = y - LEVEL_OVERLAP;
   k.box(L, o.wall, [x0 + e, dn, z0 + e], [x1 - e, top, z0 + pt]);
   k.box(L, o.wall, [x0 + e, dn, z1 - pt], [x1 - e, top, z1 - e]);
@@ -930,5 +954,3 @@ export function buildVillageHouses(include: (spec: HouseSpec) => boolean = (h) =
   return { meshes, lines, mask, spill };
 }
 
-/** Terrace level y of a row (convenience for other modules). */
-export const rowY = (row: HouseSpec["row"]) => TERRACES.find((t) => t.id === row)!.y;

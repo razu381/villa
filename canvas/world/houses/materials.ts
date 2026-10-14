@@ -168,7 +168,7 @@ interface HouseShaderParts {
   post?: string;
 }
 
-const REVEAL_SPILL = /* glsl */ `
+const WALL_EMISSIVE = /* glsl */ `
 if (vHWin.y < -0.5) {
   float spill = hWinOn(vHWin.x, -vHWin.y);
   totalEmissiveRadiance += hWinColor(vHWin.x) * 0.32 * spill;
@@ -198,10 +198,10 @@ const CORK: HouseShaderParts = {
   float gran = g1 * 0.55 + g2 * 0.45;
   float mid = hNoise(fc * 13.0 + 3.7) * 0.6 + hNoise(fc * 27.0 + 9.1) * 0.4;
   float mot = hNoise(fc * 1.3 + vHouse.w * 11.0);
-  vec3 cork = diffuseColor.rgb * (1.0 + (bond.x - 0.5) * 0.12 + (mot - 0.5) * 0.08);
+  vec3 cork = diffuseColor.rgb * (1.0 + (bond.x - 0.5) * 0.12 + (mot - 0.5) * 0.08 + (vHouse.w - 0.5) * 0.07);
   cork *= 1.0 + (mid - 0.5) * 0.24 * midVis;
   float speck = smoothstep(0.2, 0.8, gran);
-  cork = mix(cork, cork * mix(0.55, 1.28, speck), granVis);
+  cork = mix(cork, cork * mix(0.66, 1.2, speck), granVis);
   cork *= 1.0 - joint * 0.16;
   diffuseColor.rgb = cork;
   float hBumpH = (gran * 0.006 - joint * 0.004) * granVis;
@@ -209,7 +209,7 @@ const CORK: HouseShaderParts = {
   `,
   rough: /* glsl */ `roughnessFactor = hRough;`,
   normal: /* glsl */ `normal = hPerturb(normal, hBumpH * vlMask);`,
-  emissive: REVEAL_SPILL,
+  emissive: WALL_EMISSIVE,
 };
 
 const LIMESTONE: HouseShaderParts = {
@@ -241,7 +241,7 @@ const LIMESTONE: HouseShaderParts = {
   `,
   rough: /* glsl */ `roughnessFactor = hRough;`,
   normal: /* glsl */ `normal = hPerturb(normal, hBumpH * vlMask);`,
-  emissive: REVEAL_SPILL,
+  emissive: WALL_EMISSIVE,
 };
 
 const ROOF: HouseShaderParts = {
@@ -308,7 +308,7 @@ const WINDOW: HouseShaderParts = {
     float ndv = clamp(dot(nW, vW), 0.0, 1.0);
     vec3 rW = reflect(-vW, nW);
     vec3 sky = mix(uSkyHorizon, uSkyTop, smoothstep(0.0, 0.55, rW.y));
-    vec3 ground = uSkyHorizon * vec3(0.3, 0.29, 0.26);
+    vec3 ground = mix(uSkyHorizon, uSkyTop, 0.5) * vec3(0.28, 0.29, 0.3);
     vec3 env = mix(ground, sky, smoothstep(-0.12, 0.08, rW.y));
     float fres = 0.04 + 0.96 * pow(1.0 - ndv, 5.0);
     // A soft horizon band breaks up the reflection like clouds and far trees.
@@ -319,10 +319,12 @@ const WINDOW: HouseShaderParts = {
     vec2 q = vHUv;
     // Interior: a lamp-lit room — brighter ceiling, a darker sill band, soft edges.
     float vig = smoothstep(0.0, 0.18, q.x) * smoothstep(1.0, 0.82, q.x) * smoothstep(0.0, 0.12, q.y) * smoothstep(1.0, 0.9, q.y);
-    float room = 0.42 + 0.58 * smoothstep(0.05, 0.85, q.y);
+    float room = 0.3 + 0.7 * smoothstep(0.08, 0.9, q.y);
     float pool = exp(-pow((q.x - (0.3 + 0.4 * fract(vHWin.x * 5.3))) * 2.4, 2.0));
     float curtain = step(0.62, fract(vHWin.x * 19.1));
-    float inner = mix(0.55, 1.0, vig) * room * (0.72 + 0.4 * pool);
+    // Low furniture silhouettes in big glazing (sofa backs, a table) — only up close.
+    float furn = (role > 1.5 && role < 2.5) ? (1.0 - 0.45 * step(q.y, 0.3) * step(0.5, hNoise(vec2(q.x * 4.0 + vHWin.x * 31.0, 0.5)))) : 1.0;
+    float inner = mix(0.5, 1.0, vig) * room * (0.7 + 0.45 * pool) * furn;
     inner = mix(inner, inner * 0.62 + 0.18, curtain);
     float gain = role > 2.5 && role < 3.5 ? 2.0 : (role > 1.5 && role < 2.5 ? 2.3 : 2.0);
     vec3 glow = hWinColor(vHWin.x) * gain * inner * on;
