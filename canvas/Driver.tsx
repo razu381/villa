@@ -36,6 +36,7 @@ export const dayParams = createDayParams();
 export function Driver() {
   const dayRef = useRef(0);
   useFrame((state, dt) => {
+    if (!state.gl.info.autoReset) state.gl.info.reset();
     const s = useJourney.getState();
     const d = Math.min(dt, 1 / 20);
     const snap = s.snap;

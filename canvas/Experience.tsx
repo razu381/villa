@@ -16,13 +16,25 @@ import { Homes } from "./homes/Homes";
 declare global {
   interface Window {
     __VL_READY?: boolean;
+    /** Renderer stats for scripts/shot.mjs --info (draw calls, triangles, programs). */
+    __VL_STATS?: () => { calls: number; triangles: number; programs: number; geometries: number; textures: number };
   }
 }
 
 /** Flags readiness after the first few rendered frames (used by scripts/shot.mjs). */
 function ReadySignal() {
   const frames = useRef(0);
-  useFrame(() => {
+  useFrame(({ gl }) => {
+    if (frames.current === 0) {
+      gl.info.autoReset = false; // reset once per frame in Driver → stats cover the whole frame
+      window.__VL_STATS = () => ({
+        calls: gl.info.render.calls,
+        triangles: gl.info.render.triangles,
+        programs: gl.info.programs?.length ?? 0,
+        geometries: gl.info.memory.geometries,
+        textures: gl.info.memory.textures,
+      });
+    }
     frames.current++;
     if (frames.current === 6) {
       useJourney.getState().setReady(true);

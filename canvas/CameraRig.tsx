@@ -24,6 +24,12 @@ export function CameraRig() {
   const goalTarget = useRef(new Vector3());
   const pointer = useThree((s) => s.pointer);
   const first = useRef(true);
+  // Debug: ?cam=x,y,z,tx,ty,tz[,fov] pins the camera (close-up inspection).
+  const pinned = useRef<number[] | null>(
+    typeof window !== "undefined" && new URLSearchParams(window.location.search).get("cam")
+      ? new URLSearchParams(window.location.search).get("cam")!.split(",").map(Number)
+      : null,
+  );
 
   useFrame((state, dt) => {
     const s = useJourney.getState();
@@ -73,6 +79,12 @@ export function CameraRig() {
       fov.current = damp(fov.current, goalFov, lambda, d);
     }
 
+    if (pinned.current && pinned.current.length >= 6) {
+      const c = pinned.current;
+      pos.current.set(c[0], c[1], c[2]);
+      target.current.set(c[3], c[4], c[5]);
+      if (c[6]) fov.current = c[6];
+    }
     camera.position.copy(pos.current);
     camera.lookAt(target.current);
     if (Math.abs(camera.fov - fov.current) > 1e-3) {
