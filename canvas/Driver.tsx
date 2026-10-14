@@ -67,6 +67,7 @@ export function Driver() {
     // Section plane: closed = far away, open = at SECTION_Z.
     const open = U.uSection.value;
     sectionPlane.constant = open > 0.001 ? SECTION_Z + (1 - open) * 160 : 1e4;
+    U.uSectionZ.value = sectionPlane.constant;
   }, -100);
   return null;
 }

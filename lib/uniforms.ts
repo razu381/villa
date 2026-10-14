@@ -16,6 +16,8 @@ export const U = {
   uMaterial: { value: 0 },
   uLife: { value: 0 },
   uSection: { value: 0 },
+  /** World z of the section plane (everything with z > uSectionZ is cut away). */
+  uSectionZ: { value: 1e4 },
   uCars: { value: 0 },
   uWindows: { value: 0 },
   uPathLights: { value: 0 },

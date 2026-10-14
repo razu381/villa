@@ -19,6 +19,7 @@ uniform float uNight;
 uniform float uWindows;
 uniform vec3 uSweepFrom;
 uniform vec3 uSweepTo;
+uniform float uSectionZ;
 
 float vl_hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123); }
 float vl_vnoise(vec2 p) {
@@ -41,6 +42,21 @@ float vl_sweepDist(vec3 wp) {
   return front - (along + n);
 }
 float vl_sweepMask(vec3 wp) { return smoothstep(-0.7, 0.7, vl_sweepDist(wp)); }
+/** Point where the view ray through a fragment crosses the section plane (z = uSectionZ). */
+vec3 vl_sectionPoint(vec3 wp, vec3 camPos) {
+  vec3 dir = wp - camPos;
+  float k = abs(dir.z) > 1e-4 ? (uSectionZ - camPos.z) / dir.z : 0.0;
+  return camPos + dir * clamp(k, 0.0, 1.0);
+}
+/** Earth strata at a point on the cut face: horizontal cork/earth bands with soft noise. */
+vec3 vl_strata(vec3 p, vec3 base) {
+  float y = p.y + (vl_vnoise(p.xz * vec2(0.08, 0.5)) - 0.5) * 1.6;
+  float band = fract(y / 2.3);
+  float tone = mix(0.86, 1.08, smoothstep(0.0, 0.5, band) * (1.0 - smoothstep(0.55, 1.0, band)));
+  float grain = 0.94 + 0.12 * vl_vnoise(p.xy * vec2(1.7, 3.1));
+  float depth = mix(0.78, 1.0, smoothstep(-14.0, 6.0, p.y));
+  return base * tone * grain * depth;
+}
 float vl_seam(vec3 wp) {
   float d = vl_sweepDist(wp);
   float vlOn = smoothstep(0.0, 0.02, uMaterial) * (1.0 - smoothstep(0.98, 1.0, uMaterial));
@@ -64,6 +80,11 @@ export interface VillagePatchOptions {
   modelRoughness?: number;
   /** Solid colour drawn on back faces when the mesh is cut (needs closed meshes). null = off. */
   poche?: string | null;
+  /**
+   * 'flat' = solid poche colour (buildings). 'strata' = earth layers evaluated on the
+   * section plane itself (terrain/plinth) — reads like a cut architectural model.
+   */
+  pocheStyle?: "flat" | "strata";
   /** Clip with the section plane (default true). */
   clip?: boolean;
   /** Warm seam glow on the sweep front (default true). */
@@ -75,6 +96,7 @@ const DEFAULTS: Required<VillagePatchOptions> = {
   modelColor: PALETTE.modelWhite,
   modelRoughness: 0.92,
   poche: PALETTE.poche,
+  pocheStyle: "flat",
   clip: true,
   seam: true,
 };
@@ -103,7 +125,7 @@ export function patchVillageMaterial<T extends MeshStandardMaterial>(mat: T, opt
   const uSeamColor = { value: new Color("#FFB866").multiplyScalar(2.2) };
 
   mat.onBeforeCompile = (shader: WebGLProgramParametersWithUniforms) => {
-    Object.assign(shader.uniforms, sharedUniformsFor(["uTime", "uMaterial", "uLife", "uNight", "uWindows", "uSweepFrom", "uSweepTo"]), {
+    Object.assign(shader.uniforms, sharedUniformsFor(["uTime", "uMaterial", "uLife", "uNight", "uWindows", "uSweepFrom", "uSweepTo", "uSectionZ"]), {
       uModelColor,
       uModelRough,
       uPoche,
@@ -161,10 +183,16 @@ export function patchVillageMaterial<T extends MeshStandardMaterial>(mat: T, opt
       .replace(
         "#include <opaque_fragment>",
         `#include <opaque_fragment>
-        ${o.poche ? "if ( !gl_FrontFacing ) gl_FragColor = vec4( uPoche * mix( 1.0, 0.45, uNight ), 1.0 );" : ""}`,
+        ${
+          o.poche
+            ? o.pocheStyle === "strata"
+              ? "if ( !gl_FrontFacing ) { vec3 vlCut = vl_sectionPoint( vVlWorld, cameraPosition ); gl_FragColor = vec4( vl_strata( vlCut, uPoche ) * mix( 1.0, 0.45, uNight ), 1.0 ); }"
+              : "if ( !gl_FrontFacing ) gl_FragColor = vec4( uPoche * mix( 1.0, 0.45, uNight ), 1.0 );"
+            : ""
+        }`,
       );
   };
-  mat.customProgramCacheKey = () => `vl:${o.sweep ? 1 : 0}${o.poche ? 1 : 0}${o.seam ? 1 : 0}${o.clip ? 1 : 0}`;
+  mat.customProgramCacheKey = () => `vl:${o.sweep ? 1 : 0}${o.poche ? (o.pocheStyle === "strata" ? 2 : 1) : 0}${o.seam ? 1 : 0}${o.clip ? 1 : 0}`;
   mat.needsUpdate = true;
   return mat;
 }

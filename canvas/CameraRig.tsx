@@ -85,10 +85,15 @@ export function CameraRig() {
       target.current.set(c[3], c[4], c[5]);
       if (c[6]) fov.current = c[6];
     }
-    camera.position.copy(pos.current);
+    // Portrait / narrow screens: keep the composition by widening the lens a little
+    // and dollying back the rest (preserves the long-lens look, no fish-eye).
+    const k = Math.max(1, REF_ASPECT / Math.max(0.3, camera.aspect));
+    const fovEff = Math.min(58, (2 * Math.atan(Math.tan((fov.current * Math.PI) / 360) * Math.pow(k, 0.5)) * 180) / Math.PI);
+    const distScale = Math.pow(k, 0.5);
+    camera.position.copy(target.current).add(tmp.copy(pos.current).sub(target.current).multiplyScalar(distScale));
     camera.lookAt(target.current);
-    if (Math.abs(camera.fov - fov.current) > 1e-3) {
-      camera.fov = fov.current;
+    if (Math.abs(camera.fov - fovEff) > 1e-3) {
+      camera.fov = fovEff;
       camera.updateProjectionMatrix();
     }
   }, -50);
@@ -96,3 +101,5 @@ export function CameraRig() {
 }
 
 const tmp = new Vector3();
+/** Compositions are authored for ~16:10. */
+const REF_ASPECT = 1.6;
