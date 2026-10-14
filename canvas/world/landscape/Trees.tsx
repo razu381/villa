@@ -31,7 +31,8 @@ import { U } from "@/lib/uniforms";
 import { TREES, type TreeKind } from "@/lib/village";
 import { groundHeight } from "../terrain/ground";
 import { lin } from "../terrain/siteGlsl";
-import { extendMaterial, inject } from "./shaderUtils";
+import { extendMaterial, inject, uWind } from "./shaderUtils";
+import { useJourney } from "@/lib/store";
 import { buildTreeGeometry } from "./treeGeometry";
 
 const KINDS: TreeKind[] = ["round", "tall", "olive"];
@@ -43,6 +44,7 @@ attribute vec3 aFoamN;
 attribute vec3 aTree;
 attribute vec4 aInst;
 uniform float uFoam;
+uniform float uWind;
 ${VL_GLSL}
 varying vec3 vTreeA;
 varying vec4 vTreeI;
@@ -64,9 +66,9 @@ const VERT_BODY = /* glsl */ `
   mat3 tvIm = inverse(mat3(instanceMatrix));
   float tvPh = aInst.y;
   float tvSway = sin(uTime * 0.72 + tvPh) * 0.65 + sin(uTime * 1.63 + tvPh * 1.9) * 0.35;
-  tvP += (tvIm * vec3(0.92, 0.0, 0.38)) * tvSway * 0.17 * uLife * tvH * tvH;
+  tvP += (tvIm * vec3(0.92, 0.0, 0.38)) * tvSway * 0.17 * uLife * uWind * tvH * tvH;
   vec3 tvFl = vec3(sin(uTime * 2.3 + position.x * 31.0 + tvPh), 0.0, cos(uTime * 2.1 + position.z * 29.0 + tvPh));
-  tvP += (tvIm * tvFl) * 0.03 * uLife * (1.0 - aTree.y) * tvH;
+  tvP += (tvIm * tvFl) * 0.03 * uLife * uWind * (1.0 - aTree.y) * tvH;
   transformed = tvP * tv_grow();
   vTreeA = aTree;
   vTreeI = aInst;
@@ -112,7 +114,7 @@ const POST = /* glsl */ `
 `;
 
 function treeVertex(shader: WebGLProgramParametersWithUniforms, withNormal: boolean) {
-  Object.assign(shader.uniforms, sharedUniformsFor(["uTime", "uMaterial", "uLife", "uNight", "uWindows", "uSweepFrom", "uSweepTo", "uFoam"]));
+  Object.assign(shader.uniforms, sharedUniformsFor(["uTime", "uMaterial", "uLife", "uNight", "uWindows", "uSweepFrom", "uSweepTo", "uFoam"]), { uWind });
   let vs = shader.vertexShader;
   vs = inject(vs, "#include <common>", VERT_PARS);
   if (withNormal) vs = inject(vs, "#include <beginnormal_vertex>", "objectNormal = normalize(mix(aFoamN, objectNormal, tv_bloom() * mix(0.32, 1.0, aTree.y)));");
@@ -195,6 +197,7 @@ export function Trees() {
   useFrame(() => {
     const on = U.uFoam.value > 0.001;
     if (group.current && group.current.visible !== on) group.current.visible = on;
+    uWind.value = useJourney.getState().reducedMotion ? 0 : 1;
   });
 
   return (

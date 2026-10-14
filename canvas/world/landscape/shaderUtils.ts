@@ -29,6 +29,9 @@ export function inject(src: string, anchor: string, code: string, where: "before
   return src.replace(anchor, where === "after" ? `${anchor}\n${code}` : `${code}\n${anchor}`);
 }
 
+/** Wind amount for sway/flutter: 1, or 0 with reduced motion (written by Trees). */
+export const uWind = { value: 1 };
+
 /** GLSL float literal. */
 export const f = (n: number) => {
   const s = String(Math.round(n * 1e5) / 1e5);

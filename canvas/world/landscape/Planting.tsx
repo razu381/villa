@@ -25,7 +25,7 @@ import { mulberry32 } from "@/lib/noise";
 import { U } from "@/lib/uniforms";
 import { lin } from "../terrain/siteGlsl";
 import { PLANTING, SHRUBS, type Tuft } from "./layout";
-import { extendMaterial, inject } from "./shaderUtils";
+import { extendMaterial, inject, uWind } from "./shaderUtils";
 
 type Kind = 0 | 1 | 2; // lavender, grass, shrub
 
@@ -60,7 +60,7 @@ function clumpGeometry(kind: Kind) {
     py = py * 0.5 + 0.38;
     pos.push(px, Math.max(py, -0.05), pz);
     // soft, up-biased normals: beds read as a planted band, not as stones
-    const n = kind === 2 ? new Vector3(x, y * 1.4 + 0.3, z).normalize() : new Vector3(x * 0.45, 1.0 + Math.max(0, y) * 0.3, z * 0.45).normalize();
+    const n = kind === 2 ? new Vector3(x, y * 1.4 + 0.3, z).normalize() : new Vector3(x * 0.75, 0.9 + Math.max(0, y) * 0.5, z * 0.75).normalize();
     nor.push(n.x, n.y, n.z);
     h.push(Math.max(0, Math.min(1, (py + 0.05) / 0.95)));
   }
@@ -77,6 +77,7 @@ attribute float aH;
 attribute vec3 aInst;
 uniform float uLife;
 uniform float uTime;
+uniform float uWind;
 varying float vPlH;
 varying vec3 vPlI;
 `;
@@ -86,17 +87,17 @@ const VERT_BODY = /* glsl */ `
   vec3 plWind = inverse(mat3(instanceMatrix)) * vec3(0.92, 0.0, 0.38);
   float plSway = sin(uTime * 1.3 + instanceMatrix[3].x * 0.37 + instanceMatrix[3].z * 0.21);
   float plAmp = aInst.z > 0.5 && aInst.z < 1.5 ? 0.09 : 0.02;
-  transformed += plWind * plSway * plAmp * aH * aH * uLife;
+  transformed += plWind * plSway * plAmp * aH * aH * uLife * uWind;
   transformed *= plGrow;
   vPlH = aH;
   vPlI = aInst;
 `;
 const FRAG = /* glsl */ `
 #define C_LAV_BASE ${lin("#86906F")}
-#define C_LAV_TOP ${lin("#9B8BB8")}
-#define C_LAV_TOP2 ${lin("#AD9FC7")}
-#define C_GRASS_BASE ${lin("#7F8A5A")}
-#define C_GRASS_TOP ${lin("#B8B07E")}
+#define C_LAV_TOP ${lin("#978CAD")}
+#define C_LAV_TOP2 ${lin("#A598BC")}
+#define C_GRASS_BASE ${lin("#76825A")}
+#define C_GRASS_TOP ${lin("#ABA67E")}
 #define C_SHRUB_A ${lin("#56603F")}
 #define C_SHRUB_B ${lin("#66704A")}
 #define C_SHRUB_C ${lin("#7D8466")}
@@ -108,7 +109,12 @@ const COLOR = /* glsl */ `
     float tone = vPlI.y;
     float kind = vPlI.z;
     vec3 c;
-    if (kind < 0.5) c = mix(C_LAV_BASE, mix(C_LAV_TOP, C_LAV_TOP2, tone), smoothstep(0.3, 0.62, vPlH));
+    if (kind < 0.5) {
+      // grey-green foliage with a speckled haze of flower spikes on top
+      float fleck = vl_vnoise(vVlWorld.xz * 9.0 + vVlWorld.y * 11.0) * 0.65 + vl_vnoise(vVlWorld.xz * 23.0 - vVlWorld.y * 17.0) * 0.35;
+      float bloom = smoothstep(0.3, 0.62, vPlH) * smoothstep(0.42, 0.62, fleck + (vPlH - 0.6) * 0.5);
+      c = mix(C_LAV_BASE * (0.9 + 0.2 * fleck), mix(C_LAV_TOP, C_LAV_TOP2, tone), bloom * 0.92);
+    }
     else if (kind < 1.5) c = mix(C_GRASS_BASE, C_GRASS_TOP, smoothstep(0.2, 0.85, vPlH) * (0.7 + 0.3 * tone));
     else c = mix(mix(C_SHRUB_A, C_SHRUB_B, tone), C_SHRUB_C, smoothstep(0.8, 1.0, tone));
     c *= 0.8 + 0.25 * smoothstep(0.0, 0.8, vPlH);
@@ -125,6 +131,7 @@ function createPlantMaterial() {
     modelColor: "#DADCCD",
   });
   return extendMaterial(mat, "plant-v1", (shader) => {
+    shader.uniforms.uWind = uWind;
     let vs = shader.vertexShader;
     vs = inject(vs, "#include <common>", VERT_PARS);
     vs = inject(vs, "#include <begin_vertex>", VERT_BODY);
@@ -150,7 +157,7 @@ function makeMesh(kind: Kind, list: Tuft[], mat: MeshStandardMaterial) {
     _p.set(t.x, t.y - (kind === 2 ? 0.15 : 0.05), t.z);
     _q.setFromAxisAngle(_up, t.rot);
     if (kind === 0) _s.set(t.s * 0.5 * (t.len ?? 1.2), t.s * 0.72, t.s * 0.52);
-    else if (kind === 1) _s.set(t.s * 0.42, t.s * 1.05, t.s * 0.42);
+    else if (kind === 1) _s.set(t.s * 0.4, t.s * 0.85, t.s * 0.4);
     else _s.set(t.s * 1.0, t.s * 1.25, t.s * 0.95);
     mesh.setMatrixAt(i, _m.compose(_p, _q, _s));
     inst.set([t.delay, t.tone, kind], i * 3);
