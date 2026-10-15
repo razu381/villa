@@ -34,8 +34,23 @@ import {
 
 const includeFeatured = () => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("houses") === "all";
 
-export function Houses() {
-  const village = useMemo(() => buildVillageHouses(includeFeatured() ? () => true : undefined), []);
+let buildMs = 0;
+
+export interface HousesProps {
+  /**
+   * Include the village-heart pavilion (default true). Set false if another
+   * module renders VILLAGE_HEART.pavilion.
+   */
+  pavilion?: boolean;
+}
+
+export function Houses({ pavilion = true }: HousesProps) {
+  const village = useMemo(() => {
+    const t0 = performance.now();
+    const v = buildVillageHouses(includeFeatured() ? () => true : undefined, pavilion);
+    buildMs = performance.now() - t0;
+    return v;
+  }, [pavilion]);
   const mats = useMemo(() => getHouseMaterials(), []);
   const depth = useMemo(() => getHouseDepthMaterial(), []);
   const lineMat = useMemo(() => getHouseLineMaterial(), []);
@@ -56,6 +71,7 @@ export function Houses() {
       out.lines = village.lines.index!.count / 3;
       out.mask = village.mask.attributes.position.count / 3;
       out.spill = village.spill ? village.spill.index!.count / 3 : 0;
+      out.buildMs = Math.round(buildMs);
       return out;
     };
   }, [village]);
@@ -107,8 +123,9 @@ export function Houses() {
         );
       })}
       {village.spill && <mesh ref={spill} geometry={village.spill} material={spillMat} renderOrder={2} frustumCulled={false} />}
-      <mesh ref={mask} geometry={village.mask} material={maskMat} renderOrder={1} frustumCulled={false} />
-      <mesh ref={lines} geometry={village.lines} material={lineMat} renderOrder={3} frustumCulled={false} />
+      {/* Depth-only mask after every other transparent object, then the hairlines. */}
+      <mesh ref={mask} geometry={village.mask} material={maskMat} renderOrder={998} frustumCulled={false} />
+      <mesh ref={lines} geometry={village.lines} material={lineMat} renderOrder={999} frustumCulled={false} />
     </group>
   );
 }

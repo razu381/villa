@@ -8,7 +8,9 @@
  *      the sky, and windows that switch on at night.
  *
  * Object-space texturing means the pattern sticks to a house when the homes
- * module moves its floors apart (exploded view).
+ * module moves its floors apart (exploded view). Fine patterns (joints, cell
+ * grids) are box-filtered and granular detail fades by pixel footprint, so
+ * nothing aliases or shimmers at any distance.
  */
 
 import {
@@ -40,7 +42,8 @@ export const HOUSE_MATERIAL_KEYS: HouseMaterialKey[] = ["limestone", "cork", "ro
 const WIN_ON_GLSL = /* glsl */ `
 float vlWinOn(float r, float role, float lightDelay, float windows) {
   if (r < 0.0) return 0.0;
-  float p = role > 1.5 && role < 2.5 ? 0.86 : (role > 2.5 && role < 3.5 ? 0.75 : 0.62);
+  // Glazing 86 %, skylights 75 %, wall lights (and their wash) always, panes 62 %.
+  float p = role > 1.5 && role < 2.5 ? 0.86 : (role > 2.5 && role < 3.5 ? 0.75 : ((role > 3.5 && role < 4.5) || role > 6.5 ? 1.0 : 0.62));
   float lit = step(fract(r * 7.31 + 0.13), p);
   float start = 0.03 + 0.62 * lightDelay + 0.24 * fract(r * 13.7);
   return lit * smoothstep(start, start + 0.08, windows);
@@ -115,14 +118,74 @@ vec2 hFace(vec3 p, vec3 n) {
   if (a.x > a.z) return vec2(p.z, p.y);
   return vec2(p.x, p.y);
 }
-// Running-bond panels: returns (cell id hash, distance to nearest joint in metres).
-vec2 hBond(vec2 fc, vec2 size, float seed) {
-  float row = floor(fc.y / size.y);
-  float x = fc.x / size.x + 0.5 * mod(row, 2.0) + seed;
-  float col = floor(x);
-  vec2 f = vec2(fract(x), fract(fc.y / size.y));
-  vec2 d = min(f, 1.0 - f) * size;
-  return vec2(hH12(vec2(col, row) + seed * 17.0), min(d.x, d.y));
+// Integral of a pulse train: width w, centred on every multiple of P.
+float hPulseInt(float x, float P, float w) {
+  x += 0.5 * w;
+  float n = floor(x / P);
+  return n * w + min(x - n * P, w);
+}
+// Box-filtered coverage (0..1) of joint lines of width w every P metres, over
+// a pixel footprint fw: crisp up close, an exact mean tone far away (no moiré).
+float hJoint(float x, float P, float w, float fw) {
+  fw = max(fw, 1e-5);
+  return (hPulseInt(x + 0.5 * fw, P, w) - hPulseInt(x - 0.5 * fw, P, w)) / fw;
+}
+// Same, but never thinner than ~0.7 px: past that it widens at lower contrast
+// (energy-conserving), so a fine grid still reads faintly at mid distance.
+float hFineLine(float x, float P, float w, float fw) {
+  float we = max(w, 0.7 * fw);
+  return hJoint(x, P, we, fw) * (w / we);
+}
+// Cellular granules (Worley): x = F1, y = F2 - F1 (0 on a border), z = id of the nearest cell.
+vec3 hCells(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  float d1 = 8.0;
+  float d2 = 8.0;
+  float id = 0.0;
+  for (int y = -1; y <= 1; y++) {
+    for (int x = -1; x <= 1; x++) {
+      vec2 g = vec2(float(x), float(y));
+      vec2 c = i + g;
+      vec2 o = vec2(hH12(c), hH12(c + 19.19)) * 0.8 + 0.1;
+      vec2 r = g + o - f;
+      float d = dot(r, r);
+      if (d < d1) {
+        d2 = d1;
+        d1 = d;
+        id = hH12(c + 7.77);
+      } else if (d < d2) {
+        d2 = d;
+      }
+    }
+  }
+  d1 = sqrt(d1);
+  return vec3(d1, sqrt(d2) - d1, id);
+}
+// A reflected tree line along a facade (x in metres): rounded crowns, 0..1.
+float hCrowns(float x) {
+  float cell = floor(x / 1.5);
+  float h = 0.22 + 0.12 * hNoise(vec2(x * 0.6, 2.0));
+  for (int i = -1; i <= 1; i++) {
+    float c = cell + float(i);
+    float cx = (c + 0.15 + 0.7 * hH12(vec2(c, 9.1))) * 1.5;
+    float rad = 0.45 + 0.75 * hH12(vec2(c, 3.3));
+    float d = (x - cx) / rad;
+    float top = 0.45 + 0.55 * hH12(vec2(c, 5.5));
+    h = max(h, top * sqrt(max(1.0 - d * d, 0.0)));
+  }
+  return h;
+}
+// Metric size (W, H) of a quad whose uv runs 0..1 across it (panes, lamps), from
+// the ratio of facade-metre to uv derivatives — exact on a plane.
+vec2 hQuadSize(vec2 q, vec2 fc) {
+  vec2 qx = dFdx(q);
+  vec2 qy = dFdy(q);
+  vec2 cx = dFdx(fc);
+  vec2 cy = dFdy(fc);
+  float W = abs(cx.x * qx.x + cy.x * qy.x) / max(qx.x * qx.x + qy.x * qy.x, 1e-14);
+  float H = abs(cx.y * qx.y + cy.y * qy.y) / max(qx.y * qx.y + qy.y * qy.y, 1e-14);
+  return vec2(W, H);
 }
 // Bump from a scalar height via screen-space derivatives (Mikkelsen).
 vec3 hPerturb(vec3 n, float h) {
@@ -139,11 +202,23 @@ ${WIN_ON_GLSL}
 float hWinOn(float r, float role) {
   return vlWinOn(r, role, vHouse.z, uWindows);
 }
-// Cheap baked-in occlusion: ground contact and window reveals (darker towards the glass).
+// Cheap baked-in occlusion: ground contact (walls only) and window reveals (darker towards the glass).
 float hAmbientOcc() {
-  float ao = abs(vHWin.y - 6.0) < 0.5 ? 1.0 : mix(0.6, 1.0, smoothstep(-0.05, 1.4, vHObj.y - vHouse.x));
+  if (abs(vHWin.y - 6.0) < 0.5) return 1.0;
+  float ground = mix(0.6, 1.0, smoothstep(-0.05, 1.4, vHObj.y - vHouse.x));
+  float ao = mix(1.0, ground, 1.0 - abs(vHObjN.y));
   if (vHWin.y < -0.5) ao *= mix(1.0, 0.5, smoothstep(0.02, 0.5, vHUv.y));
   return ao;
+}
+// The sky seen in a surface of world normal nW: (rgb = sky/ground env, a = fresnel).
+vec4 hSkyEnv(vec3 nW, vec3 vW) {
+  float ndv = clamp(abs(dot(nW, vW)), 0.0, 1.0);
+  vec3 rW = reflect(-vW, nW);
+  vec3 sky = mix(uSkyHorizon, uSkyTop, smoothstep(0.0, 0.55, rW.y));
+  vec3 ground = mix(uSkyHorizon, uSkyTop, 0.5) * vec3(0.46, 0.45, 0.4);
+  vec3 env = mix(ground, sky, smoothstep(-0.14, 0.1, rW.y));
+  float fres = 0.04 + 0.96 * pow(1.0 - ndv, 5.0);
+  return vec4(env, fres);
 }
 // Warm interior colour per window: amber, honey or pale.
 vec3 hWinColor(float r) {
@@ -179,47 +254,81 @@ if (abs(vHWin.y - 6.0) < 0.5) {
 }
 `;
 
+/** ROLE.cap faces (inside sunk shells) render as the section poché. */
+const POCHE_CAP = /* glsl */ `
+if (abs(vHWin.y - 8.0) < 0.5) gl_FragColor = vec4(uPoche * mix(1.0, 0.45, uNight), 1.0);
+`;
+
 /* ---------------------------------------------------------- per material */
 
 const CORK: HouseShaderParts = {
   color: /* glsl */ `
   vec3 hp = vHObj + vec3(vHouse.w * 37.0, 0.0, vHouse.w * 53.0);
   vec2 fc = hFace(hp, vHObjN);
-  float fw = max(fwidth(fc.x) + fwidth(fc.y), 1e-5);
-  // Large-format panels in running bond, each a slightly different batch.
-  vec2 bond = hBond(fc, vec2(1.2, 0.6), vHouse.w * 7.0);
-  float jointVis = 1.0 - smoothstep(0.035, 0.11, fw);
-  float joint = (1.0 - smoothstep(0.003, 0.003 + fw, bond.y)) * jointVis;
-  // Granules: fine (close-ups) and a mid-scale salt-and-pepper that reads from afar.
-  float granVis = 1.0 - smoothstep(0.006, 0.03, fw);
-  float midVis = 1.0 - smoothstep(0.05, 0.16, fw);
-  float g1 = hNoise(fc * 41.0);
-  float g2 = hNoise(fc * 113.0 + 17.0);
-  float gran = g1 * 0.55 + g2 * 0.45;
+  vec2 fw2 = max(fwidth(fc), vec2(1e-5));
+  float fw = fw2.x + fw2.y;
+  // Large-format expanded-cork panels (1.2 × 0.6 m) in a loosely staggered
+  // bond, each a slightly different batch. Joints are box-filtered: crisp
+  // recessed lines up close, fading into the per-panel tone far away.
+  vec2 psz = vec2(1.2, 0.6);
+  float row = floor(fc.y / psz.y);
+  float off = 0.5 * mod(row, 2.0) + 0.3 * (hH12(vec2(row, vHouse.w * 13.0)) - 0.5);
+  float px = fc.x / psz.x + off;
+  float pid = hH12(vec2(floor(px), row) + vHouse.w * 17.0);
+  float joint = max(hJoint(fc.y, psz.y, 0.005, fw2.y), hJoint(fc.x + off * psz.x, psz.x, 0.005, fw2.x));
+  // Granules: 6–12 mm agglomerated grains with dark interstices, each grain its
+  // own tone (fades to its mean once a grain is under ~2 px).
+  // Two octaves, each shown only while its grains span ≥ ~3 px (no aliasing):
+  // fine 9 mm grains up close, 2.6 cm clusters out to ~10 m.
+  vec3 cel = hCells(fc * 105.0);
+  float granVis = 1.0 - smoothstep(0.0025, 0.007, fw);
+  float inter = 1.0 - smoothstep(0.03, 0.26, cel.y);
+  float grain = (cel.z - 0.5) * 0.17 - (inter - 0.25) * 0.22;
+  vec3 cel2 = hCells(fc * 56.0 + 11.0);
+  float clusterVis = (1.0 - smoothstep(0.0055, 0.012, fw)) * (1.0 - 0.5 * granVis);
+  float inter2 = 1.0 - smoothstep(0.015, 0.14, cel2.y);
+  float cluster = (cel2.z - 0.5) * 0.07 - (inter2 - 0.15) * 0.14;
+  // Sub-grain fleck (only in close-ups) and a faint mid-scale cloud.
+  float fleck = hNoise(fc * 340.0) - 0.5;
+  float fleckVis = 1.0 - smoothstep(0.0012, 0.004, fw);
   float mid = hNoise(fc * 13.0 + 3.7) * 0.6 + hNoise(fc * 27.0 + 9.1) * 0.4;
+  float midVis = 1.0 - smoothstep(0.05, 0.16, fw);
   float mot = hNoise(fc * 1.3 + vHouse.w * 11.0);
-  vec3 cork = diffuseColor.rgb * (1.0 + (bond.x - 0.5) * 0.12 + (mot - 0.5) * 0.08 + (vHouse.w - 0.5) * 0.07);
-  cork *= 1.0 + (mid - 0.5) * 0.24 * midVis;
-  float speck = smoothstep(0.2, 0.8, gran);
-  cork = mix(cork, cork * mix(0.66, 1.2, speck), granVis);
-  cork *= 1.0 - joint * 0.16;
+  // Per-panel tone only while a panel spans a few pixels (no shimmer from afar).
+  float panelVis = 1.0 - smoothstep(0.12, 0.3, fw);
+  vec3 cork = diffuseColor.rgb * (1.0 + (pid - 0.5) * 0.12 * panelVis + (mot - 0.5) * 0.06 + (vHouse.w - 0.5) * 0.06);
+  cork *= 1.0 + (mid - 0.5) * 0.07 * midVis;
+  cork *= 1.0 + grain * granVis + cluster * clusterVis + fleck * 0.12 * fleckVis;
+  // Darker grains read slightly redder-brown, interstices cooler.
+  cork = mix(cork, cork * vec3(0.93, 0.95, 1.02), inter * granVis * 0.6);
+  cork *= 1.0 - joint * 0.38;
   diffuseColor.rgb = cork;
-  float hBumpH = (gran * 0.006 - joint * 0.004) * granVis;
+  // (Joint relief only where a joint spans several pixels: thin features bumped
+  // via screen derivatives turn into dashes.)
+  float jointBump = 1.0 - smoothstep(0.0008, 0.002, max(fw2.x, fw2.y));
+  float hBumpH = ((1.0 - inter) * 0.0028 + (cel.z - 0.5) * 0.0012) * granVis + (1.0 - inter2) * 0.003 * clusterVis + fleck * 0.0004 * fleckVis - joint * 0.004 * jointBump;
   float hRough = 0.95;
   `,
   rough: /* glsl */ `roughnessFactor = hRough;`,
   normal: /* glsl */ `normal = hPerturb(normal, hBumpH * vlMask);`,
   emissive: WALL_EMISSIVE,
+  post: POCHE_CAP,
 };
 
 const LIMESTONE: HouseShaderParts = {
   color: /* glsl */ `
   vec3 hp = vHObj + vec3(vHouse.w * 23.0, 0.0, vHouse.w * 41.0);
   vec2 fc = hFace(hp, vHObjN);
-  float fw = max(fwidth(fc.x) + fwidth(fc.y), 1e-5);
-  vec2 bond = hBond(fc, vec2(1.15, 0.55), vHouse.w * 5.0);
-  float jointVis = 1.0 - smoothstep(0.03, 0.1, fw);
-  float joint = (1.0 - smoothstep(0.0025, 0.0025 + fw, bond.y)) * jointVis;
+  vec2 fw2 = max(fwidth(fc), vec2(1e-5));
+  float fw = fw2.x + fw2.y;
+  // Ashlar blocks (1.15 × 0.55 m, running bond) with box-filtered joints: a
+  // fine line up close, a faint coursing at mid distance, the mean far away.
+  vec2 bsz = vec2(1.15, 0.55);
+  float brow = floor(fc.y / bsz.y);
+  float boff = 0.5 * mod(brow, 2.0) + vHouse.w * 5.0;
+  vec2 bond = vec2(hH12(vec2(floor(fc.x / bsz.x + boff), brow) + vHouse.w * 85.0), 0.0);
+  float jointVis = 1.0 - smoothstep(0.15, 0.35, fw);
+  float joint = max(hJoint(fc.y, bsz.y, 0.005, fw2.y), hJoint(fc.x + boff * bsz.x, bsz.x, 0.005, fw2.x));
   float grainVis = 1.0 - smoothstep(0.004, 0.02, fw);
   float grain = hNoise(fc * 150.0) * 0.5 + hNoise(fc * 37.0 + 3.0) * 0.5;
   float cloud = hNoise(fc * 0.9 + vHouse.w * 9.0);
@@ -227,9 +336,9 @@ const LIMESTONE: HouseShaderParts = {
   stone *= 1.0 + (bond.x - 0.5) * 0.075 * jointVis + (cloud - 0.5) * 0.05;
   stone = mix(stone, stone * vec3(1.02, 1.0, 0.96), smoothstep(0.6, 1.0, bond.x) * jointVis);
   stone *= 1.0 + (grain - 0.5) * 0.12 * grainVis;
-  stone *= 1.0 - joint * 0.12;
+  stone *= 1.0 - joint * 0.36;
   diffuseColor.rgb = stone;
-  float hBumpH = (grain * 0.0012 - joint * 0.003) * grainVis;
+  float hBumpH = (grain * 0.0012 - joint * 0.003 * (1.0 - smoothstep(0.0008, 0.002, fw))) * grainVis;
   float hRough = 0.82;
   // Interior rooms (seen only through the section cut): plaster walls, oak floor.
   if (abs(vHWin.y - 6.0) < 0.5) {
@@ -242,6 +351,7 @@ const LIMESTONE: HouseShaderParts = {
   rough: /* glsl */ `roughnessFactor = hRough;`,
   normal: /* glsl */ `normal = hPerturb(normal, hBumpH * vlMask);`,
   emissive: WALL_EMISSIVE,
+  post: POCHE_CAP,
 };
 
 const ROOF: HouseShaderParts = {
@@ -253,6 +363,14 @@ const ROOF: HouseShaderParts = {
   float patchy = hNoise(fc * 0.8);
   vec3 g = diffuseColor.rgb * (1.0 + (patchy - 0.5) * 0.06);
   g *= 1.0 + (pebble - 0.5) * 0.3 * vis;
+  // Contact shade where the gravel meets the parapets (its size rides in aWin).
+  if (vHWin.y > 9.5 && vHObjN.y > 0.5) {
+    vec2 gs = vec2(vHWin.x, vHWin.y - 10.0);
+    vec2 e2 = min(vHUv, gs - vHUv) - 0.05;
+    float edge = max(min(e2.x, e2.y), 0.0);
+    hAO *= mix(0.5, 1.0, smoothstep(0.0, 0.5, edge));
+    g *= mix(0.72, 1.0, smoothstep(0.0, 0.45, edge));
+  }
   diffuseColor.rgb = g;
   float hBumpH = pebble * 0.01 * vis;
   `,
@@ -263,18 +381,27 @@ const SOLAR: HouseShaderParts = {
   color: /* glsl */ `
   // vHUv is metric across the panel (1.0 × 1.65 m) on its top face.
   vec2 q = vHUv;
-  float fw = max(fwidth(q.x) + fwidth(q.y), 1e-5);
+  vec2 fq = max(fwidth(q), vec2(1e-5));
   vec2 cs = vec2(1.0 / 6.0, 1.65 / 10.0);
-  vec2 cf = (0.5 - abs(fract(q / cs) - 0.5)) * cs; // metres to the nearest cell line
-  float gridVis = 1.0 - smoothstep(0.008, 0.03, fw);
-  float grid = (1.0 - smoothstep(0.003, 0.003 + fw, min(cf.x, cf.y))) * gridVis;
+  // Cell grid: fine lines that never vanish abruptly, cells with a faint tone each.
+  float grid = max(hFineLine(q.x, cs.x, 0.003, fq.x), hFineLine(q.y, cs.y, 0.003, fq.y));
+  float cellVis = 1.0 - smoothstep(0.03, 0.09, max(fq.x, fq.y));
+  vec3 col = diffuseColor.rgb * (0.94 + 0.12 * hH12(floor(q / cs) + vHouse.w * 50.0) * cellVis);
+  col = mix(col, vec3(0.075, 0.085, 0.1), grid * 0.7);
+  // A slim dark anodised rim (15 mm).
   float edge = min(min(q.x, 1.0 - q.x), min(q.y, 1.65 - q.y));
-  float rim = 1.0 - smoothstep(0.022, 0.022 + fw, edge);
-  vec3 silver = vec3(0.40, 0.42, 0.44);
-  vec3 col = diffuseColor.rgb * (0.92 + 0.16 * hH12(floor(q / cs) + vHouse.w * 50.0) * gridVis);
-  col = mix(col, vec3(0.30, 0.32, 0.36), grid * 0.55);
-  col = mix(col, silver, rim);
-  diffuseColor.rgb = mix(silver * 0.5, col, step(0.5, vHObjN.y));
+  float rim = 1.0 - smoothstep(0.015, 0.015 + max(fq.x, fq.y), edge);
+  vec3 rimCol = vec3(0.042, 0.047, 0.051);
+  col = mix(col, rimCol, rim);
+  float hTop = step(0.5, vHObjN.y);
+  diffuseColor.rgb = mix(rimCol, col, hTop);
+  `,
+  emissive: /* glsl */ `
+  {
+    // The sky in the glass (the panels face up: mostly sky, a cool sheen).
+    vec4 env = hSkyEnv(normalize((vec4(normal, 0.0) * viewMatrix).xyz), normalize(cameraPosition - vVlWorld));
+    totalEmissiveRadiance += env.rgb * (0.15 + 0.85 * env.a) * 0.55 * hTop * (1.0 - rim) * (1.0 - uNight * 0.8);
+  }
   `,
 };
 
@@ -299,36 +426,99 @@ const TIMBER: HouseShaderParts = {
 
 const FRAME: HouseShaderParts = {};
 
-/** Window panes: dark tinted glass reflecting the sky by day; warm interiors at night. */
+/**
+ * Window panes: dark tinted glass by day — a reflection with structure (sky in
+ * the upper part of the pane, a darker band of reflected garden and trees
+ * below a soft, continuous horizon), over a dim room — and warm lamp-lit
+ * interiors at night. Also the opal wall lights (ROLE.lamp).
+ */
 const WINDOW: HouseShaderParts = {
+  color: /* glsl */ `
+  float hRole = vHWin.y;
+  bool hLamp = hRole > 3.5 && hRole < 4.5;
+  if (hLamp) {
+    float rr = length(vHUv - 0.5) * 2.0;
+    if (rr > 1.0) discard;
+    diffuseColor.rgb = vec3(0.8, 0.79, 0.75) * (1.0 - 0.15 * smoothstep(0.75, 1.0, rr));
+  } else {
+    // Per-pane tint: some panes a touch greener, some greyer.
+    float tr = fract(vHWin.x * 7.7);
+    diffuseColor.rgb *= mix(vec3(0.95, 1.02, 1.0), vec3(1.04, 1.0, 0.97), tr);
+  }
+  `,
   emissive: /* glsl */ `
   {
     vec3 nW = normalize((vec4(normal, 0.0) * viewMatrix).xyz);
     vec3 vW = normalize(cameraPosition - vVlWorld);
-    float ndv = clamp(dot(nW, vW), 0.0, 1.0);
-    vec3 rW = reflect(-vW, nW);
-    vec3 sky = mix(uSkyHorizon, uSkyTop, smoothstep(0.0, 0.55, rW.y));
-    vec3 ground = mix(uSkyHorizon, uSkyTop, 0.5) * vec3(0.28, 0.29, 0.3);
-    vec3 env = mix(ground, sky, smoothstep(-0.12, 0.08, rW.y));
-    float fres = 0.04 + 0.96 * pow(1.0 - ndv, 5.0);
-    // A soft horizon band breaks up the reflection like clouds and far trees.
-    float band = hNoise(vec2(atan(rW.x, rW.z) * 6.0 + vHWin.x * 40.0, rW.y * 9.0));
-    env *= (0.86 + 0.28 * band) * (0.75 + 0.4 * vHUv.y);
+    vec4 envF = hSkyEnv(nW, vW);
+    float fres = envF.a;
     float role = vHWin.y;
     float on = hWinOn(vHWin.x, role);
     vec2 q = vHUv;
-    // Interior: a lamp-lit room — brighter ceiling, a darker sill band, soft edges.
-    float vig = smoothstep(0.0, 0.18, q.x) * smoothstep(1.0, 0.82, q.x) * smoothstep(0.0, 0.12, q.y) * smoothstep(1.0, 0.9, q.y);
-    float room = 0.3 + 0.7 * smoothstep(0.08, 0.9, q.y);
-    float pool = exp(-pow((q.x - (0.3 + 0.4 * fract(vHWin.x * 5.3))) * 2.4, 2.0));
-    float curtain = step(0.62, fract(vHWin.x * 19.1));
-    // Low furniture silhouettes in big glazing (sofa backs, a table) — only up close.
-    float furn = (role > 1.5 && role < 2.5) ? (1.0 - 0.45 * step(q.y, 0.3) * step(0.5, hNoise(vec2(q.x * 4.0 + vHWin.x * 31.0, 0.5)))) : 1.0;
-    float inner = mix(0.5, 1.0, vig) * room * (0.7 + 0.45 * pool) * furn;
-    inner = mix(inner, inner * 0.62 + 0.18, curtain);
-    float gain = role > 2.5 && role < 3.5 ? 2.0 : (role > 1.5 && role < 2.5 ? 2.3 : 2.0);
-    vec3 glow = hWinColor(vHWin.x) * gain * inner * on;
-    totalEmissiveRadiance += env * (0.08 + 0.92 * fres) * (1.0 - 0.75 * on) + glow;
+    vec2 fc = hFace(vHObj, vHObjN);
+    if (hLamp) {
+      float rr = length(q - 0.5) * 2.0;
+      vec3 lampC = hWinColor(vHWin.x) * vec3(1.0, 0.97, 0.9);
+      totalEmissiveRadiance += lampC * on * (4.2 - 1.4 * rr * rr) + uSkyHorizon * 0.06 * (1.0 - uNight);
+    } else {
+      vec2 sz = hQuadSize(q, fc);
+      // Reveal occlusion: darker towards the head and the jambs (metric).
+      float ej = min(q.x, 1.0 - q.x) * sz.x;
+      float eh = (1.0 - q.y) * sz.y;
+      float occ = mix(0.5, 1.0, smoothstep(0.0, 0.32, ej)) * mix(0.45, 1.0, smoothstep(0.0, 0.38, eh));
+      occ = role > 2.5 && role < 3.5 ? 1.0 : occ; // skylights: open to the sky
+      // Pane-space reflection: sky above a soft tree-line horizon that runs
+      // continuously along the facade (metres), a darker garden band below.
+      float hx = fc.x + vHouse.w * 41.0;
+      // Tree line in pane space (metric along the facade → continuous across
+      // panes): rounded crowns of a few sizes over a low hedge, leafy edge.
+      float hz = 0.24 + 0.2 * hCrowns(hx) + 0.018 * (hNoise(vec2(hx * 7.0, 1.7)) - 0.5) + 0.01 * (hNoise(vec2(hx * 19.0, 4.3)) - 0.5);
+      float above = smoothstep(hz - 0.006, hz + 0.016, q.y);
+      vec3 skyC = mix(uSkyHorizon, uSkyTop, smoothstep(hz, 1.0, q.y)) * 0.78;
+      float leaf = hNoise(vec2(hx * 3.1, q.y * 6.0 + 1.3)) * 0.6 + hNoise(vec2(hx * 9.0, q.y * 14.0)) * 0.4;
+      vec3 landC = mix(uSkyHorizon, uSkyTop, 0.5) * vec3(0.16, 0.18, 0.14) * (0.6 + 0.8 * leaf);
+      vec3 refl = mix(landC, skyC * 0.85, above);
+      // The bright sky band just above the tree line (gold at golden hour).
+      refl += uSkyHorizon * 0.35 * above * exp(-pow((q.y - hz) / 0.09, 2.0));
+      // Skylights face up: the physical sky.
+      refl = role > 2.5 && role < 3.5 ? envF.rgb : refl;
+      float tint = 0.9 + 0.2 * fract(vHWin.x * 7.7);
+      vec3 reflection = refl * (0.16 + 0.84 * fres) * occ * tint;
+      // The room behind the glass.
+      float vig = smoothstep(0.0, 0.18, q.x) * smoothstep(1.0, 0.82, q.x) * smoothstep(0.0, 0.12, q.y) * smoothstep(1.0, 0.9, q.y);
+      float roomG = 0.3 + 0.7 * smoothstep(0.08, 0.9, q.y) + 0.22 * smoothstep(0.84, 0.97, q.y);
+      float backW = 1.0 - 0.24 * exp(-pow((q.x - 0.5) / 0.3, 2.0)) * (1.0 - q.y);
+      float pool = exp(-pow((q.x - (0.3 + 0.4 * fract(vHWin.x * 5.3))) * 2.4, 2.0));
+      float curtain = step(0.62, fract(vHWin.x * 19.1));
+      // Sheer curtain gathered at one side of some panes.
+      float sheerSide = (fract(vHWin.x * 3.3) < 0.5 ? q.x : 1.0 - q.x) * sz.x;
+      float sheer = step(0.45, fract(vHWin.x * 11.3)) * (1.0 - smoothstep(0.16, 0.3, sheerSide)) * smoothstep(0.0, 0.05, sheerSide);
+      // Furniture in the big glazing (metric along the facade): sofa backs,
+      // a low table, an occasional floor lamp with its halo.
+      float furn = 1.0;
+      float halo = 0.0;
+      if (role > 1.5 && role < 2.5) {
+        float fx = fc.x + vHWin.x * 17.0;
+        float seg = floor(fx / 1.7);
+        float sx = fract(fx / 1.7);
+        float sr = hH12(vec2(seg, vHWin.x * 31.0));
+        float hgt = sr < 0.42 ? mix(0.32, 0.42, fract(sr * 7.0)) : (sr < 0.66 ? 0.22 : 0.0);
+        float inSeg = smoothstep(0.06, 0.12, sx) * smoothstep(0.94, 0.88, sx);
+        float sil = (1.0 - smoothstep(hgt - 0.02, hgt + 0.02, q.y)) * inSeg * step(0.01, hgt);
+        float lampX = abs(sx - 0.5) * 1.7;
+        float isLamp = step(0.86, sr);
+        float column = (1.0 - smoothstep(0.012, 0.03, lampX)) * (1.0 - smoothstep(0.52, 0.56, q.y)) * isLamp;
+        halo = isLamp * exp(-pow(lampX / 0.32, 2.0) - pow((q.y - 0.6) / 0.11, 2.0));
+        furn = 1.0 - 0.3 * max(sil, column);
+      }
+      float inner = mix(0.5, 1.0, vig) * roomG * backW * (0.7 + 0.45 * pool) * furn + halo * 0.9;
+      inner = mix(inner, inner * 0.62 + 0.18, curtain);
+      // By day: a dim room (≈ 8 % of the lamp-lit one) gives the glazing depth.
+      vec3 dayRoom = uPlaster * vec3(0.92, 0.9, 0.86) * (inner * 0.075 + sheer * 0.07) * (1.0 - uNight) * occ;
+      float gain = role > 2.5 && role < 3.5 ? 2.0 : (role > 1.5 && role < 2.5 ? 2.3 : 2.0);
+      vec3 glow = hWinColor(vHWin.x) * gain * inner * on;
+      totalEmissiveRadiance += (reflection + dayRoom) * (1.0 - 0.75 * on) + glow;
+    }
   }
   `,
   // Seen from inside a cut room, a window is daylight (night sky after dark), not poché.
@@ -403,11 +593,12 @@ function houseMaterial(
 }
 
 /**
- * House tones, calibrated against the facade renders: the cork reads golden
- * tan in sun (more yellow than PALETTE.cork), limestone a warm cream.
+ * House tones, calibrated against the facade renders: the cork a warm taupe
+ * (between PALETTE.cork and the sunlit renders — golden in low sun, never
+ * orange), limestone a warm cream.
  */
 export const TONES = {
-  cork: "#9E8667",
+  cork: "#9D8D75",
   limestone: "#DED3BE",
   bronze: "#6E634D",
   timber: "#8E7A62",
@@ -428,12 +619,13 @@ export function getHouseMaterials(): Record<HouseMaterialKey, MeshStandardMateri
     roof: houseMaterial("roof", new MeshStandardMaterial({ color: "#CBC4B4", roughness: 1 }), ROOF),
     window: houseMaterial(
       "window",
-      new MeshStandardMaterial({ color: PALETTE.glass, roughness: 0.12, metalness: 0.0 }),
+      // Glass has almost no diffuse: its colour is reflection (+ the room by night).
+      new MeshStandardMaterial({ color: "#0E1213", roughness: 0.1, metalness: 0.0 }),
       WINDOW,
       { modelColor: "#DAD6CD" },
     ),
     frame: houseMaterial("frame", new MeshStandardMaterial({ color: TONES.bronze, roughness: 0.45, metalness: 0.25 }), FRAME),
-    solar: houseMaterial("solar", new MeshStandardMaterial({ color: "#1A2029", roughness: 0.28, metalness: 0.35 }), SOLAR),
+    solar: houseMaterial("solar", new MeshStandardMaterial({ color: "#1E2733", roughness: 0.3, metalness: 0.2 }), SOLAR),
     timber: houseMaterial("timber", new MeshStandardMaterial({ color: TONES.timber, roughness: 0.72 }), TIMBER),
     glass: houseMaterial(
       "glass",
@@ -499,9 +691,11 @@ export function getHouseSpillMaterial(): ShaderMaterial {
       varying vec2 vUv;
       varying float vOn;
       varying float vR;
+      varying float vRole;
       void main() {
         vUv = uv;
         vR = aWin.x;
+        vRole = aWin.y;
         vOn = vlWinOn(aWin.x, aWin.y, aHouse.z, uWindows) * step(0.999, vlHouseRise(aHouse.y));
         vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
         gl_Position = projectionMatrix * mvPosition;
@@ -514,13 +708,23 @@ export function getHouseSpillMaterial(): ShaderMaterial {
       varying vec2 vUv;
       varying float vOn;
       varying float vR;
+      varying float vRole;
       void main() {
         #include <clipping_planes_fragment>
         if (vOn <= 0.001) discard;
-        float across = smoothstep(0.0, 0.32, vUv.x) * smoothstep(1.0, 0.68, vUv.x);
-        float along = pow(1.0 - vUv.y, 2.2) * smoothstep(0.0, 0.05, vUv.y);
+        float k;
+        if (vRole > 6.5) {
+          // A wall light's wash on its wall: a soft vertical oval, brightest at the fixture.
+          vec2 d = (vUv - vec2(0.5, 0.556)) * vec2(2.0, 2.0 * 1.35 / 1.2);
+          float r2 = dot(d, d);
+          k = (exp(-r2 * 2.4) * 0.8 + exp(-r2 * 14.0) * 0.5) * (1.0 - smoothstep(0.7, 1.0, sqrt(r2)));
+        } else {
+          float across = smoothstep(0.0, 0.32, vUv.x) * smoothstep(1.0, 0.68, vUv.x);
+          float along = pow(1.0 - vUv.y, 2.2) * smoothstep(0.0, 0.05, vUv.y);
+          k = across * along * (vRole > 3.5 && vRole < 4.5 ? 0.75 : 1.0);
+        }
         vec3 c = uGlow * vec3(1.0, 0.92, 0.8) * (0.9 + 0.2 * fract(vR * 3.97));
-        gl_FragColor = vec4(c * 0.5 * vOn * across * along, 1.0);
+        gl_FragColor = vec4(c * 0.5 * vOn * k, 1.0);
         #include <colorspace_fragment>
       }`,
   });
@@ -534,15 +738,20 @@ let maskCache: ShaderMaterial | null = null;
 /**
  * Depth-only hidden-line mask (geometry from buildHouseMask / the village
  * merge). Each envelope box shrinks from the bottom as its house rises, so
- * mask + risen house always fill the final volume. Draw it after the houses'
- * opaque meshes and before the lines.
+ * mask + risen house always fill the final volume.
+ * It is flagged transparent (still writing depth, never colour) so that with
+ * renderOrder 998 it draws after every other transparent object of every
+ * module — it can only hide the hairlines (renderOrder 999), never punch a
+ * house-shaped hole in foam trees, water or overlays. Homes module: same.
  */
 export function getHouseMaskMaterial(): ShaderMaterial {
   if (maskCache) return maskCache;
   maskCache = new ShaderMaterial({
     name: "house-line-mask",
+    transparent: true,
     colorWrite: false,
     depthWrite: true,
+    depthTest: true,
     side: DoubleSide,
     clipping: true,
     clippingPlanes: clipPlanes,
@@ -613,6 +822,7 @@ export function getHouseLineMaterial(): ShaderMaterial {
     vertexShader: /* glsl */ `
       #include <common>
       #include <clipping_planes_pars_vertex>
+      #define LINE_PULL 0.0016
       uniform vec2 uRes;
       uniform float uWidth;
       attribute vec3 aOther;
@@ -626,9 +836,11 @@ export function getHouseLineMaterial(): ShaderMaterial {
         vWorld = (modelMatrix * vec4(position, 1.0)).xyz;
         vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
         vec4 mvOther = modelViewMatrix * vec4(aOther, 1.0);
-        // A hair towards the camera (≈2.5 cm per 100 m) so edges win over their own faces.
-        mvPosition.xyz *= 1.0 - 0.00025;
-        mvOther.xyz *= 1.0 - 0.00025;
+        // Pulled towards the camera (≈1.6 cm at 10 m, 16 cm at 100 m): enough for a
+        // ~2 px hairline to clear its own faces at grazing angles; the mask
+        // boxes sit 3 cm inside the envelope, plan lines 3 cm above the pad.
+        mvPosition.xyz *= 1.0 - LINE_PULL;
+        mvOther.xyz *= 1.0 - LINE_PULL;
         vec4 cThis = projectionMatrix * mvPosition;
         vec4 cOther = projectionMatrix * mvOther;
         vec2 half_ = uRes * 0.5;

@@ -9,6 +9,8 @@
  *   position (3) · normal (3) · uv (2) · aHouse (4) · aWin (2)
  *   aHouse = (base y, rise delay, light delay, house random)
  *   aWin   = (window random 0..1 or -1, role)  — see ROLE
+ *            (roof gravel tops instead carry their size: (size x, 10 + size z),
+ *            for the contact shade along the parapets)
  */
 
 import { BufferGeometry, Float32BufferAttribute, type Matrix4, Uint32BufferAttribute, Vector3 } from "three";
@@ -22,10 +24,19 @@ export const ROLE = {
   glazing: 2,
   /** Skylight glass (seen from above at night). */
   skylight: 3,
+  /** Opal wall-light disc beside an entrance (window material; always lit at night). */
+  lamp: 4,
   /** Door leaf. */
   door: 5,
   /** Interior room surfaces (inside the shell; seen only through the section cut). */
   interior: 6,
+  /** Spill material only: the soft wash a wall light throws on its wall (radial). */
+  lampWash: 7,
+  /**
+   * Inside a ground-floor shell, just above the pad: drawn as flat poché, so a
+   * section cut never shows the terrain surface running through the walls.
+   */
+  cap: 8,
   /* Reveals store the NEGATED role of their window (aWin.y < 0) so they catch its warm spill. */
 } as const;
 
@@ -52,10 +63,11 @@ export class MeshBuilder {
   }
 
   private vert(p: Vec3, n: Vec3, uv: [number, number]) {
+    const h = this.houseAttr;
     this.pos.push(p[0], p[1], p[2]);
     this.nor.push(n[0], n[1], n[2]);
     this.uv.push(uv[0], uv[1]);
-    this.house.push(...this.houseAttr);
+    this.house.push(h[0], h[1], h[2], h[3]);
     this.win.push(this.winAttr[0], this.winAttr[1]);
   }
 
@@ -98,6 +110,33 @@ export class MeshBuilder {
     if (!skip.includes("ny")) this.quad([x0, y0, z0], [x1, y0, z0], [x1, y0, z1], [x0, y0, z1], [0, -1, 0]);
     if (!skip.includes("pz")) this.quad([x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1], [0, 0, 1]);
     if (!skip.includes("nz")) this.quad([x1, y0, z0], [x0, y0, z0], [x0, y1, z0], [x1, y1, z0], [0, 0, -1]);
+  }
+
+  /**
+   * A cap (coping) on top of a wall: an axis-aligned box whose underside is
+   * emitted only where it overhangs — not over `covered` [x0, x1, z0, z1]
+   * (the top of the wall it sits on). A full underside there would be
+   * coplanar with the wall's top face and z-fight inside a section cut.
+   */
+  capBox(min: Vec3, max: Vec3, covered: [number, number, number, number], skip: Face[] = []) {
+    this.box(min, max, ["ny", ...skip]);
+    const [x0, y0, z0] = min;
+    const [x1, , z1] = max;
+    const cx0 = Math.max(x0, covered[0]);
+    const cx1 = Math.min(x1, covered[1]);
+    const cz0 = Math.max(z0, covered[2]);
+    const cz1 = Math.min(z1, covered[3]);
+    const under = (a: number, b: number, c: number, d: number) => {
+      if (b - a > 1e-4 && d - c > 1e-4) this.quad([a, y0, c], [b, y0, c], [b, y0, d], [a, y0, d], [0, -1, 0]);
+    };
+    if (cx1 <= cx0 || cz1 <= cz0) {
+      under(x0, x1, z0, z1);
+      return;
+    }
+    under(x0, x1, z0, cz0);
+    under(x0, x1, cz1, z1);
+    under(x0, cx0, cz0, cz1);
+    under(cx1, x1, cz0, cz1);
   }
 
   /** A closed box in an arbitrary orthonormal frame (corner o, axes u, v, w, extents). */
@@ -211,6 +250,8 @@ export interface Opening {
   transom?: number;
   /** Per-window random (night lighting). */
   rand: number;
+  /** Doors only: false = no wall light beside it (default: one, if it fits). */
+  lamp?: boolean;
 }
 
 export interface FacadeTargets {
@@ -227,66 +268,105 @@ export interface FacadeTargets {
 }
 
 /**
- * A facade with punched openings. The outer wall is partitioned into
- * rectangles around the holes (greedy row runs), then every hole gets four
- * reveal quads and a pane at the back — sharing exact edges, so the parent
- * volume stays closed.
+ * A facade with punched openings. The outer wall is cut into a conforming grid
+ * of quads around the holes (breakpoints at every hole edge, plus `grid` —
+ * the breakpoints of the neighbouring faces of the same volume), and every hole
+ * gets reveals and a pane split on the same grid: no T-junctions, so no
+ * sub-pixel cracks along window edges or volume corners, and the parent
+ * volume stays closed for the section poché.
  */
-export function facade(f: FaceFrame, openings: Opening[], t: FacadeTargets) {
+export function facade(f: FaceFrame, openings: Opening[], t: FacadeTargets, grid?: Partial<FaceGrid>): WallLamp[] {
+  const lamps: WallLamp[] = [];
+  const inside = (x: number, max: number) => x > -1e-6 && x < max + 1e-6;
+  const us = uniqSorted([0, f.w, ...openings.flatMap((o) => [o.u0, o.u1]), ...(grid?.us ?? [])].filter((u) => inside(u, f.w)));
+  const vs = uniqSorted([0, f.h, ...openings.flatMap((o) => [o.v0, o.v1]), ...(grid?.vs ?? [])].filter((v) => inside(v, f.h)));
   t.wall.winAttr = [-1, ROLE.wall];
-  wallWithHoles(f, openings, t.wall);
+  wallGrid(f, openings, t.wall, us, vs);
 
   for (const o of openings) {
     const d = o.depth;
-    // Reveals (face into the opening).
+    const W = o.u1 - o.u0;
+    const H = o.v1 - o.v0;
+    const uSeg = [o.u0, ...us.filter((u) => u > o.u0 + 1e-5 && u < o.u1 - 1e-5), o.u1];
+    const vSeg = [o.v0, ...vs.filter((v) => v > o.v0 + 1e-5 && v < o.v1 - 1e-5), o.v1];
+    // Reveals (face into the opening), split on the facade grid.
     const role = o.fill === "door" ? ROLE.door : o.fill === "glazing" ? ROLE.glazing : ROLE.pane;
     // Reveals carry their window's random and (negated) role → warm spill when it is lit.
     t.wall.winAttr = o.fill === "door" ? [-1, -ROLE.door] : [o.rand, -role];
-    t.wall.quad(onFace(f, o.u0, o.v0), onFace(f, o.u1, o.v0), onFace(f, o.u1, o.v0, d), onFace(f, o.u0, o.v0, d), f.v);
-    t.wall.quad(onFace(f, o.u0, o.v1), onFace(f, o.u1, o.v1), onFace(f, o.u1, o.v1, d), onFace(f, o.u0, o.v1, d), neg3(f.v));
-    t.wall.quad(onFace(f, o.u0, o.v0), onFace(f, o.u0, o.v1), onFace(f, o.u0, o.v1, d), onFace(f, o.u0, o.v0, d), f.u);
-    t.wall.quad(onFace(f, o.u1, o.v0), onFace(f, o.u1, o.v1), onFace(f, o.u1, o.v1, d), onFace(f, o.u1, o.v0, d), neg3(f.u));
+    for (let i = 0; i < uSeg.length - 1; i++) {
+      const [a, b] = [uSeg[i], uSeg[i + 1]];
+      t.wall.quad(onFace(f, a, o.v0), onFace(f, b, o.v0), onFace(f, b, o.v0, d), onFace(f, a, o.v0, d), f.v);
+      t.wall.quad(onFace(f, a, o.v1), onFace(f, b, o.v1), onFace(f, b, o.v1, d), onFace(f, a, o.v1, d), neg3(f.v));
+    }
+    for (let j = 0; j < vSeg.length - 1; j++) {
+      const [a, b] = [vSeg[j], vSeg[j + 1]];
+      t.wall.quad(onFace(f, o.u0, a), onFace(f, o.u0, b), onFace(f, o.u0, b, d), onFace(f, o.u0, a, d), f.u);
+      t.wall.quad(onFace(f, o.u1, a), onFace(f, o.u1, b), onFace(f, o.u1, b, d), onFace(f, o.u1, a, d), neg3(f.u));
+    }
     t.wall.winAttr = [-1, ROLE.wall];
 
-    // The pane (or door leaf) closing the hole; uv 0..1 across the opening.
+    // The pane (or door leaf) closing the hole, on the same grid; uv 0..1 across the whole opening.
     const target = o.fill === "door" ? t.door : t.pane;
     target.winAttr = [o.rand, role];
-    target.quad(onFace(f, o.u0, o.v0, d), onFace(f, o.u1, o.v0, d), onFace(f, o.u1, o.v1, d), onFace(f, o.u0, o.v1, d), f.n, [
-      [0, 0],
-      [1, 0],
-      [1, 1],
-      [0, 1],
-    ]);
+    for (let i = 0; i < uSeg.length - 1; i++) {
+      for (let j = 0; j < vSeg.length - 1; j++) {
+        const [ua, ub, va, vb] = [uSeg[i], uSeg[i + 1], vSeg[j], vSeg[j + 1]];
+        const qa = (ua - o.u0) / W;
+        const qb = (ub - o.u0) / W;
+        const ra = (va - o.v0) / H;
+        const rb = (vb - o.v0) / H;
+        target.quad(onFace(f, ua, va, d), onFace(f, ub, va, d), onFace(f, ub, vb, d), onFace(f, ua, vb, d), f.n, [
+          [qa, ra],
+          [qb, ra],
+          [qb, rb],
+          [qa, rb],
+        ]);
+      }
+    }
     target.winAttr = [-1, ROLE.wall];
 
     // Slim frame + mullions standing just proud of the glass.
     if (o.fill !== "door") {
       const fw = o.fill === "glazing" ? 0.07 : 0.06;
       const fd = 0.07;
-      const W = o.u1 - o.u0;
-      const H = o.v1 - o.v0;
       const back = d - 0.012; // a hair proud of the glass (never coplanar with the pane)
       const frameBar = (u0: number, v0: number, lu: number, lv: number) =>
         t.frame.frameBox(onFace(f, o.u0 + u0, o.v0 + v0, back), f.u, f.v, f.n, lu, lv, fd);
-      frameBar(0, 0, W, fw);
-      frameBar(0, H - fw, W, fw);
-      frameBar(0, fw, fw, H - 2 * fw);
-      frameBar(W - fw, fw, fw, H - 2 * fw);
+      // The outer bars are embedded FRAME_EMBED into the four reveals: no frame
+      // face is coplanar with a reveal (back faces would z-fight as poché) and
+      // there is no hairline slit between frame and reveal either (it would
+      // alias into dashes of the lit reveal behind it at distance).
+      const e = FRAME_EMBED;
+      const inner = H - 2 * fw + 2 * e;
+      frameBar(-e, -e, W + 2 * e, fw);
+      frameBar(-e, H - fw + e, W + 2 * e, fw);
+      frameBar(-e, fw - e, fw, inner);
+      frameBar(W - fw + e, fw - e, fw, inner);
       const m = o.mullions ?? 0;
       for (let k = 1; k <= m; k++) {
         const u = (W * k) / (m + 1) - fw * 0.4;
-        frameBar(u, fw, fw * 0.8, H - 2 * fw);
+        frameBar(u, fw - e, fw * 0.8, inner);
       }
-      if (o.transom) frameBar(fw, o.transom, W - 2 * fw, fw * 0.8);
+      if (o.transom) frameBar(fw - e, o.transom, W - 2 * fw + 2 * e, fw * 0.8);
       // A slim bronze sill lip under punched windows (a fine shadow line from afar).
       if (o.fill === "pane" && o.v0 > 0.3) {
         t.frame.frameBox(onFace(f, o.u0 - 0.03, o.v0 - 0.04, 0), f.u, f.v, f.n, W + 0.06, 0.04, 0.05);
       }
     } else {
-      // A slim bronze handle bar on the door leaf.
-      const W = o.u1 - o.u0;
-      const H = o.v1 - o.v0;
-      t.frame.frameBox(onFace(f, o.u0 + W * 0.82, o.v0 + H * 0.3, d), f.u, f.v, f.n, 0.04, H * 0.4, 0.06);
+      // A slim bronze handle bar, standing 5 mm proud of the door leaf.
+      t.frame.frameBox(onFace(f, o.u0 + W * 0.82, o.v0 + H * 0.3, d - 0.005), f.u, f.v, f.n, 0.04, H * 0.4, 0.06);
+      // A round opal wall light beside the entrance (lit at night).
+      if (o.lamp !== false) {
+        const s = 0.2;
+        const lv = o.v0 + Math.min(2.0, H - 0.25);
+        const clear = (a: number) =>
+          a > 0.2 && a + s < f.w - 0.2 && !openings.some((p) => p !== o && a < p.u1 + 0.12 && a + s > p.u0 - 0.12 && lv - s / 2 < p.v1 + 0.12 && lv + s / 2 > p.v0 - 0.12);
+        const right = o.u1 + 0.32;
+        const left = o.u0 - 0.32 - s;
+        const order = f.w - o.u1 >= o.u0 ? [right, left] : [left, right];
+        const a = order.find(clear);
+        if (a !== undefined) lamps.push(wallLamp(f, a + s / 2, lv, o.rand, t));
+      }
     }
 
     if (t.lines) {
@@ -300,6 +380,56 @@ export function facade(f: FaceFrame, openings: Opening[], t: FacadeTargets) {
       L.seg(a, e, 0.72);
       L.seg(b, c, 0.74);
       L.seg(e, c, 0.76);
+    }
+  }
+  return lamps;
+}
+
+/** Outer frame bars are embedded this far into the reveals (metres). */
+export const FRAME_EMBED = 0.003;
+
+export interface WallLamp {
+  /** Centre of the light on the face (face coordinates). */
+  u: number;
+  v: number;
+  rand: number;
+}
+
+/**
+ * A small round wall light: a bronze back plate (embedded 5 mm in the wall,
+ * 5 cm proud) and an opal disc (window material, ROLE.lamp; uv 0..1 → the
+ * shader cuts the circle) 1 mm in front of it.
+ */
+export function wallLamp(f: FaceFrame, u: number, v: number, rand: number, t: Pick<FacadeTargets, "frame" | "pane">): WallLamp {
+  const s = 0.2;
+  t.frame.frameBox(onFace(f, u - s / 2, v - s / 2, 0.005), f.u, f.v, f.n, s, s, 0.055);
+  const r = 0.085;
+  const z = -0.051;
+  t.pane.winAttr = [rand, ROLE.lamp];
+  t.pane.quad(onFace(f, u - r, v - r, z), onFace(f, u + r, v - r, z), onFace(f, u + r, v + r, z), onFace(f, u - r, v + r, z), f.n, [
+    [0, 0],
+    [1, 0],
+    [1, 1],
+    [0, 1],
+  ]);
+  t.pane.winAttr = [-1, ROLE.wall];
+  return { u, v, rand };
+}
+
+/** Extra breakpoints (face coordinates) a facade's wall grid must include. */
+export interface FaceGrid {
+  us: number[];
+  vs: number[];
+}
+
+/** A conforming grid of wall quads over us × vs, skipping cells inside holes. */
+function wallGrid(f: FaceFrame, holes: Rect[], b: MeshBuilder, us: number[], vs: number[]) {
+  for (let j = 0; j < vs.length - 1; j++) {
+    const vm = (vs[j] + vs[j + 1]) / 2;
+    for (let i = 0; i < us.length - 1; i++) {
+      const um = (us[i] + us[i + 1]) / 2;
+      if (holes.some((o) => um > o.u0 && um < o.u1 && vm > o.v0 && vm < o.v1)) continue;
+      b.quad(onFace(f, us[i], vs[j]), onFace(f, us[i + 1], vs[j]), onFace(f, us[i + 1], vs[j + 1]), onFace(f, us[i], vs[j + 1]), f.n);
     }
   }
 }
@@ -337,7 +467,7 @@ export function wallWithHoles(f: FaceFrame, holes: Rect[], b: MeshBuilder, n: Ve
   }
 }
 
-function uniqSorted(xs: number[]) {
+export function uniqSorted(xs: number[]) {
   const s = [...xs].sort((a, b) => a - b);
   const out: number[] = [];
   for (const x of s) if (!out.length || Math.abs(x - out[out.length - 1]) > 1e-5) out.push(x);
@@ -352,14 +482,24 @@ function uniqSorted(xs: number[]) {
  * shrinks each box from the bottom as its house rises, so mask + risen
  * house always fill the final envelope (hidden edges stay hidden).
  */
+/** Hidden-line mask boxes are shrunk this far inside the envelope they stand for. */
+export const MASK_INSET = 0.03;
+
 export class MaskBuilder {
   pos: number[] = [];
   mask: number[] = [];
   delay = 0;
 
   box(min: Vec3, max: Vec3) {
-    const [x0, y0, z0] = min;
-    const [x1, y1, z1] = max;
+    // Shrunk MASK_INSET inwards (sides and top), so hairlines lying on the
+    // envelope are never coplanar with the mask that hides the lines behind it.
+    const i = MASK_INSET;
+    const x0 = min[0] + Math.min(i, (max[0] - min[0]) * 0.25);
+    const x1 = max[0] - Math.min(i, (max[0] - min[0]) * 0.25);
+    const z0 = min[2] + Math.min(i, (max[2] - min[2]) * 0.25);
+    const z1 = max[2] - Math.min(i, (max[2] - min[2]) * 0.25);
+    const y0 = min[1];
+    const y1 = max[1] - Math.min(i, (max[1] - min[1]) * 0.25);
     const c: Vec3[] = [
       [x0, y0, z0],
       [x1, y0, z0],
