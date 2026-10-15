@@ -216,7 +216,7 @@ export function buildArrivals(): Arrival[] {
     const t0 = 3.86 + 0.05 * i;
     const t1 = t0 + 0.185;
     const t2 = t1 + 0.115;
-    const t3 = 4.66 + 0.058 * i;
+    const t3 = 4.6 + 0.06 * i;
     const keys: [number, number][] = [
       [t0, 0],
       [t1, sMouth],

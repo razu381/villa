@@ -35,8 +35,8 @@ import { PALETTE } from "@/lib/palette";
 import { useJourney } from "@/lib/store";
 import { bump, clamp01, easeOutQuart, smooth } from "@/lib/timeline";
 import { clipPlanes } from "@/lib/uniforms";
-import { PATHS, PATH_WIDTH, PLAYGROUND, VILLAGE_HEART } from "@/lib/village";
-import { CROSSINGS, STAIR } from "../world/landscape/layout";
+import { HOUSES, PATHS, PATH_WIDTH, PLAYGROUND, VILLAGE_HEART } from "@/lib/village";
+import { CROSSINGS, POOLS, STAIR } from "../world/landscape/layout";
 import { TERRACE_WALL, groundHeight } from "../world/terrain/ground";
 
 /** The heart the reveal grows from (as the contours and plan lines do). */
@@ -58,6 +58,48 @@ export function walkY(x: number, z: number) {
   }
   return groundHeight(x, z);
 }
+
+/* ------------------------------------------------------------ the lanes */
+
+/** Footprints the lanes must not run through: houses, the pavilion, the pools (x0, x1, z0, z1). */
+const BLOCKERS: [number, number, number, number][] = [
+  ...HOUSES.map((h): [number, number, number, number] => [h.x - h.width / 2 - 0.5, h.x + h.width / 2 + 0.5, h.z - h.depth / 2 - 0.5, h.z + h.depth / 2 + 0.5]),
+  (() => {
+    const p = VILLAGE_HEART.pavilion;
+    return [p.x - p.width / 2 - 0.5, p.x + p.width / 2 + 0.5, p.z - p.depth / 2 - 0.5, p.z + p.depth / 2 + 0.5] as [number, number, number, number];
+  })(),
+  ...POOLS.map((p): [number, number, number, number] => [p.x - p.hx - 0.6, p.x + p.hx + 0.6, p.z - p.hz - 0.6, p.z + p.hz + 0.6]),
+];
+const blocked = (x: number, z: number) => BLOCKERS.some(([x0, x1, z0, z1]) => x > x0 && x < x1 && z > z0 && z < z1);
+
+/**
+ * The walkable lanes: every PATHS polyline resampled (≈0.4 m) and split into
+ * runs wherever it would cross a house, the pavilion or a pool — so neither
+ * the luminous lines nor the walkers ever pass through a building.
+ */
+export const LANE_RUNS: [number, number][][] = (() => {
+  const runs: [number, number][][] = [];
+  for (const p of PATHS) {
+    let run: [number, number][] = [];
+    const flush = () => {
+      if (run.length > 1 && polyLength(run) > 4) runs.push(run);
+      run = [];
+    };
+    for (let i = 0; i < p.length - 1; i++) {
+      const [ax, az] = p[i];
+      const [bx, bz] = p[i + 1];
+      const n = Math.max(1, Math.ceil(Math.hypot(bx - ax, bz - az) / 0.4));
+      for (let k = i === 0 ? 0 : 1; k <= n; k++) {
+        const x = ax + ((bx - ax) * k) / n;
+        const z = az + ((bz - az) * k) / n;
+        if (blocked(x, z)) flush();
+        else run.push([x, z]);
+      }
+    }
+    flush();
+  }
+  return runs;
+})();
 
 /* ------------------------------------------------------- luminous lines */
 
@@ -91,21 +133,7 @@ function buildRibbons(): Ribbon {
       prev = cur;
     }
   };
-  for (const p of PATHS) {
-    for (let i = 0; i < p.length - 1; i++) {
-      const [ax, az] = p[i];
-      const [bx, bz] = p[i + 1];
-      const len = Math.hypot(bx - ax, bz - az);
-      const n = Math.max(2, Math.ceil(len / 0.6));
-      const pts: [number, number, number][] = [];
-      for (let k = 0; k <= n; k++) {
-        const x = ax + ((bx - ax) * k) / n;
-        const z = az + ((bz - az) * k) / n;
-        pts.push([x, walkY(x, z) + 0.05, z]);
-      }
-      strip(pts);
-    }
-  }
+  for (const run of LANE_RUNS) strip(run.map(([x, z]): [number, number, number] => [x, walkY(x, z) + 0.05, z]));
   // the playground ring
   const cx = (PLAYGROUND.minX + PLAYGROUND.maxX) / 2;
   const cz = (PLAYGROUND.minZ + PLAYGROUND.maxZ) / 2;
@@ -236,7 +264,8 @@ interface Figure {
   yaw: number;
 }
 
-const TONES = ["#F2EFE8", "#E9E4D8", "#D6C7AC", "#B99B78", PALETTE.cork, "#6F6455"];
+/** Model figures: mostly white and stone, a few in cork — never dark silhouettes. */
+const TONES = ["#F4F1EA", "#EEEAE1", "#E6DFD1", "#D9CDB8", "#C9B597", PALETTE.cork];
 
 function polyLength(p: [number, number][]) {
   let L = 0;
@@ -277,7 +306,7 @@ function buildFigures(): Figure[] {
     yaw: rand() * Math.PI * 2,
   });
   // walkers on the lanes, in ones and twos
-  const lanes = PATHS.map((p) => ({ p, L: polyLength(p) }));
+  const lanes = LANE_RUNS.map((p) => ({ p, L: polyLength(p) }));
   const total = lanes.reduce((a, l) => a + l.L, 0);
   let n = 0;
   while (n < 40) {
