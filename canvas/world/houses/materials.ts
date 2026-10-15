@@ -196,7 +196,10 @@ vec3 hPerturb(vec3 n, float h) {
   vec3 r2 = cross(n, sx);
   float det = dot(sx, r1);
   vec3 grad = sign(det) * (dFdx(h) * r1 + dFdy(h) * r2);
-  return normalize(abs(det) * n - grad);
+  // Degenerate derivatives (grazing / sub-pixel faces) give a zero vector; a NaN
+  // normal here poisons the bloom mip chain and blacks out the whole frame.
+  vec3 r = abs(det) * n - grad;
+  return dot(r, r) > 1e-24 ? normalize(r) : n;
 }
 ${WIN_ON_GLSL}
 float hWinOn(float r, float role) {

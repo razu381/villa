@@ -89,8 +89,6 @@ function studioLight(fs: string) {
 
 /** The house shader's fake bounce light inside cut rooms (see world/houses/materials.ts WALL_EMISSIVE). */
 const ROOM_BOUNCE = "uPlaster * vec3(1.0, 0.95, 0.86) * 0.45 * (1.0 - uNight)";
-/** The last line of the house shader's hPerturb (world/houses/materials.ts). */
-const BUMP_NORMALIZE = "return normalize(abs(det) * n - grad);";
 
 /**
  * Clone of a house material with [section plane, cut plane] clipping and the
@@ -117,11 +115,8 @@ function cloneHouseMaterial(key: HouseMaterialKey, src: MeshStandardMaterial, cu
       .replace("#include <common>", "#include <common>\nuniform float uHomeGlow;\nuniform float uHomeOpen;\nuniform vec3 uHomeFloor;")
       .replace("uFloorTone * (0.9 + 0.2 * board)", "mix(uFloorTone, uHomeFloor, uHomeOpen) * (0.9 + 0.2 * board)")
       .replace("#include <tonemapping_fragment>", "gl_FragColor.rgb *= 1.0 + uHomeGlow;\n#include <tonemapping_fragment>")
-      .replace(ROOM_BOUNCE, `${ROOM_BOUNCE} * (1.0 - uHomeOpen)`)
-      // Guard the bump's normalize: a degenerate screen-space frame (det = 0,
-      // no bump) gives normalize(0) = NaN, which mip-chain bloom then smears
-      // over the whole frame. Fall back to the unperturbed normal.
-      .replace(BUMP_NORMALIZE, "vec3 hNn = abs(det) * n - grad;\n  return dot(hNn, hNn) > 1e-30 ? normalize(hNn) : n;");
+      .replace(ROOM_BOUNCE, `${ROOM_BOUNCE} * (1.0 - uHomeOpen)`);
+    // (The bump's NaN guard now lives in the source hPerturb — world/houses/materials.ts.)
     if (key === "window") {
       fs = fs.replace(
         "#include <clipping_planes_fragment>",
