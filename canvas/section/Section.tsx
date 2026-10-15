@@ -36,7 +36,7 @@ import { mulberry32 } from "@/lib/noise";
 import { useJourney } from "@/lib/store";
 import { sectionPlane, U } from "@/lib/uniforms";
 import { PLINTH } from "@/lib/village";
-import { updateSectionAnchors } from "./anchors";
+import { SECTION_ANCHORS, updateSectionAnchors } from "./anchors";
 import { buildArrivals, buildCarGeometry, buildCarShadowGeometry, arrivalS, roadY } from "./cars";
 import { OUTLINES, buildGarage } from "./garageGeometry";
 import { SU } from "./glsl";
@@ -129,7 +129,10 @@ export function Section() {
   );
 
   useEffect(() => {
-    if (DBG) (window as unknown as { __VL_SCENE?: unknown }).__VL_SCENE = scene;
+    if (!DBG) return;
+    const w = window as unknown as { __VL_SCENE?: unknown; __VL_SECTION_ANCHORS?: unknown };
+    w.__VL_SCENE = scene;
+    w.__VL_SECTION_ANCHORS = SECTION_ANCHORS;
   }, [scene]);
 
   useFrame((state) => {
