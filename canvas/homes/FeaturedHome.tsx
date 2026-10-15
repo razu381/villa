@@ -71,6 +71,7 @@ export function FeaturedHome({ id }: { id: HomeId }) {
       plan: homeLineMaterial({ color: "#F6EEDF", alpha: 0.72, width: 1.0 }),
       guides: homeLineMaterial({ color: PALETTE.taupe, alpha: 0.55, width: 1.0, dashed: true }),
       gold: homeLineMaterial({ color: "#E9CF98", alpha: 0.85, width: 1.25 }),
+      plot: homeLineMaterial({ color: "#EFD8A6", alpha: 0.9, width: 1.25 }),
       leader: homeLineMaterial({ color: PALETTE.sun, alpha: 0.9, width: 1.0 }),
       halo: haloMaterial(),
       marker: markerMaterial(),
@@ -84,7 +85,7 @@ export function FeaturedHome({ id }: { id: HomeId }) {
     () => () => {
       disposeHomeData(id);
       for (const set of mats.sets) Object.values(set).forEach((m) => m.dispose());
-      [...mats.interior, ...mats.depths, mats.lamp, mats.pool, mats.plan, mats.guides, mats.gold, mats.leader, mats.halo, mats.marker].forEach((m) => m.dispose());
+      [...mats.interior, ...mats.depths, mats.lamp, mats.pool, mats.plan, mats.guides, mats.gold, mats.plot, mats.leader, mats.halo, mats.marker].forEach((m) => m.dispose());
     },
     [id, mats],
   );
@@ -187,7 +188,8 @@ export function FeaturedHome({ id }: { id: HomeId }) {
     const wantHover = interactive && (homesState.hover === id || cardHover) ? 1 : 0;
     st.hover = snap ? wantHover : damp(st.hover, wantHover, 7, dt);
     if (lift.current) lift.current.position.y = st.hover * 0.32;
-    mats.hu.uHomeGlow.value = st.hover * 0.07;
+    // (The jewel's own lift: a breath brighter than its neighbours, more under the pointer.)
+    mats.hu.uHomeGlow.value = st.hover * 0.07 + st.jewel * 0.035;
 
     // Plan cut planes (world): y_pad + lift + cut height; "off" when closed.
     const i0 = data.levels[0].interior;
@@ -209,6 +211,7 @@ export function FeaturedHome({ id }: { id: HomeId }) {
     mats.cuts[2].constant = 1e4;
     mats.hu.uOpen[0].value = e > 0.0005 ? Math.max(c0, smooth(0.05, 0.3, e)) : 0;
     mats.hu.uOpen[1].value = e > 0.0005 ? Math.max(c1, smooth(0.05, 0.3, e)) : 0;
+    mats.hu.uStudio.value = smooth(0.15, 0.85, e);
 
     // Interiors: only while open (they live inside the closed shells otherwise).
     const open = e > 0.01;
@@ -254,15 +257,18 @@ export function FeaturedHome({ id }: { id: HomeId }) {
       updateHouseLineResolution(gl);
       const gold = mats.gold.uniforms;
       gold.uProgress.value = Math.min(1, j * 1.15);
-      gold.uAlpha.value = (0.42 + 0.4 * st.hover) * smooth(0.0, 0.35, j);
+      gold.uAlpha.value = (0.36 + 0.4 * st.hover) * smooth(0.0, 0.35, j);
+      const plot = mats.plot.uniforms;
+      plot.uProgress.value = smooth(0.0, 0.85, j);
+      plot.uAlpha.value = (0.62 + 0.3 * st.hover) * (1 - 0.35 * U.uNight.value);
       mats.leader.uniforms.uProgress.value = smooth(0.25, 0.9, j);
       mats.leader.uniforms.uAlpha.value = 0.75 * smooth(0.2, 0.6, j);
       const mk = mats.marker.uniforms;
       mk.uAlpha.value = smooth(0.55, 1.0, j);
       mk.uHover.value = st.hover;
-      mk.uSize.value = 26 * gl.getPixelRatio();
+      mk.uSize.value = 30 * gl.getPixelRatio();
       const ha = mats.halo.uniforms;
-      ha.uAlpha.value = (0.3 + 0.25 * st.hover) * smooth(0.1, 0.8, j) * (1 - 0.6 * U.uNight.value);
+      ha.uAlpha.value = (0.55 + 0.3 * st.hover) * smooth(0.1, 0.8, j) * (1 - 0.5 * U.uNight.value);
     }
   });
 
@@ -407,6 +413,7 @@ export function FeaturedHome({ id }: { id: HomeId }) {
         {/* The jewel. */}
         <group ref={jewel} visible={false}>
           <mesh geometry={data.lines} material={mats.gold} renderOrder={999} frustumCulled={false} />
+          <mesh geometry={data.plot} material={mats.plot} renderOrder={999} frustumCulled={false} />
           <mesh position={[box.cx, 0.08, box.cz]} rotation-x={-Math.PI / 2} material={mats.halo} renderOrder={3}>
             <planeGeometry args={[box.hx * 2 + 7, box.hz * 2 + 7]} />
           </mesh>

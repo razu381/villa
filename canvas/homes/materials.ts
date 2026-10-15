@@ -20,6 +20,7 @@ import {
   MeshStandardMaterial,
   NormalBlending,
   Plane,
+  ShaderChunk,
   ShaderMaterial,
   Vector2,
   Vector3,
@@ -44,6 +45,14 @@ export interface HomeUniforms {
   uPoche: { value: Color };
   /** Per material set: 0 closed → 1 open in plan (exploded view). */
   uOpen: { value: number }[];
+  /**
+   * The exploded home's own light, 0 (journey: exactly the village's shading)
+   * → 1: a raking-light response (a low sun still reads on floors and table
+   * tops, its shadows long and legible) and a little less ambient fill.
+   */
+  uStudio: { value: number };
+  /** Floor tone of the open rooms: a pale limed oak, so the model's furniture reads against it. */
+  uHomeFloor: { value: Color };
 }
 
 export const createHomeUniforms = (sets = 3): HomeUniforms => ({
@@ -51,10 +60,34 @@ export const createHomeUniforms = (sets = 3): HomeUniforms => ({
   uLamp: { value: 0 },
   uPoche: { value: new Color(PALETTE.poche) },
   uOpen: Array.from({ length: sets }, () => ({ value: 0 })),
+  uStudio: { value: 0 },
+  uHomeFloor: { value: new Color("#D3C2A5") },
 });
+
+/**
+ * three's physical lighting with a raking-light response: N·L lifted towards
+ * N·L^0.55 by uStudio (grazing light still models horizontal surfaces, like a
+ * photographer's low fill card). Identity at uStudio = 0.
+ */
+const RAKE_LIGHTS = ShaderChunk.lights_physical_pars_fragment.replace(
+  "float dotNL = saturate( dot( geometryNormal, directLight.direction ) );",
+  "float dotNL = saturate( dot( geometryNormal, directLight.direction ) );\n\tdotNL = mix( dotNL, pow( dotNL, 0.55 ), uStudio );",
+);
+/** Less ambient fill in the studio light (by day; at night the fill is the light). */
+const STUDIO_FILL = "reflectedLight.indirectDiffuse *= 1.0 - 0.28 * uStudio * (1.0 - uNight);";
+
+/** Adds the studio light to a MeshStandardMaterial fragment shader (after its own patches). */
+function studioLight(fs: string) {
+  return fs
+    .replace("#include <common>", "#include <common>\nuniform float uStudio;")
+    .replace("#include <lights_physical_pars_fragment>", RAKE_LIGHTS)
+    .replace("#include <aomap_fragment>", `#include <aomap_fragment>\n${STUDIO_FILL}`);
+}
 
 /** The house shader's fake bounce light inside cut rooms (see world/houses/materials.ts WALL_EMISSIVE). */
 const ROOM_BOUNCE = "uPlaster * vec3(1.0, 0.95, 0.86) * 0.45 * (1.0 - uNight)";
+/** The last line of the house shader's hPerturb (world/houses/materials.ts). */
+const BUMP_NORMALIZE = "return normalize(abs(det) * n - grad);";
 
 /**
  * Clone of a house material with [section plane, cut plane] clipping and the
@@ -74,18 +107,25 @@ function cloneHouseMaterial(key: HouseMaterialKey, src: MeshStandardMaterial, cu
     base.call(src, shader, renderer);
     shader.uniforms.uHomeGlow = hu.uHomeGlow;
     shader.uniforms.uHomeOpen = open;
+    shader.uniforms.uStudio = hu.uStudio;
+    shader.uniforms.uHomeFloor = hu.uHomeFloor;
     if (shader.uniforms.uPoche) shader.uniforms.uPoche = hu.uPoche;
     let fs = shader.fragmentShader
-      .replace("#include <common>", "#include <common>\nuniform float uHomeGlow;\nuniform float uHomeOpen;")
+      .replace("#include <common>", "#include <common>\nuniform float uHomeGlow;\nuniform float uHomeOpen;\nuniform vec3 uHomeFloor;")
+      .replace("uFloorTone * (0.9 + 0.2 * board)", "mix(uFloorTone, uHomeFloor, uHomeOpen) * (0.9 + 0.2 * board)")
       .replace("#include <tonemapping_fragment>", "gl_FragColor.rgb *= 1.0 + uHomeGlow;\n#include <tonemapping_fragment>")
-      .replace(ROOM_BOUNCE, `${ROOM_BOUNCE} * (1.0 - uHomeOpen)`);
+      .replace(ROOM_BOUNCE, `${ROOM_BOUNCE} * (1.0 - uHomeOpen)`)
+      // Guard the bump's normalize: a degenerate screen-space frame (det = 0,
+      // no bump) gives normalize(0) = NaN, which mip-chain bloom then smears
+      // over the whole frame. Fall back to the unperturbed normal.
+      .replace(BUMP_NORMALIZE, "vec3 hNn = abs(det) * n - grad;\n  return dot(hNn, hNn) > 1e-30 ? normalize(hNn) : n;");
     if (key === "window") {
       fs = fs.replace(
         "#include <clipping_planes_fragment>",
         "#include <clipping_planes_fragment>\nif (uHomeOpen > 0.02 && vHWin.y > 0.5 && vHWin.y < 2.5) discard;",
       );
     }
-    shader.fragmentShader = fs;
+    shader.fragmentShader = studioLight(fs);
   };
   const cacheKey = src.customProgramCacheKey();
   m.customProgramCacheKey = () => `${cacheKey}:home`;
@@ -138,7 +178,8 @@ export function interiorMaterial(cut: Plane, hu: HomeUniforms) {
     base.call(m, shader, renderer);
     shader.uniforms.uPoche = hu.uPoche;
     shader.uniforms.uLamp = hu.uLamp;
-    shader.fragmentShader = shader.fragmentShader
+    shader.uniforms.uStudio = hu.uStudio;
+    shader.fragmentShader = studioLight(shader.fragmentShader)
       .replace("#include <common>", "#include <common>\nuniform float uLamp;")
       // Lamp-lit at dusk: a warm fill proportional to the surface colour (never flat).
       .replace("#include <emissivemap_fragment>", "#include <emissivemap_fragment>\ntotalEmissiveRadiance = emissive * diffuseColor.rgb * 0.16 * uLamp;");

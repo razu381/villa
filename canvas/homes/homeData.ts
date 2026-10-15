@@ -36,6 +36,10 @@ export interface HomeData {
   guides: [BufferGeometry, BufferGeometry];
   /** Unit-height leader line for the jewel marker. */
   leader: BufferGeometry;
+  /** The jewel's setting: a golden hairline around the plot at ground level, corners crossing like a draughtsman's. */
+  plot: BufferGeometry;
+  /** The plot (all parts, garden included), local: min/max x and z. */
+  plotBox: { minX: number; maxX: number; minZ: number; maxZ: number };
   /** Footprint (union of levels) centre and half extents, local. */
   box: { cx: number; cz: number; hx: number; hz: number; height: number };
   /** How far the upper floor and the roof lift in the exploded view. */
@@ -115,6 +119,32 @@ export function buildHomeData(id: HomeId): HomeData {
   const leader = new LineCollector();
   leader.seg([0, 0, 0], [0, 1, 0], 0, 1);
 
+  // The plot: every part of the house, garden walls and paving included.
+  const pb = { minX: Infinity, maxX: -Infinity, minZ: Infinity, maxZ: -Infinity };
+  for (const p of build.parts) {
+    p.geometry.computeBoundingBox();
+    const b = p.geometry.boundingBox!;
+    pb.minX = Math.min(pb.minX, b.min.x);
+    pb.maxX = Math.max(pb.maxX, b.max.x);
+    pb.minZ = Math.min(pb.minZ, b.min.z);
+    pb.maxZ = Math.max(pb.maxZ, b.max.z);
+  }
+  const plot = new LineCollector();
+  {
+    const m = 0.7; // margin outside the plot
+    const o = 0.9; // corner overshoot
+    const y = 0.07;
+    const x0 = pb.minX - m;
+    const x1 = pb.maxX + m;
+    const z0 = pb.minZ - m;
+    const z1 = pb.maxZ + m;
+    // Drawn as one pen stroke round the plot, each side crossing the next corner.
+    plot.seg([x0 - o, y, z1], [x1 + o, y, z1], 0.0, 0.34);
+    plot.seg([x1, y, z1 + o], [x1, y, z0 - o], 0.22, 0.34);
+    plot.seg([x1 + o, y, z0], [x0 - o, y, z0], 0.44, 0.34);
+    plot.seg([x0, y, z0 - o], [x0, y, z1 + o], 0.66, 0.34);
+  }
+
   const data: HomeData = {
     id,
     build,
@@ -124,6 +154,8 @@ export function buildHomeData(id: HomeId): HomeData {
     mask: build.mask!,
     guides,
     leader: leader.build(),
+    plot: plot.build(),
+    plotBox: pb,
     box: { cx: (minX + maxX) / 2, cz: (minZ + maxZ) / 2, hx: (maxX - minX) / 2, hz: (maxZ - minZ) / 2, height: build.height },
     lift: id === "v3" ? [5.6, 10.8] : [5.8, 11.0],
     tops: [l0.y1 + 0.5, l1.y1 + 0.5],
@@ -149,7 +181,7 @@ export function disposeHomeData(id: HomeId) {
       add(l.interior.plan);
     }
   }
-  [d.lines, d.mask, ...d.guides, d.leader].forEach(add);
+  [d.lines, d.mask, ...d.guides, d.leader, d.plot].forEach(add);
   d.merged.forEach((m) => add(m.geometry));
   d.build.parts.forEach((p) => add(p.geometry));
   add(d.build.spill);

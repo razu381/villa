@@ -84,7 +84,7 @@ export function Veil() {
             float h = vWorld.y - terraceY(vWorld.z);
             k *= smoothstep(0.0, 9.0, h);
             vec3 col = mix(mix(uFog, uSky, 0.35), uTint, 0.18 * (1.0 - uNight));
-            gl_FragColor = vec4(col, uAmount * k * mix(0.46, 0.4, uNight));
+            gl_FragColor = vec4(col, uAmount * k * mix(0.3, 0.32, uNight));
             #include <colorspace_fragment>
           }`,
       }),
