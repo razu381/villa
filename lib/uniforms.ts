@@ -10,6 +10,8 @@ export const U = {
   uTime: { value: 0 },
   /** Build stages, 0 → 1 (see lib/timeline.ts `Stages`). */
   uContours: { value: 0 },
+  /** Podium outline drawn, then the podium rises (see build.ts). */
+  uPlan: { value: 0 },
   uLines: { value: 0 },
   uRise: { value: 0 },
   uFoam: { value: 0 },

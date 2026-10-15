@@ -61,6 +61,7 @@ const GROUND_GLSL = /* glsl */ `
 varying vec3 vTrTerr;
 varying vec3 vTrN;
 uniform float uContours;
+uniform float uPlan;
 uniform float uLines;
 uniform float uRise;
 uniform float uCutZ;
@@ -273,7 +274,7 @@ const COLOR_CODE = /* glsl */ `
     float side = vTrTerr.y;
     trPd = tr_podium(p.xz);
     trAO = texture2D(uTrAO, tr_aoUv(p.xz));
-    if (side < 0.5 && (trMask > 0.001 || uLines > 0.001)) {
+    if (side < 0.5 && (trMask > 0.001 || uPlan > 0.001)) {
       trPth = tr_paths(p.xz, trPl);
       trDk = tr_decks(p.xz);
       trPg = tr_playground(p.xz);
@@ -347,7 +348,7 @@ const POST_CODE = /* glsl */ `
     if (side < 0.5) {
       float off = 1.0 - vlMask;
       // the stronghold's outline is drawn first, quickly, before it rises
-      float revP = 1.0 - smoothstep(-14.0, 0.0, r - (uLines * 420.0 - 10.0));
+      float revP = 1.0 - smoothstep(-14.0, 0.0, r - (uPlan * 420.0 - 10.0));
       float outline = max(tr_edge(pd - TR_BASTION_OUT, 0.75), tr_edge(pd - TR_BASTION_IN, 0.6));
       float inPod = step(pd, TR_BASTION_IN + 0.02);
       for (int i = 0; i < TR_STEPS.length(); i++) {
@@ -378,6 +379,7 @@ export function createTerrainMaterial() {
   return extendMaterial(mat, "terrain-v3", (shader) => {
     Object.assign(shader.uniforms, siteUniforms(), {
       uContours: U.uContours,
+      uPlan: U.uPlan,
       uLines: U.uLines,
       uRise: U.uRise,
       uCutZ,

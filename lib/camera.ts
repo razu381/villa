@@ -23,11 +23,15 @@ export interface CameraShot {
  * Keys must stay sorted by t.
  */
 const BASE_KEYS: CameraKey[] = [
-  // Hero → match cut with the film's aerial (high, ~45° oblique, village centred).
-  { t: 0.6, pos: [70, 190, 180], target: [-6, 0, -2], fov: 30 },
-  // The drawing — almost a plan view, the hill's contours readable.
-  { t: 1.2, pos: [40, 210, 140], target: [-6, 0, -4], fov: 30 },
-  { t: 1.95, pos: [-20, 170, 150], target: [-8, 2, -4], fov: 30 },
+  // Hero → match cut with the film's aerial (high, ~45° oblique, village centred):
+  // the whole model on its table, a blank hill waiting for its first line.
+  { t: 0.6, pos: [99, 262, 250], target: [-6, 0, -2], fov: 30 },
+  // The drawing — steeper, nearly a plan, the hill's contours readable; the
+  // model sits up and right of the text. A slow push-in as the plan is drawn
+  // and the podium rises, landing close enough to read the houses' lines.
+  { t: 1.25, pos: [52, 300, 190], target: [-16, 0, 10], fov: 30 },
+  { t: 1.7, pos: [16, 230, 200], target: [-26, 0, 14], fov: 30 },
+  { t: 1.98, pos: [-20, 170, 150], target: [-8, 2, -4], fov: 30 },
   // The model rises — a crane down and around.
   { t: 2.4, pos: [-120, 95, 150], target: [-6, 4, -4], fov: 30 },
   { t: 2.95, pos: [-150, 70, 60], target: [-6, 4, -6], fov: 30 },

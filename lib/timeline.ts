@@ -86,7 +86,12 @@ export interface Stages {
   heroFade: number;
   /** Topographic contour lines drawing in on the terrain. */
   contours: number;
-  /** Architect's line drawing of the houses tracing in. */
+  /**
+   * The stronghold's plan: the podium outline is drawn on the bare hill
+   * (0 → ~0.45), then the podium rises out of it (~0.45 → 1, canvas/world/terrain/build.ts).
+   */
+  plan: number;
+  /** Architect's line drawing of the houses (and paths, decks) tracing in on the risen podium. */
   lines: number;
   /** Houses rising from their plans as a white model (per-house delay applied by consumer). */
   rise: number;
@@ -115,10 +120,12 @@ export interface Stages {
 export function stagesFromT(t: number): Stages {
   return {
     heroFade: smooth(0.55, 1.05, t),
-    contours: ramp(0.85, 1.5, t),
-    lines: ramp(1.3, 2.0, t),
-    rise: ramp(2.0, 2.7, t),
-    foam: ramp(2.35, 2.95, t),
+    // contours → podium outline → podium rises → house lines on the podium → houses rise
+    contours: ramp(0.8, 1.38, t),
+    plan: ramp(1.2, 1.74, t),
+    lines: ramp(1.74, 2.16, t),
+    rise: ramp(2.1, 2.76, t),
+    foam: ramp(2.4, 2.96, t),
     material: ramp(3.0, 3.8, t),
     life: smooth(3.55, 4.05, t),
     section: bump(4.12, 4.42, 4.82, 5.02, t),

@@ -5,7 +5,7 @@ import "@fontsource-variable/instrument-sans/index.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000"),
+  metadataBase: new URL("https://villa-bay-iota.vercel.app"),
   title: "Vila Leku — Living in harmony",
   description: "A contemporary village above the Lisbon coast. Leceia, Oeiras — by Phidias.",
   openGraph: {

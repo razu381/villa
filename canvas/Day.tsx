@@ -18,6 +18,7 @@ export function Day() {
   const moon = useRef<DirectionalLight>(null);
   const hemi = useRef<HemisphereLight>(null);
   const scene = useThree((s) => s.scene);
+  const gl = useThree((s) => s.gl);
   const tier = useJourney((s) => s.tier);
 
   const fog = useMemo(() => new Fog(new Color("#E6DED3"), 260, 1100), []);
@@ -82,6 +83,8 @@ export function Day() {
       hemi.current.intensity = p.hemiIntensity;
     }
     fog.color.copy(p.fog);
+    // Read by the AgX curve (post ToneMapping effect, or the renderer on tier low).
+    gl.toneMappingExposure = p.exposure;
   });
 
   const mapSize = tier === "high" ? 4096 : tier === "mid" ? 2048 : 1024;

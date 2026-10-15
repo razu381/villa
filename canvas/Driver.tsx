@@ -14,6 +14,7 @@ export const damp = (current: number, target: number, lambda: number, dt: number
 
 const STAGE_TO_UNIFORM: [keyof Stages, keyof typeof U][] = [
   ["contours", "uContours"],
+  ["plan", "uPlan"],
   ["lines", "uLines"],
   ["rise", "uRise"],
   ["foam", "uFoam"],
