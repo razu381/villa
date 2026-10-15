@@ -85,12 +85,12 @@ export function Section() {
     const c = new Color();
     const rand = mulberry32(9);
     arrivals.forEach((a, i) => {
-      c.set(CAR_PAINTS[a.paint]).convertSRGBToLinear();
+      c.set(CAR_PAINTS[a.paint]); // Color.set already lands in the linear working space
       paint.set([c.r, c.g, c.b], i * 3);
     });
     PARKED.forEach((b, j) => {
       const i = arrivals.length + j;
-      c.set(CAR_PAINTS[Math.floor(rand() * CAR_PAINTS.length)]).convertSRGBToLinear();
+      c.set(CAR_PAINTS[Math.floor(rand() * CAR_PAINTS.length)]);
       paint.set([c.r, c.g, c.b], i * 3);
       const z = b.row === "north" ? BAY_ROWS.north : BAY_ROWS.south;
       const reversed = rand() < 0.3;

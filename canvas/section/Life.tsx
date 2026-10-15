@@ -167,7 +167,7 @@ function createRibbonMaterial() {
     uniforms: {
       uGlow: { value: 0 },
       uReveal: { value: 0 },
-      uColor: { value: new Color("#FFDDA8").convertSRGBToLinear() },
+      uColor: { value: new Color("#FFDDA8") },
       uTime: { value: 0 },
     },
     vertexShader: /* glsl */ `
@@ -199,8 +199,8 @@ function createRibbonMaterial() {
         float am = abs(vLine.y);
         float w = max(0.035, fwidth(vLine.y) * 0.9);
         float core = (1.0 - smoothstep(w * 0.5, w * 1.5, am)) * (0.035 / w);
-        float halo = exp(-am * am * 18.0) * 0.62 + exp(-am * am * 1.6) * 0.2;
-        float a = (core * 3.8 + halo) * (shown * 0.9 + front * 0.8) * uGlow;
+        float halo = exp(-am * am * 18.0) * 0.55 + exp(-am * am * 1.6) * 0.17;
+        float a = (core * 3.4 + halo) * (shown * 0.9 + front * 0.8) * uGlow;
         gl_FragColor = vec4(uColor * a, 1.0);
       }`,
   });
