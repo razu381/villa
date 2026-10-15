@@ -1,28 +1,37 @@
 "use client";
 
 /**
- * While a home is open, the village behind it recedes into the air: a
- * camera-facing plane of the day's fog colour, set just behind the selected
- * home (depth-tested, so only what lies beyond it is veiled), clearest around
- * the home's silhouette and a little denser towards the frame edges.
- * Calm and cheap: one transparent quad, no post-processing.
+ * While a home is open, the rest of the village recedes into the air.
+ *
+ * A camera-facing quad of the day's fog colour drawn over everything in the
+ * opaque pass (renderOrder VEIL_ORDER, no depth test, blended) — and the
+ * selected home is drawn right after it (FeaturedHome gives its meshes
+ * HOME_ORDER), so the home, and only the home, stays crisp: neighbours at the
+ * same depth recede as much as the hill behind. Thinnest around the home on
+ * screen, a little denser towards the frame edges, like aerial perspective.
+ * (The village's few transparent bits — railing glass, window spill, path
+ * lights — draw later and stay as they are: lights through haze.)
+ * Calm and cheap: one quad, no post-processing.
  */
 
 import { useFrame, useThree } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
-import { Color, type Mesh, ShaderMaterial, Vector2, Vector3 } from "three";
+import { Color, CustomBlending, type Mesh, OneMinusSrcAlphaFactor, ShaderMaterial, SrcAlphaFactor, Vector2, Vector3 } from "three";
 import { useJourney } from "@/lib/store";
 import { U } from "@/lib/uniforms";
 import { FEATURED } from "@/lib/village";
 import { damp } from "../Driver";
 
+/** Opaque-pass order of the veil; the selected home draws after it. */
+export const VEIL_ORDER = 50;
+export const HOME_ORDER = 51;
+
 /** Vertical centre of each exploded stack above its pad (m). */
 const STACK_MID = { v3: 9.5, v4: 9.0 } as const;
-/** How far behind the home's centre the veil sits (m, along the view). */
-const BEHIND = 12;
+/** Distance of the quad in front of the camera (m) — in front of everything. */
+const NEAR = 2;
 
 const v = new Vector3();
-const dir = new Vector3();
 
 export function Veil() {
   const camera = useThree((s) => s.camera);
@@ -35,9 +44,13 @@ export function Veil() {
     () =>
       new ShaderMaterial({
         name: "home-veil",
-        transparent: true,
+        // Opaque pass (so the home can follow it there) but blended.
+        transparent: false,
+        blending: CustomBlending,
+        blendSrc: SrcAlphaFactor,
+        blendDst: OneMinusSrcAlphaFactor,
         depthWrite: false,
-        depthTest: true,
+        depthTest: false,
         fog: false,
         uniforms: {
           uAmount: { value: 0 },
@@ -50,9 +63,7 @@ export function Veil() {
         },
         vertexShader: /* glsl */ `
           varying vec4 vClip;
-          varying vec3 vWorld;
           void main() {
-            vWorld = (modelMatrix * vec4(position, 1.0)).xyz;
             gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
             vClip = gl_Position;
           }`,
@@ -65,26 +76,14 @@ export function Veil() {
           uniform float uAspect;
           uniform vec3 uTint;
           varying vec4 vClip;
-          varying vec3 vWorld;
-          // The podium terraces (lib/village TERRACES / steps), for feathering.
-          float terraceY(float z) {
-            float y = 7.8;
-            y += (6.4 - 7.8) * smoothstep(-26.8, -25.6, z);
-            y += (5.0 - 6.4) * smoothstep(-7.3, -6.1, z);
-            y += (3.6 - 5.0) * smoothstep(13.0, 14.2, z);
-            return y;
-          }
           void main() {
             vec2 uv = vClip.xy / vClip.w * 0.5 + 0.5;
             vec2 d = (uv - uCenter) * vec2(uAspect, 1.0);
             float r = length(d);
-            float k = mix(0.55, 1.0, smoothstep(0.18, 0.75, r));
-            // Where the plane meets the ground there is no veil: it thickens with
-            // height above the terrace, like aerial perspective (no hard seam).
-            float h = vWorld.y - terraceY(vWorld.z);
-            k *= smoothstep(0.0, 9.0, h);
-            vec3 col = mix(mix(uFog, uSky, 0.35), uTint, 0.18 * (1.0 - uNight));
-            gl_FragColor = vec4(col, uAmount * k * mix(0.3, 0.32, uNight));
+            // Thin around the home (its garden keeps a little air), fuller at the edges.
+            float k = mix(0.07, 0.2, smoothstep(0.15, 0.8, r));
+            vec3 col = mix(mix(uFog, uSky, 0.35), uTint, 0.12 * (1.0 - uNight));
+            gl_FragColor = vec4(col, uAmount * k * mix(1.0, 1.15, uNight));
             #include <colorspace_fragment>
           }`,
       }),
@@ -105,14 +104,12 @@ export function Veil() {
       const h = FEATURED[s.home];
       focus.current.set(h.x, h.y + STACK_MID[s.home], h.z);
     }
-    // Place the plane behind the home, facing the camera, covering the frustum.
-    dir.copy(focus.current).sub(camera.position);
-    const dist = dir.length() + BEHIND;
-    dir.normalize();
-    m.position.copy(camera.position).addScaledVector(dir, dist);
+    // A quad just in front of the camera, facing it, covering the frustum.
+    camera.getWorldDirection(v);
+    m.position.copy(camera.position).addScaledVector(v, NEAR);
     m.quaternion.copy(camera.quaternion);
     const fov = ((camera as { fov?: number }).fov ?? 30) * (Math.PI / 180);
-    const hgt = 2 * Math.tan(fov / 2) * dist * 1.6;
+    const hgt = 2 * Math.tan(fov / 2) * NEAR * 1.2;
     m.scale.set(hgt * (size.width / Math.max(1, size.height)), hgt, 1);
     // Clearest around the home on screen.
     v.copy(focus.current).project(camera);
@@ -121,7 +118,7 @@ export function Veil() {
   });
 
   return (
-    <mesh ref={ref} material={mat} renderOrder={5} frustumCulled={false} visible={false}>
+    <mesh ref={ref} material={mat} renderOrder={VEIL_ORDER} frustumCulled={false} visible={false}>
       <planeGeometry args={[1, 1]} />
     </mesh>
   );

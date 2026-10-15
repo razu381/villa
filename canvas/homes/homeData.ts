@@ -138,11 +138,14 @@ export function buildHomeData(id: HomeId): HomeData {
     const x1 = pb.maxX + m;
     const z0 = pb.minZ - m;
     const z1 = pb.maxZ + m;
-    // Drawn as one pen stroke round the plot, each side crossing the next corner.
-    plot.seg([x0 - o, y, z1], [x1 + o, y, z1], 0.0, 0.34);
-    plot.seg([x1, y, z1 + o], [x1, y, z0 - o], 0.22, 0.34);
-    plot.seg([x1 + o, y, z0], [x0 - o, y, z0], 0.44, 0.34);
-    plot.seg([x0, y, z0 - o], [x0, y, z1 + o], 0.66, 0.34);
+    // Drawn as one pen stroke round the plot, each side crossing the next corner…
+    plot.seg([x0 - o, y, z1], [x1 + o, y, z1], 0.0, 0.3);
+    plot.seg([x1, y, z1 + o], [x1, y, z0 - o], 0.18, 0.3);
+    plot.seg([x1 + o, y, z0], [x0 - o, y, z0], 0.36, 0.3);
+    plot.seg([x0, y, z0 - o], [x0, y, z1 + o], 0.54, 0.3);
+    // …then a second rule just inside it (a double rule: the jewel's setting).
+    const i = 0.32;
+    plot.rect(x0 + i, z0 + i, x1 - i, z1 - i, y, 0.7);
   }
 
   const data: HomeData = {

@@ -73,8 +73,11 @@ const RAKE_LIGHTS = ShaderChunk.lights_physical_pars_fragment.replace(
   "float dotNL = saturate( dot( geometryNormal, directLight.direction ) );",
   "float dotNL = saturate( dot( geometryNormal, directLight.direction ) );\n\tdotNL = mix( dotNL, pow( dotNL, 0.55 ), uStudio );",
 );
-/** Less ambient fill in the studio light (by day; at night the fill is the light). */
-const STUDIO_FILL = "reflectedLight.indirectDiffuse *= 1.0 - 0.28 * uStudio * (1.0 - uNight);";
+/**
+ * The studio fill: by day a little less ambient (the sun models the open
+ * floors); by night a little more (moonlit model, the roof never a black hole).
+ */
+const STUDIO_FILL = "reflectedLight.indirectDiffuse *= 1.0 + uStudio * mix(-0.28, 0.6, uNight);";
 
 /** Adds the studio light to a MeshStandardMaterial fragment shader (after its own patches). */
 function studioLight(fs: string) {
@@ -402,7 +405,7 @@ export function markerMaterial() {
         vec2 p = (gl_PointCoord - 0.5) * vPx;
         float r = length(p);
         float R = vPx * 0.5 - 2.0;
-        float ring = clamp(1.0 - abs(r - (R - 0.5)) / 0.75, 0.0, 1.0) * (0.75 + 0.25 * uHover);
+        float ring = clamp(1.0 - abs(r - (R - 0.6)) / 1.0, 0.0, 1.0) * (0.85 + 0.15 * uHover);
         float core = clamp(3.2 + 0.8 * uHover - r, 0.0, 1.0);
         float halo = exp(-r * r / (R * R * 0.35)) * 0.18;
         float w = ring + core + halo;
@@ -415,13 +418,13 @@ export function markerMaterial() {
   });
 }
 
-/** Soft warm halo on the ground around a home (additive rounded-rect ring). */
+/** Soft warm light pooled on the ground around a home (a rounded-rect ring, falling off outwards). */
 export function haloMaterial() {
   return new ShaderMaterial({
     name: "home-halo",
     transparent: true,
     depthWrite: false,
-    blending: AdditiveBlending,
+    blending: NormalBlending,
     polygonOffset: true,
     polygonOffsetFactor: -2,
     polygonOffsetUnits: -6,
@@ -431,7 +434,7 @@ export function haloMaterial() {
       uAlpha: { value: 0 },
       uHalf: { value: new Vector2(4, 6) },
       uPad: { value: 2.5 },
-      uColor: { value: new Color(PALETTE.sun) },
+      uColor: { value: new Color("#FBE6BE") },
     },
     vertexShader: /* glsl */ `
       #include <common>
@@ -459,7 +462,7 @@ export function haloMaterial() {
         float k = exp(-d * d / (uPad * uPad * 0.25)) * (1.0 - smoothstep(uPad * 0.8, uPad, d));
         float a = k * uAlpha;
         if (a < 0.002) discard;
-        gl_FragColor = vec4(uColor * a, 1.0);
+        gl_FragColor = vec4(uColor, a);
         #include <colorspace_fragment>
       }`,
   });

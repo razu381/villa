@@ -9,7 +9,7 @@
  * live" it is presented as a jewel (a golden line drawing, a warm halo, a
  * small marker) and answers the pointer.
  *
- * Explore: the floors separate (critically damped — no overshoot): the roof
+ * Explore: the floors separate (a quart-out tween — no overshoot): the roof
  * lifts first, then the upper floor; each open level is cut in plan, showing
  * its rooms, furniture and the floor plan drawn on the slab. At dusk the
  * lamps come on.
@@ -17,7 +17,7 @@
 
 import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
-import { BufferGeometry, Float32BufferAttribute, type Group, type Mesh, type Points, type ShaderMaterial } from "three";
+import { BufferGeometry, Float32BufferAttribute, type Group, type Material, type Mesh, type Points, type ShaderMaterial } from "three";
 import {
   getHouseLineMaterial,
   getHouseMaskMaterial,
@@ -44,8 +44,11 @@ import {
   poolMaterial,
 } from "./materials";
 import { homesState } from "./state";
+import { HOME_ORDER } from "./Veil";
 
 const ease = (k: number) => k * k * (3 - 2 * k);
+/** Length of the explode / close tween (quart-out; the staggered levels make it read ~1.4 s). */
+const EXPLODE_SECONDS = 2.2;
 
 export function FeaturedHome({ id }: { id: HomeId }) {
   const spec = FEATURED[id];
@@ -96,6 +99,9 @@ export function FeaturedHome({ id }: { id: HomeId }) {
   const closed = useRef<Group>(null);
   const interiorRefs = useRef<(Group | null)[]>([null, null]);
   const houseMeshes = useRef<Mesh[]>([]);
+  /** Opaque interior meshes (furniture, lamps): drawn after the veil with the house. */
+  const interiorMeshes = useRef<Mesh[]>([]);
+  const order = useRef(0);
   const spillRefs = useRef<(Mesh | null)[]>([null, null, null]);
   const lines = useRef<Mesh>(null);
   const mask = useRef<Mesh>(null);
@@ -121,8 +127,8 @@ export function FeaturedHome({ id }: { id: HomeId }) {
     [mats],
   );
 
-  // Explode dynamics (critically damped spring) and soft states.
-  const sim = useRef({ x: 0, v: 0, hover: 0, jewel: 0, explore: 0 });
+  // Explode tween and soft states.
+  const sim = useRef({ x: 0, from: 0, to: 0, k: 1, hover: 0, jewel: 0, explore: 0 });
 
   const markerGeo = useMemo(() => {
     const g = new BufferGeometry();
@@ -147,22 +153,20 @@ export function FeaturedHome({ id }: { id: HomeId }) {
     const selected = s.mode === "explore" && s.home === id;
     const target = selected ? Math.min(1, Math.max(0, s.explode)) : 0;
 
-    // ---- explode: x'' = w²(T - x) - 2w x'  (sub-stepped)
+    // ---- explode: a quart-out tween towards store.explode (re-aimed from where
+    // it is whenever the target moves — never a jump, never an overshoot).
     if (snap || s.reducedMotion) {
-      st.x = target;
-      st.v = 0;
+      st.x = st.from = st.to = target;
+      st.k = 1;
     } else {
-      const w = 3.6;
-      const n = 4;
-      const h = dt / n;
-      for (let i = 0; i < n; i++) {
-        const a = w * w * (target - st.x) - 2 * w * st.v;
-        st.v += a * h;
-        st.x += st.v * h;
+      if (target !== st.to) {
+        st.from = st.x;
+        st.to = target;
+        st.k = 0;
       }
-      if (Math.abs(st.x - target) < 1e-4 && Math.abs(st.v) < 1e-4) {
-        st.x = target;
-        st.v = 0;
+      if (st.k < 1) {
+        st.k = Math.min(1, st.k + dt / EXPLODE_SECONDS);
+        st.x = st.from + (st.to - st.from) * (1 - Math.pow(1 - st.k, 4));
       }
     }
     const e = Math.min(1, Math.max(0, st.x));
@@ -237,6 +241,16 @@ export function FeaturedHome({ id }: { id: HomeId }) {
     // Lamps: warm interiors once the held sun passes ~sunset.
     mats.hu.uLamp.value = smooth(0.8, 0.9, U.uDay.value);
 
+    // While this home is the chosen one it draws after the veil (Veil.tsx), so
+    // the village recedes and the home does not. (Glass stays in the
+    // transparent pass. In the journey the veil is off and order is moot.)
+    const wantOrder = s.home === id ? HOME_ORDER : 0;
+    if (wantOrder !== order.current) {
+      order.current = wantOrder;
+      for (const m of houseMeshes.current) if (!(m.material as Material).transparent) m.renderOrder = wantOrder;
+      for (const m of interiorMeshes.current) m.renderOrder = wantOrder;
+    }
+
     // ---- build stages, exactly like canvas/world/Houses.tsx
     const risen = U.uRise.value > 0.0005;
     for (const m of houseMeshes.current) m.visible = risen;
@@ -257,18 +271,18 @@ export function FeaturedHome({ id }: { id: HomeId }) {
       updateHouseLineResolution(gl);
       const gold = mats.gold.uniforms;
       gold.uProgress.value = Math.min(1, j * 1.15);
-      gold.uAlpha.value = (0.36 + 0.4 * st.hover) * smooth(0.0, 0.35, j);
+      gold.uAlpha.value = (0.6 + 0.3 * st.hover) * smooth(0.0, 0.35, j);
       const plot = mats.plot.uniforms;
       plot.uProgress.value = smooth(0.0, 0.85, j);
       plot.uAlpha.value = (0.62 + 0.3 * st.hover) * (1 - 0.35 * U.uNight.value);
       mats.leader.uniforms.uProgress.value = smooth(0.25, 0.9, j);
-      mats.leader.uniforms.uAlpha.value = 0.75 * smooth(0.2, 0.6, j);
+      mats.leader.uniforms.uAlpha.value = 0.9 * smooth(0.2, 0.6, j);
       const mk = mats.marker.uniforms;
       mk.uAlpha.value = smooth(0.55, 1.0, j);
       mk.uHover.value = st.hover;
-      mk.uSize.value = 30 * gl.getPixelRatio();
+      mk.uSize.value = 34 * gl.getPixelRatio();
       const ha = mats.halo.uniforms;
-      ha.uAlpha.value = (0.55 + 0.3 * st.hover) * smooth(0.1, 0.8, j) * (1 - 0.5 * U.uNight.value);
+      ha.uAlpha.value = (0.3 + 0.2 * st.hover) * smooth(0.1, 0.8, j) * (1 - 0.5 * U.uNight.value);
     }
   });
 
@@ -309,6 +323,9 @@ export function FeaturedHome({ id }: { id: HomeId }) {
     s.setMode("explore");
   };
   useEffect(() => () => setCursor(false), []); // eslint-disable-line react-hooks/exhaustive-deps
+  const pushInterior = (el: Mesh | null) => {
+    if (el && !interiorMeshes.current.includes(el)) interiorMeshes.current.push(el);
+  };
 
   return (
     <group ref={root} name={`home-${id}`} position={[spec.x, spec.y, spec.z]} rotation-y={spec.rotY}>
@@ -387,8 +404,8 @@ export function FeaturedHome({ id }: { id: HomeId }) {
                 }}
                 visible={false}
               >
-                <mesh geometry={lv.interior.furniture} material={mats.interior[lv.level]} castShadow receiveShadow />
-                {lv.interior.lamps && <mesh geometry={lv.interior.lamps} material={mats.lamp} />}
+                <mesh ref={pushInterior} geometry={lv.interior.furniture} material={mats.interior[lv.level]} castShadow receiveShadow />
+                {lv.interior.lamps && <mesh ref={pushInterior} geometry={lv.interior.lamps} material={mats.lamp} />}
                 {lv.interior.pools && <mesh geometry={lv.interior.pools} material={mats.pool} renderOrder={3} />}
                 <mesh geometry={lv.interior.plan} material={mats.plan} renderOrder={4} frustumCulled={false} />
               </group>
@@ -414,7 +431,7 @@ export function FeaturedHome({ id }: { id: HomeId }) {
         <group ref={jewel} visible={false}>
           <mesh geometry={data.lines} material={mats.gold} renderOrder={999} frustumCulled={false} />
           <mesh geometry={data.plot} material={mats.plot} renderOrder={999} frustumCulled={false} />
-          <mesh position={[box.cx, 0.08, box.cz]} rotation-x={-Math.PI / 2} material={mats.halo} renderOrder={3}>
+          <mesh position={[box.cx, 0.2, box.cz]} rotation-x={-Math.PI / 2} material={mats.halo} renderOrder={3}>
             <planeGeometry args={[box.hx * 2 + 7, box.hz * 2 + 7]} />
           </mesh>
           <group position={[box.cx, box.height + 0.35, box.cz]} scale={[1, markerY - box.height - 0.35 - 0.25, 1]}>

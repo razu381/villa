@@ -5,14 +5,15 @@ import type { HomeId } from "@/lib/store";
  * Camera keys for "Two ways to live" (t ∈ [5, 6)) while scrolling, and the
  * close-up shots used in explore mode. Owned by the homes module.
  *
- * Journey: a long lens from the south at golden hour, both featured homes in
- * the upper-middle of the frame (title bottom-left, cards bottom-right) on a
- * diagonal — the townhouse behind, the villa in front — the sun raking in
- * from the west; a slow lateral drift across the chapter.
+ * Journey: a long lens from the south-south-west at golden hour, the two
+ * featured homes in the upper band of the frame (the title sits bottom-left,
+ * the cards bottom-right): the townhouse behind on the left, the villa in
+ * front on the right, the low sun raking in from the west across their faces
+ * and throwing the shadows east. A slow lateral drift across the chapter.
  */
 export const HOMES_KEYS: CameraKey[] = [
-  { t: 5.08, pos: [-24.8, 44.9, 101.5], target: [-4, 4, 24], fov: 26 },
-  { t: 5.9, pos: [-15.4, 42.6, 102.6], target: [-3, 4, 24.5], fov: 26 },
+  { t: 5.08, pos: [-19.5, 44, 101], target: [-4.5, 4, 24], fov: 26 },
+  { t: 5.9, pos: [-10.2, 41.7, 101.5], target: [-3.5, 4, 24.5], fov: 26 },
 ];
 
 /*
@@ -25,7 +26,7 @@ export const HOMES_KEYS: CameraKey[] = [
  */
 const LANDSCAPE: Record<HomeId, CameraShot> = {
   v3: { pos: [-6.3, 40.5, 50.1], target: [-14.3, 12.5, 4.14], fov: 30 },
-  v4: { pos: [-4.45, 40.1, 76.8], target: [12.8, 11, 29.8], fov: 30 },
+  v4: { pos: [-5.75, 41.1, 76.8], target: [11.5, 12, 29.8], fov: 30 },
 };
 const PORTRAIT: Record<HomeId, CameraShot> = {
   v3: { pos: [-14.5, 25.3, 32.0], target: [-18.4, 5, 9.4], fov: 30 },
