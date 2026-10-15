@@ -128,6 +128,10 @@ function cloneHouseMaterial(key: HouseMaterialKey, src: MeshStandardMaterial, cu
         "#include <clipping_planes_fragment>\nif (uHomeOpen > 0.02 && vHWin.y > 0.5 && vHWin.y < 2.5) discard;",
       );
     }
+    if (key === "solar") {
+      // The open home's panels by night: a faint moonlit slate, not a black hole.
+      fs = fs.replace("#include <tonemapping_fragment>", "gl_FragColor.rgb += uStudio * uNight * vec3(0.016, 0.02, 0.03);\n#include <tonemapping_fragment>");
+    }
     shader.fragmentShader = studioLight(fs);
   };
   const cacheKey = src.customProgramCacheKey();

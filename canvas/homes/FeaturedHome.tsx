@@ -15,7 +15,7 @@
  * lamps come on.
  */
 
-import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import { BufferGeometry, Float32BufferAttribute, type Group, type Material, type Mesh, type Points, type ShaderMaterial } from "three";
 import {
@@ -286,43 +286,10 @@ export function FeaturedHome({ id }: { id: HomeId }) {
     }
   });
 
-  // Pointer: hover → lift + glow + "open" cursor; click → explore this home.
-  const setCursor = (on: boolean) => {
-    const el = gl.domElement;
-    el.style.cursor = on ? "pointer" : "";
-    if (on) el.dataset.cursor = "open";
-    else delete el.dataset.cursor;
+  const registerProxy = (el: Mesh | null) => {
+    if (el) homesState.proxies.set(id, el);
+    else homesState.proxies.delete(id);
   };
-  const canInteract = () => {
-    const s = useJourney.getState();
-    return s.mode === "journey" && stagesFromT(s.t).homes > 0.5;
-  };
-  const onOver = (e: ThreeEvent<PointerEvent>) => {
-    if (!canInteract()) return;
-    e.stopPropagation();
-    homesState.hover = id;
-    setCursor(true);
-  };
-  const onOut = () => {
-    if (homesState.hover === id) homesState.hover = null;
-    setCursor(false);
-  };
-  const onMove = (e: ThreeEvent<PointerEvent>) => {
-    const ok = canInteract();
-    if (ok && homesState.hover !== id) onOver(e);
-    else if (!ok && homesState.hover === id) onOut();
-  };
-  const onClick = (e: ThreeEvent<MouseEvent>) => {
-    if (!canInteract()) return;
-    e.stopPropagation();
-    homesState.hover = null;
-    setCursor(false);
-    const s = useJourney.getState();
-    s.setHome(id);
-    s.setExplode(1);
-    s.setMode("explore");
-  };
-  useEffect(() => () => setCursor(false), []); // eslint-disable-line react-hooks/exhaustive-deps
   const pushInterior = (el: Mesh | null) => {
     if (el && !interiorMeshes.current.includes(el)) interiorMeshes.current.push(el);
   };
@@ -440,8 +407,8 @@ export function FeaturedHome({ id }: { id: HomeId }) {
           <points ref={marker} geometry={markerGeo} material={mats.marker} position={[box.cx, markerY, box.cz]} renderOrder={1000} frustumCulled={false} />
         </group>
       </group>
-      {/* Hit proxy for the pointer (cheap box raycast). */}
-      <mesh position={[box.cx, box.height / 2, box.cz]} visible={false} onPointerOver={onOver} onPointerOut={onOut} onPointerMove={onMove} onClick={onClick}>
+      {/* Hit proxy for the pointer (a cheap box raycast — see Homes.tsx). */}
+      <mesh ref={registerProxy} position={[box.cx, box.height / 2, box.cz]} visible={false}>
         <boxGeometry args={[box.hx * 2 + 0.6, box.height + 0.8, box.hz * 2 + 0.6]} />
       </mesh>
     </group>

@@ -29,8 +29,8 @@ const LANDSCAPE: Record<HomeId, CameraShot> = {
   v4: { pos: [-5.75, 41.1, 76.8], target: [11.5, 12, 29.8], fov: 30 },
 };
 const PORTRAIT: Record<HomeId, CameraShot> = {
-  v3: { pos: [-14.5, 25.3, 32.0], target: [-18.4, 5, 9.4], fov: 30 },
-  v4: { pos: [-4.9, 24.4, 55.1], target: [3.2, 3.6, 33.0], fov: 30 },
+  v3: { pos: [-14.23, 26.72, 33.58], target: [-18.4, 5, 9.4], fov: 30 },
+  v4: { pos: [-5.47, 25.86, 56.65], target: [3.2, 3.6, 33.0], fov: 30 },
 };
 
 const portrait = () => typeof window !== "undefined" && window.innerWidth / Math.max(1, window.innerHeight) < 0.9;
