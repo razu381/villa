@@ -120,7 +120,7 @@ export const ARRIVALS: { bayX: number; row: "north" | "south"; paint: number }[]
 export const PARKED: { x: number; row: "north" | "south" }[] = (() => {
   // the rows never park at the same x, so the elevation reads one car per bay — a calm rhythm
   const north = [-46, -43, -37, -34, -22, -10, -7, 5, 8, 20, 23];
-  const south = [-40, -31, -4, 11, 14, 26, 29];
+  const south = [-40, -31, -25, -4, 2, 11, 14, 26, 29];
   const taken = new Set(ARRIVALS.map((a) => `${a.row}:${a.bayX}`));
   return [
     ...north.map((x) => ({ x, row: "north" as const })),
