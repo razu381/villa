@@ -1,7 +1,7 @@
 /**
  * GLSL description of the site plan, generated from lib/village.ts:
- * podium SDF, pedestrian paths, house footprints, pool decks, street,
- * driveway, playground. Shared by the terrain and table shaders.
+ * podium SDF, pedestrian paths, pool decks (incl. the pavilion's deck — the
+ * pavilion itself is built by the houses module), street, driveway, playground.
  */
 import { Color, Vector4 } from "three";
 import { HOUSES, PATHS, PATH_WIDTH, PLAYGROUND, PODIUM, STREET, VILLAGE_HEART, VILLA_POOLS } from "@/lib/village";
@@ -21,8 +21,6 @@ const PODIUM_H = [(PODIUM.maxX - PODIUM.minX) / 2, (PODIUM.maxZ - PODIUM.minZ) /
 export const PATH_SEGMENTS: Vector4[] = PATHS.flatMap((p) =>
   p.slice(0, -1).map((a, i) => new Vector4(a[0], a[1], p[i + 1][0], p[i + 1][1])),
 );
-/** House footprints (x, z, halfWidth, halfDepth). */
-export const HOUSE_RECTS: Vector4[] = HOUSES.map((h) => new Vector4(h.x, h.z, h.width / 2, h.depth / 2));
 
 const pool = VILLAGE_HEART.pool;
 const pav = VILLAGE_HEART.pavilion;
@@ -42,10 +40,8 @@ export const DECKS: [number, number, number, number][] = [
 
 export const SITE_GLSL = /* glsl */ `
 #define TR_NSEG ${PATH_SEGMENTS.length}
-#define TR_NHOUSE ${HOUSE_RECTS.length}
 #define TR_PATH_HALF ${f(PATH_WIDTH / 2)}
 uniform vec4 uTrSegs[TR_NSEG];
-uniform vec4 uTrHouses[TR_NHOUSE];
 
 float tr_box(vec2 p, vec2 c, vec2 h) {
   vec2 q = abs(p - c) - h;
@@ -85,15 +81,6 @@ float tr_playground(vec2 p) {
   return tr_box(p, vec2(${f((PLAYGROUND.minX + PLAYGROUND.maxX) / 2)}, ${f((PLAYGROUND.minZ + PLAYGROUND.maxZ) / 2)}),
                 vec2(${f((PLAYGROUND.maxX - PLAYGROUND.minX) / 2 - 3.0)}, ${f((PLAYGROUND.maxZ - PLAYGROUND.minZ) / 2 - 3.0)})) - 3.0;
 }
-/** Nearest house footprint distance (positive outside). */
-float tr_houses(vec2 p) {
-  float d = 1e9;
-  for (int i = 0; i < TR_NHOUSE; i++) {
-    vec4 h = uTrHouses[i];
-    d = min(d, tr_box(p, h.xy, h.zw));
-  }
-  return d;
-}
 #define TR_STREET_Z ${f(STREET.z)}
 #define TR_PORTAL_CX ${f(PORTAL.cx)}
 #define TR_PORTAL_HALF ${f((PORTAL.maxX - PORTAL.minX) / 2)}
@@ -109,5 +96,4 @@ const float TR_STEPS[${STEPS.length}] = float[](${STEPS.map((s) => f(s.z)).join(
 
 export const siteUniforms = () => ({
   uTrSegs: { value: PATH_SEGMENTS },
-  uTrHouses: { value: HOUSE_RECTS },
 });

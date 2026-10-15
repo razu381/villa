@@ -7,14 +7,18 @@
  * exactly inside the retaining walls, and the grid is refined around the
  * podium's rounded corners.
  *
- * Attributes: position, normal, aTerr = (natural height, side flag, top height).
+ * Attributes: position, normal,
+ *   aTerr  = (pre-build height, side flag, final top height)
+ *   aMorph = (pre-build normal xyz, 1 on the top surface and the sides' top row)
+ * The vertex shader lerps the top from the pre-build hill to the built ground
+ * with uPodRise (build.ts).
  */
 import { BufferAttribute, BufferGeometry } from "three";
-import { PLINTH, PODIUM, naturalHeight } from "@/lib/village";
-import { EDGE, PORTAL, STEPS, STEP_BAND, groundHeight } from "./ground";
+import { PLINTH, PODIUM } from "@/lib/village";
+import { EDGE, PORTAL, STEPS, STEP_BAND, existingHeight, groundHeight } from "./ground";
 
 const BASE_STEP = 1.4;
-const FINE_STEP = 0.36;
+const FINE_STEP = 0.3;
 
 function buildAxis(min: number, max: number, refine: [number, number][], forced: number[]) {
   const stepAt = (v: number) => (refine.some(([a, b]) => v >= a && v <= b) ? FINE_STEP : BASE_STEP);
@@ -79,7 +83,16 @@ export function buildPlinthGeometry() {
   const pos = new Float32Array(vCount * 3);
   const nor = new Float32Array(vCount * 3);
   const terr = new Float32Array(vCount * 3);
+  const morph = new Float32Array(vCount * 4);
   const idx: number[] = [];
+  /** Normal of the pre-build hill (central differences). */
+  const exNormal = (x: number, z: number): [number, number, number] => {
+    const e = 0.6;
+    const dx = (existingHeight(x + e, z) - existingHeight(x - e, z)) / (2 * e);
+    const dz = (existingHeight(x, z + e) - existingHeight(x, z - e)) / (2 * e);
+    const l = Math.hypot(dx, 1, dz);
+    return [-dx / l, 1 / l, -dz / l];
+  };
 
   // minmod slope limiter: crisp normals at the built drops, smooth elsewhere.
   const minmod = (a: number, b: number) => (a * b <= 0 ? 0 : Math.abs(a) < Math.abs(b) ? a : b);
@@ -99,7 +112,8 @@ export function buildPlinthGeometry() {
       const len = Math.hypot(dx, 1, dz);
       pos.set([x, h, z], v * 3);
       nor.set([-dx / len, 1 / len, -dz / len], v * 3);
-      terr.set([naturalHeight(x, z), 0, h], v * 3);
+      terr.set([existingHeight(x, z), 0, h], v * 3);
+      morph.set([...exNormal(x, z), 1], v * 4);
       v++;
     }
   }
@@ -118,13 +132,16 @@ export function buildPlinthGeometry() {
     const start = v;
     for (const [x, z] of pts) {
       const h = groundHeight(x, z);
+      const ex = existingHeight(x, z);
       pos.set([x, h, z], v * 3);
       nor.set(n, v * 3);
-      terr.set([naturalHeight(x, z), 1, h], v * 3);
+      terr.set([ex, 1, h], v * 3);
+      morph.set([...n, 1], v * 4);
       v++;
       pos.set([x, PLINTH.bottom, z], v * 3);
       nor.set(n, v * 3);
-      terr.set([naturalHeight(x, z), 1, h], v * 3);
+      terr.set([ex, 1, h], v * 3);
+      morph.set([...n, 0], v * 4);
       v++;
     }
     for (let k = 0; k < pts.length - 1; k++) {
@@ -151,7 +168,8 @@ export function buildPlinthGeometry() {
   ]) {
     pos.set([x, PLINTH.bottom, z], v * 3);
     nor.set([0, -1, 0], v * 3);
-    terr.set([0, 1, PLINTH.bottom], v * 3);
+    terr.set([PLINTH.bottom, 1, PLINTH.bottom], v * 3);
+    morph.set([0, -1, 0, 0], v * 4);
     v++;
   }
   idx.push(b0, b0 + 1, b0 + 2, b0 + 1, b0 + 3, b0 + 2);
@@ -160,6 +178,7 @@ export function buildPlinthGeometry() {
   g.setAttribute("position", new BufferAttribute(pos.subarray(0, v * 3), 3));
   g.setAttribute("normal", new BufferAttribute(nor.subarray(0, v * 3), 3));
   g.setAttribute("aTerr", new BufferAttribute(terr.subarray(0, v * 3), 3));
+  g.setAttribute("aMorph", new BufferAttribute(morph.subarray(0, v * 4), 4));
   g.setIndex(idx);
   g.computeBoundingBox();
   g.computeBoundingSphere();

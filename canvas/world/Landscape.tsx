@@ -4,9 +4,10 @@
  * The landscape: limestone bastion and terrace walls with stairs, the garage
  * portal, trees (foam → foliage), pools, planting, the botanical playground
  * and night path lights. Everything in the village is clipped by the section.
+ * (The village-heart pavilion is built by the houses module; the landscape
+ * only paves its deck.)
  */
 import { PathLights } from "./landscape/PathLights";
-import { Pavilion } from "./landscape/Pavilion";
 import { Planting } from "./landscape/Planting";
 import { Playground } from "./landscape/Playground";
 import { Pools } from "./landscape/Pools";
@@ -18,7 +19,6 @@ export function Landscape() {
     <group>
       <Walls />
       <Pools />
-      <Pavilion />
       <Playground />
       <Trees />
       <Planting />

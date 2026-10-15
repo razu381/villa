@@ -1,20 +1,28 @@
 /**
- * Baked contact shading for the ground (0.5 m/px over the plinth):
- *   R — under tree canopies (appears with the foam trees)
+ * Baked ground data over the plinth (0.5 m/px), computed once on load:
+ *
+ * AO texture (RGBA8)
+ *   R — contact shading under tree canopies (appears with the foam trees)
  *   G — around house footprints (appears as the houses rise)
- *   B — under hillside shrubs (appears with life)
- * Soft Gaussian splats, computed once on load (a few ms). Sampled by the
- * terrain shader, multiplied by each stage's progress.
+ *   B — under shrubs and planting beds (appears with life)
+ *   A — groves: 0 open dry clearing → 1 dense maquis (layout.groveMask)
+ *
+ * Height texture (R16F): the finished ground, so the section's topsoil band
+ * follows the real surface wherever the cut plane is.
  */
-import { DataTexture, LinearFilter, RGBAFormat, UnsignedByteType } from "three";
-import { HOUSES, PLINTH, TREES } from "@/lib/village";
-import { SHRUBS } from "../landscape/layout";
+import { DataTexture, DataUtils, HalfFloatType, LinearFilter, RGBAFormat, RedFormat, UnsignedByteType } from "three";
+import { HOUSES, PLINTH } from "@/lib/village";
+import { BEDS, LANDSCAPE_TREES, SHRUBS, groveMask } from "../landscape/layout";
+import { groundHeight } from "./ground";
+import { f } from "../landscape/shaderUtils";
 
 export const AO_RES = 0.5;
+export const AO_W = Math.round((PLINTH.maxX - PLINTH.minX) / AO_RES) + 1;
+export const AO_H = Math.round((PLINTH.maxZ - PLINTH.minZ) / AO_RES) + 1;
 
 export function buildAoTexture() {
-  const w = Math.round((PLINTH.maxX - PLINTH.minX) / AO_RES) + 1;
-  const h = Math.round((PLINTH.maxZ - PLINTH.minZ) / AO_RES) + 1;
+  const w = AO_W;
+  const h = AO_H;
   const tree = new Float32Array(w * h).fill(1);
   const house = new Float32Array(w * h).fill(1);
   const shrub = new Float32Array(w * h).fill(1);
@@ -33,11 +41,12 @@ export function buildAoTexture() {
       }
     }
   };
-  for (const t of TREES) {
+  for (const t of LANDSCAPE_TREES) {
     const width = t.kind === "tall" ? t.height * 0.24 : t.kind === "olive" ? t.height * 1.0 : t.height * 0.78;
     splat(tree, t.x, t.z, width * 0.5 + 0.6, t.kind === "tall" ? 0.42 : 0.34);
   }
   for (const s of SHRUBS) splat(shrub, s.x, s.z, s.s * 1.1 + 0.3, 0.3);
+  for (const s of BEDS) splat(shrub, s.x, s.z, s.s * 0.9 + 0.25, 0.22);
   // houses: distance falloff from the footprint
   for (const hs of HOUSES) {
     const hx = hs.width / 2;
@@ -58,11 +67,14 @@ export function buildAoTexture() {
     }
   }
   const data = new Uint8Array(w * h * 4);
-  for (let k = 0; k < w * h; k++) {
-    data[k * 4] = Math.round(Math.max(0, tree[k]) * 255);
-    data[k * 4 + 1] = Math.round(Math.max(0, house[k]) * 255);
-    data[k * 4 + 2] = Math.round(Math.max(0, shrub[k]) * 255);
-    data[k * 4 + 3] = 255;
+  for (let j = 0; j < h; j++) {
+    for (let i = 0; i < w; i++) {
+      const k = j * w + i;
+      data[k * 4] = Math.round(Math.max(0, tree[k]) * 255);
+      data[k * 4 + 1] = Math.round(Math.max(0, house[k]) * 255);
+      data[k * 4 + 2] = Math.round(Math.max(0, shrub[k]) * 255);
+      data[k * 4 + 3] = Math.round(groveMask(PLINTH.minX + i * AO_RES, PLINTH.minZ + j * AO_RES) * 255);
+    }
   }
   const tex = new DataTexture(data, w, h, RGBAFormat, UnsignedByteType);
   tex.magFilter = LinearFilter;
@@ -71,3 +83,30 @@ export function buildAoTexture() {
   tex.needsUpdate = true;
   return tex;
 }
+
+export function buildHeightTexture() {
+  const data = new Uint16Array(AO_W * AO_H);
+  for (let j = 0; j < AO_H; j++) {
+    for (let i = 0; i < AO_W; i++) data[j * AO_W + i] = DataUtils.toHalfFloat(groundHeight(PLINTH.minX + i * AO_RES, PLINTH.minZ + j * AO_RES));
+  }
+  const tex = new DataTexture(data, AO_W, AO_H, RedFormat, HalfFloatType);
+  tex.magFilter = LinearFilter;
+  tex.minFilter = LinearFilter;
+  tex.generateMipmaps = false;
+  tex.needsUpdate = true;
+  return tex;
+}
+
+let _ao: DataTexture | null = null;
+let _h: DataTexture | null = null;
+/** Shared, built once on first use. */
+export const aoTexture = () => (_ao ??= buildAoTexture());
+export const heightTexture = () => (_h ??= buildHeightTexture());
+
+/** GLSL: plinth (x, z) → texel-centred uv for the textures above. */
+export const PLINTH_UV_GLSL = /* glsl */ `
+vec2 tr_aoUv(vec2 xz) {
+  return vec2(((xz.x - ${f(PLINTH.minX)}) / ${f(AO_RES)} + 0.5) / ${f(AO_W)},
+              ((xz.y - ${f(PLINTH.minZ)}) / ${f(AO_RES)} + 0.5) / ${f(AO_H)});
+}
+`;

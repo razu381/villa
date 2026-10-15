@@ -1,17 +1,20 @@
 /**
- * Limestone landscape architecture as two merged geometries:
- *   stone  — the bastion ring (with the garage portal and the street entrance),
- *            terrace walls, stairs and cheeks, copings, pool copings, portal frame
- *   recess — the dark inside faces of the garage portal
+ * Limestone landscape architecture as merged geometries:
+ *   stone      — the bastion ring (with the garage portal and the street entrance),
+ *                terrace walls, stairs and cheeks, copings, pool copings, portal frame
+ *   recess     — the inside faces of the garage portal (jambs, soffit, light strip)
+ *   recessBack — the portal's back face, its own mesh so the section/cars module
+ *                can hide it (or replace it with the tunnel) while cars drive in
  *
- * Every piece is a closed solid (poché reads when cut). Vertex attributes:
- *   position, normal, aWall = (u along the face [m], v [m], kind)
+ * Every stone piece is a closed solid (poché reads when cut). Vertex attributes:
+ *   position, normal, aWall = (u along the face [m], v [m], kind),
+ *   aBase = the pre-build ground under the vertex (the podium rises from it, build.ts)
  * kinds: 0 masonry face · 1 coping / paving slab · 2 dressed stone (stairs, frames)
  *        3 recess interior · 4 recess light strip
  */
 import { BufferAttribute, BufferGeometry, Vector3 } from "three";
 import { PATH_WIDTH, PODIUM, STREET, TERRACES } from "@/lib/village";
-import { BASTION, ENTRANCE, PODIUM_FRAME, PORTAL, STEPS, TERRACE_WALL, baseHeight } from "../terrain/ground";
+import { BASTION, ENTRANCE, PODIUM_FRAME, PORTAL, STEPS, TERRACE_WALL, baseHeight, existingHeight } from "../terrain/ground";
 import { CROSSINGS, POOLS, STAIR } from "./layout";
 
 export const KIND = { masonry: 0, coping: 1, dressed: 2, recess: 3, light: 4 } as const;
@@ -88,9 +91,23 @@ export class Builder {
 
   build() {
     const g = new BufferGeometry();
+    const base = new Float32Array(this.pos.length / 3);
+    const cache = new Map<string, number>();
+    for (let i = 0; i < base.length; i++) {
+      const x = this.pos[i * 3];
+      const z = this.pos[i * 3 + 2];
+      const key = `${x.toFixed(3)},${z.toFixed(3)}`;
+      let b = cache.get(key);
+      if (b === undefined) {
+        b = existingHeight(x, z) - 0.02;
+        cache.set(key, b);
+      }
+      base[i] = b;
+    }
     g.setAttribute("position", new BufferAttribute(new Float32Array(this.pos), 3));
     g.setAttribute("normal", new BufferAttribute(new Float32Array(this.nor), 3));
     g.setAttribute("aWall", new BufferAttribute(new Float32Array(this.wall), 3));
+    g.setAttribute("aBase", new BufferAttribute(base, 1));
     g.computeBoundingBox();
     g.computeBoundingSphere();
     return g;
@@ -205,6 +222,7 @@ function ringStrip(
 export function buildWalls() {
   const stone = new Builder();
   const recess = new Builder();
+  const recessBack = new Builder();
 
   /* ------------------------------------------------------------ bastion */
   const gapW = ENTRANCE.width / 2 + ENTRANCE.cheek;
@@ -269,7 +287,7 @@ export function buildWalls() {
   const rT = yT - 0.012;
   R.quad([[rx0, yF, zBack], [rx0, yF, zIn], [rx0, rT, zIn], [rx0, rT, zBack]], [1, 0, 0], [[zBack, yF], [zIn, yF], [zIn, rT], [zBack, rT]], KIND.recess);
   R.quad([[rx1, yF, zBack], [rx1, yF, zIn], [rx1, rT, zIn], [rx1, rT, zBack]], [-1, 0, 0], [[zBack, yF], [zIn, yF], [zIn, rT], [zBack, rT]], KIND.recess);
-  R.quad([[rx0, yF, zBack], [rx1, yF, zBack], [rx1, rT, zBack], [rx0, rT, zBack]], [0, 0, 1], [[rx0, yF], [rx1, yF], [rx1, rT], [rx0, rT]], KIND.recess);
+  recessBack.quad([[rx0, yF, zBack], [rx1, yF, zBack], [rx1, rT, zBack], [rx0, rT, zBack]], [0, 0, 1], [[rx0, yF], [rx1, yF], [rx1, rT], [rx0, rT]], KIND.recess);
   R.quad([[rx0, rT, zBack], [rx1, rT, zBack], [rx1, rT, zIn], [rx0, rT, zIn]], [0, -1, 0], [[rx0, zBack], [rx1, zBack], [rx1, zIn], [rx0, zIn]], KIND.recess);
   // a warm light strip in the soffit (glows at night)
   R.quad([[rx0 + 0.6, rT - 0.02, zBack + 0.5], [rx1 - 0.6, rT - 0.02, zBack + 0.5], [rx1 - 0.6, rT - 0.02, zBack + 0.8], [rx0 + 0.6, rT - 0.02, zBack + 0.8]], [0, -1, 0], [[0, 0], [1, 0], [1, 1], [0, 1]], KIND.light);
@@ -347,5 +365,5 @@ export function buildWalls() {
     stone.box([p.x + p.hx, yB, p.z - p.hz], [p.x + p.hx + w, yT2, p.z + p.hz], KIND.dressed, KIND.coping);
   }
 
-  return { stone: stone.build(), recess: recess.build() };
+  return { stone: stone.build(), recess: recess.build(), recessBack: recessBack.build() };
 }

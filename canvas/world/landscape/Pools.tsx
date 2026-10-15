@@ -9,6 +9,8 @@
  * - Basin depth grows with the model rising (U.uRise); white until the sweep.
  * - Water fills with U.uLife: an empty basin becomes satin water — fresnel to
  *   the sky, a soft sun glint, refraction, aqua absorption and caustics.
+ * - Receives the sun's shadow map (houses and trees shade the water and the
+ *   basin), plus the analytic shadow of the basin's own rim.
  * - At night the pools glow softly from underwater lights (emissive > 1).
  * - Clipped by the section plane.
  */
@@ -55,6 +57,7 @@ function buildPoolGeometry() {
 const VERT = /* glsl */ `
 #include <common>
 #include <fog_pars_vertex>
+#include <shadowmap_pars_vertex>
 #include <clipping_planes_pars_vertex>
 attribute vec4 aPool;
 attribute vec2 aPool2;
@@ -68,6 +71,9 @@ void main() {
   vPool2 = aPool2;
   vec4 mvPosition = viewMatrix * wp;
   gl_Position = projectionMatrix * mvPosition;
+  #if defined( USE_SHADOWMAP ) && NUM_DIR_LIGHT_SHADOWS > 0
+    vDirectionalShadowCoord[ 0 ] = directionalShadowMatrix[ 0 ] * vec4( wp.xyz + vec3( 0.0, directionalLightShadows[ 0 ].shadowNormalBias, 0.0 ), 1.0 );
+  #endif
   #include <clipping_planes_vertex>
   #include <fog_vertex>
 }
@@ -75,7 +81,9 @@ void main() {
 
 const FRAG = /* glsl */ `
 #include <common>
+#include <packing>
 #include <fog_pars_fragment>
+#include <shadowmap_pars_fragment>
 #include <clipping_planes_pars_fragment>
 ${VL_GLSL}
 uniform float uRise;
@@ -94,7 +102,7 @@ varying vec2 vPool2;
 
 #define C_TILE ${lin("#D8D6C8")}
 #define C_TILE_DEEP ${lin("#C9CCC0")}
-#define C_WATER ${lin("#79A8A6")}
+#define C_WATER ${lin("#5F9895")}
 #define C_GLOW ${lin("#86C9C6")}
 
 float pl_box(vec2 p, vec2 c, vec2 h) { vec2 q = abs(p - c) - h; return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0); }
@@ -111,15 +119,26 @@ float pl_trace(vec3 o, vec3 d, vec2 c, vec2 h, float yB, out vec3 n) {
   return max(t, 0.0);
 }
 
+/** The sun's shadow map at this fragment (houses, trees on the water). */
+float pl_sunShadow() {
+  float s = 1.0;
+  #if defined( USE_SHADOWMAP ) && NUM_DIR_LIGHT_SHADOWS > 0
+    DirectionalLightShadow ls = directionalLightShadows[ 0 ];
+    s = getShadow( directionalShadowMap[ 0 ], ls.shadowMapSize, ls.shadowIntensity, ls.shadowBias, ls.shadowRadius, vDirectionalShadowCoord[ 0 ] );
+  #endif
+  return s;
+}
+float plSun = 1.0;
+
 vec3 pl_light(vec3 albedo, vec3 n, float shadow) {
   float ndl = max(dot(n, uSunDir), 0.0);
   vec3 hemi = mix(uHemiGround, uHemiSky, 0.5 * n.y + 0.5) * uHemiI;
-  return albedo * RECIPROCAL_PI * (uSunColor * uSunI * ndl * shadow + hemi);
+  return albedo * RECIPROCAL_PI * (uSunColor * uSunI * ndl * shadow * plSun + hemi);
 }
 
 float pl_caustic(vec2 p) {
   float t = uTime * 0.55;
-  vec2 q = p * 1.7;
+  vec2 q = p * 4.2;
   float v = sin(q.x + t + sin(q.y * 1.3 - t * 0.7));
   v += sin(q.y * 1.1 - t * 0.8 + sin(q.x * 1.7 + t * 0.5));
   v += sin((q.x + q.y) * 0.8 + t * 1.1);
@@ -149,14 +168,15 @@ vec3 pl_basin(vec3 P, vec3 n, vec2 c, vec2 h, float y0, float D, float under) {
   vec2 e = h - abs(P.xz - c);
   float corner = smoothstep(0.0, 0.6, min(e.x, e.y));
   float deepK = smoothstep(0.15, 1.0, D);
-  col *= mix(1.0, mix(0.72, 1.0, corner), deepK) * mix(1.0, 0.82, depthK * deepK);
-  if (n.y > 0.5) col += uSunColor * uSunI * 0.16 * pl_caustic(P.xz) * sh * under * RECIPROCAL_PI;
+  col *= mix(1.0, mix(0.72, 1.0, corner), deepK) * mix(1.0, 0.66, depthK * deepK);
+  if (n.y > 0.5) col += uSunColor * uSunI * 0.22 * pl_caustic(P.xz) * sh * plSun * under * RECIPROCAL_PI;
   return col;
 }
 
 void main() {
   #include <clipping_planes_fragment>
   if (uRise < 0.1) discard; // nothing is dug before the model rises
+  plSun = pl_sunShadow();
   vec2 c = vPool.xy;
   vec2 h = vPool.zw;
   float y0 = vPool2.x;
@@ -178,17 +198,19 @@ void main() {
       sin(W.z * 2.3 - t * 0.7) * 0.6 + sin(W.x * 2.9 + t * 0.9 - W.z) * 0.4);
     vec3 N = normalize(vec3(g.x * 0.035, 1.0, g.y * 0.035));
     float cosT = clamp(dot(-V, N), 0.0, 1.0);
-    float F = 0.02 + 0.98 * pow(1.0 - cosT, 5.0);
+    float F = 0.04 + 0.96 * pow(1.0 - cosT, 5.0);
     vec3 R = reflect(V, N);
-    vec3 sky = mix(uSkyHorizon, uSkyTop, smoothstep(0.0, 0.7, R.y));
-    float glint = pow(max(dot(R, uSunDir), 0.0), 140.0) * uSunI * 1.4 * smoothstep(0.0, 0.08, uSunDir.y);
+    // the sky in the water: a bright band at the horizon, deepening overhead
+    vec3 sky = mix(uSkyHorizon * 1.12, uSkyTop, smoothstep(0.02, 0.6, R.y));
+    sky += uSkyHorizon * 0.18 * (1.0 - smoothstep(0.0, 0.12, abs(R.y - 0.04)));
+    float glint = pow(max(dot(R, uSunDir), 0.0), 140.0) * uSunI * 1.4 * smoothstep(0.0, 0.08, uSunDir.y) * plSun;
     vec3 T = refract(V, N, 0.75);
     vec3 nB;
     float tB = pl_trace(W, T, c, h, y0 - D, nB);
     vec3 B = W + T * tB;
     vec3 basin = pl_basin(B, nB, c, h, y0, D, 1.0);
-    vec3 absorb = exp(-tB * vec3(0.62, 0.2, 0.16));
-    vec3 body = pl_light(C_WATER, vec3(0.0, 1.0, 0.0), 1.0) * 0.55;
+    vec3 absorb = exp(-tB * vec3(0.75, 0.26, 0.22));
+    vec3 body = pl_light(C_WATER, vec3(0.0, 1.0, 0.0), 1.0) * 0.5;
     vec3 refr = basin * absorb + body * (1.0 - absorb);
     // underwater lights at night
     // underwater lights at night: lamps along the long walls, light falling off with depth
@@ -198,7 +220,7 @@ void main() {
     float deep = clamp((y0 - B.y) / max(D, 0.01), 0.0, 1.0);
     refr = mix(refr, refr * 0.35, uNight);
     refr += C_GLOW * uNight * fill * (0.22 + 0.95 * wallNear * lamps) * mix(1.0, 0.6, deep) * exp(-tB * 0.25);
-    col = mix(refr, sky * mix(1.0, 0.35, uNight), F * mix(1.0, 0.5, uNight)) + uSunColor * glint;
+    col = mix(refr, sky * mix(1.0, 0.35, uNight), clamp(F * 1.15, 0.0, 0.85) * mix(1.0, 0.5, uNight)) + uSunColor * glint;
     // the waterline: a thin wet darkening on the walls just above
   } else {
     vec3 P = o + V * tI;
@@ -220,9 +242,11 @@ export function Pools() {
       vertexShader: VERT,
       fragmentShader: FRAG,
       fog: true,
+      lights: true,
       clipping: true,
       uniforms: {
         ...UniformsUtils.clone(UniformsLib.fog),
+        ...UniformsUtils.clone(UniformsLib.lights),
         ...sharedUniformsFor(["uTime", "uMaterial", "uLife", "uNight", "uWindows", "uSweepFrom", "uSweepTo", "uRise", "uSunDir", "uSunColor", "uSkyTop", "uSkyHorizon"]),
         uSunI: { value: 1 },
         uHemiI: { value: 1 },
@@ -251,5 +275,5 @@ export function Pools() {
     (mat.uniforms.uHemiSky.value as Color).copy(p.hemiSky);
     (mat.uniforms.uHemiGround.value as Color).copy(p.hemiGround);
   });
-  return <mesh geometry={geo} material={mat} receiveShadow={false} renderOrder={1} />;
+  return <mesh geometry={geo} material={mat} receiveShadow renderOrder={1} />;
 }

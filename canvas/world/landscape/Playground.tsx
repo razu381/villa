@@ -28,15 +28,16 @@ function mounds() {
     [-50.0, 23.0, 3.0, 0.9],
     [-48.5, 33.5, 2.4, 0.75],
   ];
-  return mergeGeometries(
-    list.map(([x, z, r, h]) => {
-      const g = new SphereGeometry(1, 36, 14, 0, Math.PI * 2, 0, Math.PI / 2);
-      g.scale(r, h, r * 0.86);
-      g.rotateY((x * 13.1) % 3);
-      g.translate(x, Y - 0.04, z);
-      return g;
-    }),
-  )!;
+  const parts = list.map(([x, z, r, h]) => {
+    const g = new SphereGeometry(1, 36, 14, 0, Math.PI * 2, 0, Math.PI / 2);
+    g.scale(r, h, r * 0.86);
+    g.rotateY((x * 13.1) % 3);
+    g.translate(x, Y - 0.04, z);
+    return g;
+  });
+  const merged = mergeGeometries(parts)!;
+  parts.forEach((g) => g.dispose());
+  return merged;
 }
 
 function arch(R: number, band: number, depth: number) {
@@ -80,15 +81,18 @@ function timber() {
   beam.translate(-61.0, Y + 0.42, 20.6);
   parts.push(beam);
   // parts have differing attribute sets → keep position/normal only
-  return mergeGeometries(
-    parts.map((g) => {
-      const n = g.index ? g.toNonIndexed() : g;
-      const out = new BufferGeometry();
-      out.setAttribute("position", n.getAttribute("position"));
-      out.setAttribute("normal", n.getAttribute("normal"));
-      return out;
-    }),
-  )!;
+  const flat = parts.map((g) => {
+    const n = g.index ? g.toNonIndexed() : g;
+    const out = new BufferGeometry();
+    out.setAttribute("position", n.getAttribute("position"));
+    out.setAttribute("normal", n.getAttribute("normal"));
+    if (n !== g) n.dispose();
+    return out;
+  });
+  const merged = mergeGeometries(flat)!;
+  parts.forEach((g) => g.dispose());
+  flat.forEach((g) => g.dispose());
+  return merged;
 }
 
 export function Playground() {

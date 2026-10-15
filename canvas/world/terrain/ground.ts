@@ -33,9 +33,13 @@ export const STEPS: { z: number; upper: number; lower: number }[] = (() => {
 })();
 
 /** The bastion: a limestone retaining wall around the podium (podium-distance units). */
-export const BASTION = { inner: -0.2, outer: 0.7, parapet: 0.55, coping: 0.12, overhang: 0.07 } as const;
-/** Ground transition band (podium distance) — hidden inside the bastion. */
-export const EDGE: [number, number] = [0.05, 0.5];
+export const BASTION = { inner: -0.2, outer: 0.9, parapet: 0.55, coping: 0.12, overhang: 0.07 } as const;
+/**
+ * Ground transition band (podium distance) — a narrow drop in the middle of the
+ * 1.1 m bastion, so no terrain triangle (fine cell diagonal ≈ 0.42 m) can reach
+ * past either face of the wall, even on the rounded corners.
+ */
+export const EDGE: [number, number] = [0.25, 0.4];
 /** Terrace retaining walls between rows. */
 export const TERRACE_WALL = { half: 0.3, parapet: 0.45 } as const;
 export const STEP_BAND = 0.1;
@@ -61,6 +65,17 @@ export function terraceSharp(z: number) {
   let y: number = TERRACES[0].y;
   for (const s of STEPS) y += (s.lower - s.upper) * smoothstep(s.z - STEP_BAND, s.z + STEP_BAND, z);
   return y;
+}
+
+/**
+ * The site before anything is built: the natural hill with the existing public
+ * street. The plinth's top morphs from this to groundHeight as the podium rises
+ * (see build.ts), so the drawing chapter opens on a blank, contoured hill.
+ */
+export function existingHeight(x: number, z: number) {
+  const h = naturalHeight(x, z);
+  const street = 1 - smoothstep(STREET.halfWidth, STREET.halfWidth + 5, Math.abs(z - STREET.z));
+  return h + (STREET.y - h) * street;
 }
 
 /** Ground outside the podium: natural hill, flattened street and driveway (mirrors heightAt). */
@@ -95,6 +110,12 @@ export function groundHeight(x: number, z: number) {
   const m = podiumWeight(x, z);
   return b + (terraceSharp(z) - b) * m;
 }
+
+/**
+ * The village heart — the origin of every outward reveal (contours, plan
+ * lines). Mirrors the delay origin used for HOUSES in lib/village.ts.
+ */
+export const HEART = { x: -10, z: -6 } as const;
 
 /** Rounded-rectangle perimeter of the podium offset by `d` (podium-distance units). */
 export const PODIUM_FRAME = {
