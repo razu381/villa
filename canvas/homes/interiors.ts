@@ -130,7 +130,7 @@ class Level {
     }
   }
 
-  rectRoom(r: Rect, inset = 0.14) {
+  rectRoom(r: Rect, inset = 0.22) {
     this.room(
       [
         [r.x0, r.z0],
@@ -617,7 +617,7 @@ function townhouseGround(L: Level, r: Rect, px: number, pz1: number) {
       [hx1, pz1],
       [r.x0, pz1],
     ],
-    0.14,
+    0.22,
   );
   L.room(
     [
@@ -628,7 +628,7 @@ function townhouseGround(L: Level, r: Rect, px: number, pz1: number) {
       [r.x0, pz1 + 0.06],
       [ex0, pz1 + 0.06],
     ],
-    0.14,
+    0.22,
   );
 
   // Hall: the stair along the partition, a console along the wall.
@@ -770,7 +770,7 @@ function villaGround(L: Level, bar: Rect, wing: Rect, core: Rect) {
       [bar.x1, bar.z1],
       [bar.x0, bar.z1],
     ],
-    0.14,
+    0.22,
   );
   L.rectRoom(wing);
   L.liftSymbol({ x0: core.x0 + 0.25, x1: core.x1 - 0.25, z0: Math.max(core.z0, bar.z0 - 0.4) + 0.25, z1: core.z1 - 0.25 }, L.F + CUT_ABOVE_FLOOR + 0.01);

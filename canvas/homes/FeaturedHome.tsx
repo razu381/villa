@@ -68,7 +68,7 @@ export function FeaturedHome({ id }: { id: HomeId }) {
       interior: [interiorMaterial(furnitureCuts[0], hu), interiorMaterial(furnitureCuts[1], hu)],
       lamp: lampMaterial(hu),
       pool: poolMaterial(hu),
-      plan: homeLineMaterial({ color: "#3E362C", alpha: 0.5, width: 1.0 }),
+      plan: homeLineMaterial({ color: "#F6EEDF", alpha: 0.72, width: 1.0 }),
       guides: homeLineMaterial({ color: PALETTE.taupe, alpha: 0.55, width: 1.0, dashed: true }),
       gold: homeLineMaterial({ color: "#E9CF98", alpha: 0.85, width: 1.25 }),
       leader: homeLineMaterial({ color: PALETTE.sun, alpha: 0.9, width: 1.0 }),
