@@ -8,6 +8,8 @@ import { U } from "@/lib/uniforms";
 import { dayParams } from "./Driver";
 import { rigView } from "./CameraRig";
 
+const FOG_NEAR = 260;
+const FOG_FAR = 1100;
 /** Half-size of the shadow box when it covers the whole model (m). */
 const SHADOW_EXTENT = 135;
 /** Tightest half-size (exploded home close-ups) (m). */
@@ -48,7 +50,7 @@ function fitShadow(light: DirectionalLight, sunDir: Vector3, mapSize: number) {
   const th = Math.tan((v.fov * Math.PI) / 360) * 1.08;
   const tw = th * v.aspect;
   // Far reach of the view: the fog in the journey; just past the chosen home while exploring.
-  const reach = dist * 1.7 + (340 - dist * 1.7) * (1 - v.explore);
+  const reach = dist * 1.7 + (340 * v.distScale - dist * 1.7) * (1 - v.explore);
 
   // The sun's frame (rotation only): x/y across the light, z towards the sun.
   basis.lookAt(sunDir, ORIGIN, UP);
@@ -58,7 +60,7 @@ function fitShadow(light: DirectionalLight, sunDir: Vector3, mapSize: number) {
   let n = 0;
   for (let i = -1; i <= 1; i++) {
     for (let j = -1; j <= 1; j++) {
-      ray.copy(fwd).addScaledVector(right, i * tw).addScaledVector(up, j * th).normalize();
+      ray.copy(fwd).addScaledVector(right, i * tw).addScaledVector(up, (j - v.lift) * th).normalize();
       for (const y of SHADOW_YS) {
         let d = ray.y < -1e-4 ? (y - v.pos.y) / ray.y : reach;
         if (!(d > 0)) d = reach;
@@ -116,7 +118,7 @@ export function Day() {
   const gl = useThree((s) => s.gl);
   const tier = useJourney((s) => s.tier);
 
-  const fog = useMemo(() => new Fog(new Color("#E6DED3"), 260, 1100), []);
+  const fog = useMemo(() => new Fog(new Color("#E6DED3"), FOG_NEAR, FOG_FAR), []);
   useEffect(() => {
     scene.fog = fog;
     return () => {
@@ -179,6 +181,10 @@ export function Day() {
       hemi.current.intensity = p.hemiIntensity;
     }
     fog.color.copy(p.fog);
+    // The air belongs to the model, not the lens: a camera dollied back for a
+    // portrait screen sees the same haze.
+    fog.near = FOG_NEAR * rigView.distScale;
+    fog.far = FOG_FAR * rigView.distScale;
     // Read by the AgX curve (post ToneMapping effect, or the renderer on tier low).
     gl.toneMappingExposure = p.exposure;
   });

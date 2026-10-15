@@ -21,6 +21,7 @@ import { useJourney } from "@/lib/store";
 import { U } from "@/lib/uniforms";
 import { FEATURED } from "@/lib/village";
 import { damp } from "../Driver";
+import { rigView } from "../CameraRig";
 
 /** Opaque-pass order of the veil; the selected home draws after it. */
 export const VEIL_ORDER = 50;
@@ -109,7 +110,8 @@ export function Veil() {
     m.position.copy(camera.position).addScaledVector(v, NEAR);
     m.quaternion.copy(camera.quaternion);
     const fov = ((camera as { fov?: number }).fov ?? 30) * (Math.PI / 180);
-    const hgt = 2 * Math.tan(fov / 2) * NEAR * 1.2;
+    // (A portrait lens shift moves the frustum off-axis — cover the far side too.)
+    const hgt = 2 * Math.tan(fov / 2) * NEAR * 1.2 * (1 + Math.abs(rigView.lift));
     m.scale.set(hgt * (size.width / Math.max(1, size.height)), hgt, 1);
     // Clearest around the home on screen.
     v.copy(focus.current).project(camera);

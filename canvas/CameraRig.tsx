@@ -3,7 +3,7 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useRef } from "react";
 import { PerspectiveCamera, Vector3 } from "three";
-import { sampleCamera } from "@/lib/camera";
+import { sampleCamera, type CameraSample } from "@/lib/camera";
 import { useJourney } from "@/lib/store";
 import { HOME_SHOTS } from "./homes/shots";
 import { damp } from "./Driver";
@@ -15,7 +15,9 @@ import { damp } from "./Driver";
  */
 export function CameraRig() {
   const camera = useThree((s) => s.camera) as PerspectiveCamera;
-  const sample = useRef({ pos: [0, 0, 0], target: [0, 0, 0], fov: 30 });
+  const sample = useRef<CameraSample>({ pos: [0, 0, 0], target: [0, 0, 0], fov: 30, zoom: 1, lift: 0 });
+  const zoom = useRef(1);
+  const lift = useRef(0);
   const pos = useRef(new Vector3(70, 190, 180));
   const target = useRef(new Vector3(-6, 0, -2));
   const fov = useRef(30);
@@ -41,6 +43,8 @@ export function CameraRig() {
     goalPos.current.fromArray(sample.current.pos);
     goalTarget.current.fromArray(sample.current.target);
     let goalFov = sample.current.fov;
+    let goalZoom = sample.current.zoom;
+    let goalLift = sample.current.lift;
 
     const wantExplore = s.mode === "explore" && s.home ? 1 : 0;
     explore.current = snap ? wantExplore : damp(explore.current, wantExplore, 2.4, d);
@@ -50,6 +54,9 @@ export function CameraRig() {
       goalPos.current.lerp(tmp.fromArray(shot.pos), k);
       goalTarget.current.lerp(tmp.fromArray(shot.target), k);
       goalFov = goalFov + (shot.fov - goalFov) * k;
+      // The close-ups carry their own portrait framing.
+      goalZoom += (1 - goalZoom) * k;
+      goalLift -= goalLift * k;
       // Gentle pointer parallax while exploring.
       if (!s.reducedMotion) {
         goalPos.current.x += pointer.x * 4 * k;
@@ -61,6 +68,8 @@ export function CameraRig() {
       pos.current.copy(goalPos.current);
       target.current.copy(goalTarget.current);
       fov.current = goalFov;
+      zoom.current = goalZoom;
+      lift.current = goalLift;
     } else {
       const lambda = s.reducedMotion ? 10 : 3.2;
       pos.current.x = damp(pos.current.x, goalPos.current.x, lambda, d);
@@ -70,6 +79,8 @@ export function CameraRig() {
       target.current.y = damp(target.current.y, goalTarget.current.y, lambda, d);
       target.current.z = damp(target.current.z, goalTarget.current.z, lambda, d);
       fov.current = damp(fov.current, goalFov, lambda, d);
+      zoom.current = damp(zoom.current, goalZoom, lambda, d);
+      lift.current = damp(lift.current, goalLift, lambda, d);
     }
 
     if (pinned.current && pinned.current.length >= 6) {
@@ -80,9 +91,14 @@ export function CameraRig() {
     }
     // Portrait / narrow screens: keep the composition by widening the lens a little
     // and dollying back the rest (preserves the long-lens look, no fish-eye).
+    // Phones in portrait (w → 1) also take the key's portrait fit: a little
+    // closer than width-preserving, and a lens shift that lifts the subject
+    // above the text (verticals stay true — no tilt).
     const k = Math.max(1, REF_ASPECT / Math.max(0.3, camera.aspect));
     const fovEff = Math.min(58, (2 * Math.atan(Math.tan((fov.current * Math.PI) / 360) * Math.pow(k, 0.5)) * 180) / Math.PI);
-    const distScale = Math.pow(k, 0.5);
+    const w = Math.min(1, Math.max(0, (k - 1) / (PORTRAIT_K - 1)));
+    const distScale = Math.pow(k, 0.5) * (1 + (zoom.current - 1) * w);
+    const liftEff = lift.current * w;
     camera.position.copy(target.current).add(tmp.copy(pos.current).sub(target.current).multiplyScalar(distScale));
     // The settled view (no breathing) — what the shadow frustum is fitted to (Day.tsx).
     rigView.pos.copy(camera.position);
@@ -90,6 +106,8 @@ export function CameraRig() {
     rigView.fov = fovEff;
     rigView.aspect = camera.aspect;
     rigView.explore = explore.current;
+    rigView.lift = liftEff;
+    rigView.distScale = distScale;
     // Breathing: a tiny slow orbit so a still frame never feels frozen.
     if (!s.reducedMotion && !s.snap && !pinned.current) {
       const e = state.clock.elapsedTime;
@@ -97,9 +115,12 @@ export function CameraRig() {
       camera.position.y += Math.sin(e * 0.07 + 1.3) * 0.4;
     }
     camera.lookAt(target.current);
-    if (Math.abs(camera.fov - fovEff) > 1e-3) {
-      camera.fov = fovEff;
-      camera.updateProjectionMatrix();
+    camera.fov = fovEff;
+    camera.updateProjectionMatrix();
+    if (liftEff !== 0) {
+      // Off-axis projection: the optical axis lands at ndc y = liftEff.
+      camera.projectionMatrix.elements[9] = -liftEff;
+      camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert();
     }
   }, -50);
   return null;
@@ -112,6 +133,8 @@ const tmp = new Vector3();
  * drift): stable while the journey is still, so consumers fitted to it (the
  * sun's shadow frustum) stay still too.
  */
-export const rigView = { pos: new Vector3(70, 190, 180), target: new Vector3(-6, 0, -2), fov: 30, aspect: 1.6, explore: 0 };
+export const rigView = { pos: new Vector3(70, 190, 180), target: new Vector3(-6, 0, -2), fov: 30, aspect: 1.6, explore: 0, lift: 0, distScale: 1 };
 /** Compositions are authored for ~16:10. */
 const REF_ASPECT = 1.6;
+/** Narrowness (REF_ASPECT / aspect) at which the portrait fit applies fully (≈ 1:2 phones). */
+const PORTRAIT_K = 3.2;

@@ -9,6 +9,22 @@ export interface CameraKey {
   pos: Vec3;
   target: Vec3;
   fov: number;
+  /**
+   * Portrait phones only: [zoom, lift]. The rig keeps a key's width on narrow
+   * screens (dollied back), which leaves a tall empty sky; `zoom` (< 1) comes
+   * closer than that and `lift` shifts the lens so the subject sits higher
+   * (ndc units: 0.4 puts the target ~30 % from the top), above the text.
+   * Omitted = [1, 0] (the section and homes keys carry their own portrait fit).
+   */
+  portrait?: [number, number];
+}
+
+export interface CameraSample {
+  pos: number[];
+  target: number[];
+  fov: number;
+  zoom: number;
+  lift: number;
 }
 
 export interface CameraShot {
@@ -16,6 +32,10 @@ export interface CameraShot {
   target: Vec3;
   fov: number;
 }
+
+/** Portrait fits: the whole model, filling the width, above the text. */
+const P_MODEL: [number, number] = [0.82, 0.38];
+const P_DRAW: [number, number] = [0.84, 0.32];
 
 /**
  * The journey camera path. Long lenses (fov 26–34), slow cranes, never a cut.
@@ -25,33 +45,33 @@ export interface CameraShot {
 const BASE_KEYS: CameraKey[] = [
   // Hero → match cut with the film's aerial (high, ~45° oblique, village centred):
   // the whole model on its table, a blank hill waiting for its first line.
-  { t: 0.6, pos: [99, 262, 250], target: [-6, 0, -2], fov: 30 },
+  { t: 0.6, pos: [99, 262, 250], target: [-6, 0, -2], fov: 30, portrait: [0.9, 0.28] },
   // The drawing — steeper, nearly a plan, the hill's contours readable; the
   // model sits up and right of the text. A slow push-in as the plan is drawn
   // and the podium rises, landing close enough to read the houses' lines.
-  { t: 1.25, pos: [52, 300, 190], target: [-16, 0, 10], fov: 30 },
-  { t: 1.7, pos: [16, 230, 200], target: [-26, 0, 14], fov: 30 },
-  { t: 1.98, pos: [-20, 170, 150], target: [-8, 2, -4], fov: 30 },
+  { t: 1.25, pos: [52, 300, 190], target: [-16, 0, 10], fov: 30, portrait: P_DRAW },
+  { t: 1.7, pos: [16, 230, 200], target: [-26, 0, 14], fov: 30, portrait: P_DRAW },
+  { t: 1.98, pos: [-20, 170, 150], target: [-8, 2, -4], fov: 30, portrait: P_DRAW },
   // The model rises — a crane down and around, south-west → south: the
   // stronghold's bastion faces us as the trees arrive.
-  { t: 2.4, pos: [-110, 100, 160], target: [-10, 4, -6], fov: 30 },
-  { t: 2.95, pos: [10, 78, 190], target: [-4, 2, -8], fov: 30 },
+  { t: 2.4, pos: [-110, 100, 160], target: [-10, 4, -6], fov: 30, portrait: P_MODEL },
+  { t: 2.95, pos: [10, 78, 190], target: [-4, 2, -8], fov: 30, portrait: P_MODEL },
   // The making — the sweep travels east → west; we follow it from the south.
-  { t: 3.25, pos: [120, 60, 130], target: [10, 4, -4], fov: 30 },
-  { t: 3.9, pos: [-40, 48, 124], target: [-18, 2, 6], fov: 30 },
+  { t: 3.25, pos: [120, 60, 130], target: [10, 4, -4], fov: 30, portrait: P_MODEL },
+  { t: 3.9, pos: [-40, 48, 124], target: [-18, 2, 6], fov: 30, portrait: [0.78, 0.36] },
   ...SECTION_KEYS,
   ...HOMES_KEYS,
   // Night — pull back to see the whole village switch on; as the invitation
   // arrives (title top-left, the form on the right) the village settles low
   // and left, between them.
-  { t: 6.1, pos: [110, 70, 150], target: [-6, 2, -2], fov: 30 },
-  { t: 6.8, pos: [178, 95, 148], target: [22, 0, -66], fov: 30 },
+  { t: 6.1, pos: [110, 70, 150], target: [-6, 2, -2], fov: 30, portrait: [0.72, 0.4] },
+  { t: 6.8, pos: [178, 95, 148], target: [22, 0, -66], fov: 30, portrait: [0.66, 0.44] },
 ];
 
 export const CAMERA_KEYS: CameraKey[] = [...BASE_KEYS].sort((a, b) => a.t - b.t);
 
 /** Catmull-Rom (non-uniform t) interpolation of the camera path at journey time t. */
-export function sampleCamera(t: number, out: { pos: number[]; target: number[]; fov: number }) {
+export function sampleCamera(t: number, out: CameraSample) {
   const keys = CAMERA_KEYS;
   if (t <= keys[0].t) return copyKey(keys[0], out);
   if (t >= keys[keys.length - 1].t) return copyKey(keys[keys.length - 1], out);
@@ -70,15 +90,23 @@ export function sampleCamera(t: number, out: { pos: number[]; target: number[]; 
     out.target[a] = hermite(k0.target[a], k1.target[a], k2.target[a], k3.target[a], k0.t, k1.t, k2.t, k3.t, e);
   }
   out.fov = k1.fov + (k2.fov - k1.fov) * e;
+  const p1 = k1.portrait ?? NO_FIT;
+  const p2 = k2.portrait ?? NO_FIT;
+  out.zoom = p1[0] + (p2[0] - p1[0]) * e;
+  out.lift = p1[1] + (p2[1] - p1[1]) * e;
   return out;
 }
 
-function copyKey(k: CameraKey, out: { pos: number[]; target: number[]; fov: number }) {
+const NO_FIT: [number, number] = [1, 0];
+
+function copyKey(k: CameraKey, out: CameraSample) {
   for (let a = 0; a < 3; a++) {
     out.pos[a] = k.pos[a];
     out.target[a] = k.target[a];
   }
   out.fov = k.fov;
+  out.zoom = (k.portrait ?? NO_FIT)[0];
+  out.lift = (k.portrait ?? NO_FIT)[1];
   return out;
 }
 
