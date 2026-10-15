@@ -3,15 +3,15 @@
 import dynamic from "next/dynamic";
 import { CHAPTERS } from "@/lib/timeline";
 import { SmoothScroll } from "./SmoothScroll";
-import { HeroVideo } from "./HeroVideo";
-import { Chrome } from "./chrome/Chrome";
+import { HeroMedia } from "./HeroMedia";
+import { ArcHaze, Chrome, ChromeTop } from "./chrome/Chrome";
 import { HeroChapter } from "./chapters/HeroChapter";
 import { DrawingChapter } from "./chapters/DrawingChapter";
 import { ModelChapter } from "./chapters/ModelChapter";
 import { MakingChapter } from "./chapters/MakingChapter";
 import { CarsChapter } from "./chapters/CarsChapter";
 import { HomesChapter } from "./chapters/HomesChapter";
-import { NightChapter } from "./chapters/NightChapter";
+import { NightChapter, NightTail } from "./chapters/NightChapter";
 
 // The 3D world loads after first paint, hidden behind the hero film.
 const Experience = dynamic(() => import("@/canvas/Experience"), { ssr: false });
@@ -30,11 +30,13 @@ export default function Journey() {
   return (
     <>
       <SmoothScroll />
+      <ChromeTop />
       <div className="vl-stage">
         <Experience />
       </div>
-      <HeroVideo />
-      <main className="vl-journey">
+      <HeroMedia />
+      <ArcHaze />
+      <main className="vl-journey" id="main">
         {CHAPTERS.map((c) => {
           const C = CHAPTER_COMPONENTS[c.id];
           return (
@@ -43,6 +45,7 @@ export default function Journey() {
             </section>
           );
         })}
+        <NightTail />
       </main>
       <Chrome />
     </>
