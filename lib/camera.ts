@@ -10,13 +10,15 @@ export interface CameraKey {
   target: Vec3;
   fov: number;
   /**
-   * Portrait phones only: [zoom, lift]. The rig keeps a key's width on narrow
-   * screens (dollied back), which leaves a tall empty sky; `zoom` (< 1) comes
-   * closer than that and `lift` shifts the lens so the subject sits higher
+   * Portrait phones only: [zoom, lift, slide?]. The rig keeps a key's width on
+   * narrow screens (dollied back), which leaves a tall empty sky; `zoom` (< 1)
+   * comes closer than that and `lift` shifts the lens so the subject sits higher
    * (ndc units: 0.4 puts the target ~30 % from the top), above the text.
+   * `slide` shifts it sideways (ndc, + = target right) for keys whose
+   * landscape target is off the subject to leave room for text or a form.
    * Omitted = [1, 0] (the section and homes keys carry their own portrait fit).
    */
-  portrait?: [number, number];
+  portrait?: [number, number, number?];
 }
 
 export interface CameraSample {
@@ -25,6 +27,7 @@ export interface CameraSample {
   fov: number;
   zoom: number;
   lift: number;
+  slide: number;
 }
 
 export interface CameraShot {
@@ -65,7 +68,8 @@ const BASE_KEYS: CameraKey[] = [
   // arrives (title top-left, the form on the right) the village settles low
   // and left, between them.
   { t: 6.1, pos: [110, 70, 150], target: [-6, 2, -2], fov: 30, portrait: [0.72, 0.4] },
-  { t: 6.8, pos: [178, 95, 148], target: [22, 0, -66], fov: 30, portrait: [0.66, 0.44] },
+  { t: 6.3, pos: [203, 110, 166], target: [16, 0, -88], fov: 30, portrait: [0.6, 0.38, 0.84] },
+  { t: 6.8, pos: [208, 112, 164], target: [18, 0, -92], fov: 30, portrait: [0.58, 0.4, 0.84] },
 ];
 
 export const CAMERA_KEYS: CameraKey[] = [...BASE_KEYS].sort((a, b) => a.t - b.t);
@@ -94,10 +98,11 @@ export function sampleCamera(t: number, out: CameraSample) {
   const p2 = k2.portrait ?? NO_FIT;
   out.zoom = p1[0] + (p2[0] - p1[0]) * e;
   out.lift = p1[1] + (p2[1] - p1[1]) * e;
+  out.slide = (p1[2] ?? 0) + ((p2[2] ?? 0) - (p1[2] ?? 0)) * e;
   return out;
 }
 
-const NO_FIT: [number, number] = [1, 0];
+const NO_FIT: [number, number, number?] = [1, 0];
 
 function copyKey(k: CameraKey, out: CameraSample) {
   for (let a = 0; a < 3; a++) {
@@ -107,6 +112,7 @@ function copyKey(k: CameraKey, out: CameraSample) {
   out.fov = k.fov;
   out.zoom = (k.portrait ?? NO_FIT)[0];
   out.lift = (k.portrait ?? NO_FIT)[1];
+  out.slide = (k.portrait ?? NO_FIT)[2] ?? 0;
   return out;
 }
 

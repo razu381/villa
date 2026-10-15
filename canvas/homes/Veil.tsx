@@ -111,7 +111,7 @@ export function Veil() {
     m.quaternion.copy(camera.quaternion);
     const fov = ((camera as { fov?: number }).fov ?? 30) * (Math.PI / 180);
     // (A portrait lens shift moves the frustum off-axis — cover the far side too.)
-    const hgt = 2 * Math.tan(fov / 2) * NEAR * 1.2 * (1 + Math.abs(rigView.lift));
+    const hgt = 2 * Math.tan(fov / 2) * NEAR * 1.2 * (1 + Math.max(Math.abs(rigView.lift), Math.abs(rigView.slide)));
     m.scale.set(hgt * (size.width / Math.max(1, size.height)), hgt, 1);
     // Clearest around the home on screen.
     v.copy(focus.current).project(camera);

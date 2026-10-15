@@ -60,7 +60,7 @@ function fitShadow(light: DirectionalLight, sunDir: Vector3, mapSize: number) {
   let n = 0;
   for (let i = -1; i <= 1; i++) {
     for (let j = -1; j <= 1; j++) {
-      ray.copy(fwd).addScaledVector(right, i * tw).addScaledVector(up, (j - v.lift) * th).normalize();
+      ray.copy(fwd).addScaledVector(right, (i - v.slide) * tw).addScaledVector(up, (j - v.lift) * th).normalize();
       for (const y of SHADOW_YS) {
         let d = ray.y < -1e-4 ? (y - v.pos.y) / ray.y : reach;
         if (!(d > 0)) d = reach;
