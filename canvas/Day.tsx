@@ -2,12 +2,107 @@
 
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
-import { BackSide, Color, Fog, ShaderMaterial, type DirectionalLight, type HemisphereLight } from "three";
+import { BackSide, Color, Fog, Matrix4, ShaderMaterial, Vector3, type DirectionalLight, type HemisphereLight } from "three";
 import { useJourney } from "@/lib/store";
 import { U } from "@/lib/uniforms";
 import { dayParams } from "./Driver";
+import { rigView } from "./CameraRig";
 
+/** Half-size of the shadow box when it covers the whole model (m). */
 const SHADOW_EXTENT = 135;
+/** Tightest half-size (exploded home close-ups) (m). */
+const SHADOW_MIN = 16;
+/** The model and its table shadow: footprints are clamped to this (m). */
+const SHADOW_BOUNDS = { minX: -150, maxX: 150, minZ: -125, maxZ: 125 };
+/** Heights the footprint is sampled at: the ground and the top of the houses (m). */
+const SHADOW_YS = [-2, 22];
+
+const UP = new Vector3(0, 1, 0);
+const ORIGIN = new Vector3();
+const basis = new Matrix4();
+const ax = new Vector3();
+const ay = new Vector3();
+const az = new Vector3();
+const fwd = new Vector3();
+const right = new Vector3();
+const up = new Vector3();
+const ray = new Vector3();
+const pt = new Vector3();
+const ctr = new Vector3();
+
+/**
+ * Fits the sun's orthographic shadow box to what is on screen: the ground
+ * footprint of the settled view (9 rays, at ground and roof height, clamped to
+ * the model), seen from the sun. Close-ups get a tight box — crisp shadows
+ * without stair-steps — wide views the whole model. The box centre is snapped
+ * to the shadow map's texel grid in the sun's frame and it is fitted to the
+ * rig's view without the breathing drift, so a still frame's shadows are still.
+ */
+function fitShadow(light: DirectionalLight, sunDir: Vector3, mapSize: number) {
+  const v = rigView;
+  fwd.subVectors(v.target, v.pos);
+  const dist = fwd.length();
+  fwd.divideScalar(Math.max(1e-6, dist));
+  right.crossVectors(fwd, UP).normalize();
+  up.crossVectors(right, fwd);
+  const th = Math.tan((v.fov * Math.PI) / 360) * 1.08;
+  const tw = th * v.aspect;
+  // Far reach of the view: the fog in the journey; just past the chosen home while exploring.
+  const reach = dist * 1.7 + (340 - dist * 1.7) * (1 - v.explore);
+
+  // The sun's frame (rotation only): x/y across the light, z towards the sun.
+  basis.lookAt(sunDir, ORIGIN, UP);
+  basis.extractBasis(ax, ay, az);
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity, minZ = Infinity, maxZ = -Infinity;
+  ctr.set(0, 0, 0);
+  let n = 0;
+  for (let i = -1; i <= 1; i++) {
+    for (let j = -1; j <= 1; j++) {
+      ray.copy(fwd).addScaledVector(right, i * tw).addScaledVector(up, j * th).normalize();
+      for (const y of SHADOW_YS) {
+        let d = ray.y < -1e-4 ? (y - v.pos.y) / ray.y : reach;
+        if (!(d > 0)) d = reach;
+        d = Math.min(d, reach);
+        pt.copy(v.pos).addScaledVector(ray, d);
+        pt.x = Math.min(SHADOW_BOUNDS.maxX, Math.max(SHADOW_BOUNDS.minX, pt.x));
+        pt.z = Math.min(SHADOW_BOUNDS.maxZ, Math.max(SHADOW_BOUNDS.minZ, pt.z));
+        pt.y = y;
+        const lx = pt.dot(ax);
+        const ly = pt.dot(ay);
+        const lz = pt.dot(az);
+        if (lx < minX) minX = lx;
+        if (lx > maxX) maxX = lx;
+        if (ly < minY) minY = ly;
+        if (ly > maxY) maxY = ly;
+        if (lz < minZ) minZ = lz;
+        if (lz > maxZ) maxZ = lz;
+        ctr.add(pt);
+        n++;
+      }
+    }
+  }
+  const pad = 1.1;
+  const hx = Math.min(SHADOW_EXTENT, Math.max(SHADOW_MIN, ((maxX - minX) / 2) * pad + 4));
+  const hy = Math.min(SHADOW_EXTENT, Math.max(SHADOW_MIN, ((maxY - minY) / 2) * pad + 4));
+  // Centre in the sun's frame, snapped to whole texels → a world-fixed texel grid.
+  const sx = (2 * hx) / mapSize;
+  const sy = (2 * hy) / mapSize;
+  const cx = Math.round((minX + maxX) / 2 / sx) * sx;
+  const cy = Math.round((minY + maxY) / 2 / sy) * sy;
+  const cz = (minZ + maxZ) / 2;
+  const target = light.target.position;
+  target.set(0, 0, 0).addScaledVector(ax, cx).addScaledVector(ay, cy).addScaledVector(az, cz);
+  light.position.copy(target).addScaledVector(sunDir, 300);
+  light.target.updateMatrixWorld();
+  const cam = light.shadow.camera;
+  if (cam.right !== hx || cam.top !== hy) {
+    cam.left = -hx;
+    cam.right = hx;
+    cam.top = hy;
+    cam.bottom = -hy;
+    cam.updateProjectionMatrix();
+  }
+}
 
 /**
  * Sun, moon, sky and fog — all from the shared day parameters.
@@ -69,7 +164,8 @@ export function Day() {
   useFrame(() => {
     const p = dayParams;
     if (sun.current) {
-      sun.current.position.copy(p.sunDir).multiplyScalar(300);
+      if (sun.current.castShadow) fitShadow(sun.current, p.sunDir, sun.current.shadow.mapSize.x);
+      else sun.current.position.copy(p.sunDir).multiplyScalar(300);
       sun.current.color.copy(p.sunColor);
       sun.current.intensity = Math.max(0, p.sunIntensity) * (p.sunDir.y > -0.02 ? 1 : 0);
     }
@@ -106,7 +202,7 @@ export function Day() {
         shadow-camera-top={SHADOW_EXTENT}
         shadow-camera-bottom={-SHADOW_EXTENT}
         shadow-camera-near={10}
-        shadow-camera-far={700}
+        shadow-camera-far={620}
       />
       <directionalLight ref={moon} color="#A9BCFF" intensity={0} />
     </>

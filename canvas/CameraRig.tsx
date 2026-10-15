@@ -57,13 +57,6 @@ export function CameraRig() {
       }
     }
 
-    // Breathing: a tiny slow orbit so a still frame never feels frozen.
-    if (!s.reducedMotion && !s.snap) {
-      const e = state.clock.elapsedTime;
-      goalPos.current.x += Math.sin(e * 0.11) * 0.8;
-      goalPos.current.y += Math.sin(e * 0.07 + 1.3) * 0.4;
-    }
-
     if (snap) {
       pos.current.copy(goalPos.current);
       target.current.copy(goalTarget.current);
@@ -91,6 +84,18 @@ export function CameraRig() {
     const fovEff = Math.min(58, (2 * Math.atan(Math.tan((fov.current * Math.PI) / 360) * Math.pow(k, 0.5)) * 180) / Math.PI);
     const distScale = Math.pow(k, 0.5);
     camera.position.copy(target.current).add(tmp.copy(pos.current).sub(target.current).multiplyScalar(distScale));
+    // The settled view (no breathing) — what the shadow frustum is fitted to (Day.tsx).
+    rigView.pos.copy(camera.position);
+    rigView.target.copy(target.current);
+    rigView.fov = fovEff;
+    rigView.aspect = camera.aspect;
+    rigView.explore = explore.current;
+    // Breathing: a tiny slow orbit so a still frame never feels frozen.
+    if (!s.reducedMotion && !s.snap && !pinned.current) {
+      const e = state.clock.elapsedTime;
+      camera.position.x += Math.sin(e * 0.11) * 0.8;
+      camera.position.y += Math.sin(e * 0.07 + 1.3) * 0.4;
+    }
     camera.lookAt(target.current);
     if (Math.abs(camera.fov - fovEff) > 1e-3) {
       camera.fov = fovEff;
@@ -101,5 +106,12 @@ export function CameraRig() {
 }
 
 const tmp = new Vector3();
+
+/**
+ * The rig's settled view this frame (portrait-adjusted, without the breathing
+ * drift): stable while the journey is still, so consumers fitted to it (the
+ * sun's shadow frustum) stay still too.
+ */
+export const rigView = { pos: new Vector3(70, 190, 180), target: new Vector3(-6, 0, -2), fov: 30, aspect: 1.6, explore: 0 };
 /** Compositions are authored for ~16:10. */
 const REF_ASPECT = 1.6;
