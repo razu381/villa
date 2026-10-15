@@ -12,7 +12,7 @@ import type { HomeId } from "@/lib/store";
  * and throwing the shadows east. A slow lateral drift across the chapter.
  */
 export const HOMES_KEYS: CameraKey[] = [
-  { t: 5.08, pos: [-19.5, 44, 101], target: [-4.5, 4, 24], fov: 26 },
+  { t: 5.08, pos: [-19.5, 45, 101], target: [-4.5, 4, 24], fov: 26 },
   { t: 5.9, pos: [-10.2, 41.7, 101.5], target: [-3.5, 4, 24.5], fov: 26 },
 ];
 
