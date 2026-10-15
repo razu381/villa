@@ -8,7 +8,7 @@ import { useReveal } from "@/lib/ui-reveal";
 import { Pin } from "../ui/Pin";
 import { ChapterText } from "./ChapterText";
 import { HomePanel } from "../homes/HomePanel";
-import { enterExplore, exitExplore, inHomes } from "../homes/explore";
+import { backToVillage, enterExplore, exitExplore, inHomes } from "../homes/explore";
 
 /**
  * Golden hour — two ways to live. The Action layer: two selectable cards;
@@ -34,7 +34,7 @@ function useExploreGuard() {
     });
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape" && useJourney.getState().mode === "explore") {
-        exitExplore();
+        backToVillage();
       }
     };
     window.addEventListener("keydown", onKey);
@@ -48,11 +48,8 @@ function useExploreGuard() {
 function HomeCards() {
   const ref = useRef<HTMLDivElement>(null);
   useReveal(ref, { when: (s) => s.t >= 5.1 && s.t < 5.97 && s.mode === "journey", delay: 0.45, interactive: true });
-  const select = (id: HomeId) => {
-    enterExplore(id);
-    // Focus moves to the panel title once it mounts.
-    requestAnimationFrame(() => document.getElementById("vl-panel-title")?.focus({ preventScroll: true }));
-  };
+  // Focus moves to the panel title once the panel is on screen (HomePanel).
+  const select = (id: HomeId) => enterExplore(id, { focusPanel: true });
   return (
     <div ref={ref} className="vl-cards" role="group" aria-label={UI.homes.choose}>
       <div className="vl-haze vl-haze--right" data-r="scrim" aria-hidden="true" />

@@ -8,14 +8,24 @@ import { useCompact } from "@/lib/ui-media";
 import { Pin } from "../ui/Pin";
 import { ChapterText } from "./ChapterText";
 
-/** Noon — the section cut. Cars below, life above, as a refined legend. */
+/**
+ * Noon — the section cut. Cars below, life above, as a refined legend.
+ * Compact screens: the legend takes the body's place under the title, so the
+ * line the chapter exists for stays on screen while the cut is open.
+ */
 export function CarsChapter() {
   const c = COPY.cars;
   const compact = useCompact();
   return (
     <Pin>
-      <ChapterText eyebrow={c.eyebrow} title={c.title} body={c.body} from={4.06} to={compact ? 4.4 : 4.96} />
-      <Legend from={compact ? 4.43 : 4.3} />
+      {compact ? (
+        <ChapterText eyebrow={c.eyebrow} title={c.title} body={c.body} from={4.06} to={4.96} swapAt={4.38} swap={<Legend from={4.41} inline />} />
+      ) : (
+        <>
+          <ChapterText eyebrow={c.eyebrow} title={c.title} body={c.body} from={4.06} to={4.96} />
+          <Legend from={4.3} />
+        </>
+      )}
     </Pin>
   );
 }
@@ -35,16 +45,18 @@ function Marker({ kind }: { kind: "dashed" | "line" | "circle" }) {
   );
 }
 
-function Legend({ from }: { from: number }) {
+function Legend({ from, inline = false }: { from: number; inline?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
-  useReveal(ref, { when: (s) => s.t >= from && s.t < 4.94, delay: 0.05 });
+  useReveal(ref, { when: (s) => s.t >= from && s.t < 4.94, delay: inline ? 0.15 : 0.05 });
   return (
-    <div ref={ref} className="vl-legend">
-      <div className="vl-haze vl-haze--right" data-r="scrim" aria-hidden="true" />
-      <p className="vl-eyebrow vl-legend__eyebrow" data-r="fade">
-        <span className="vl-eyebrow__rule" aria-hidden="true" />
-        in section
-      </p>
+    <div ref={ref} className="vl-legend" data-inline={inline ? "1" : undefined}>
+      {!inline && <div className="vl-haze vl-haze--right" data-r="scrim" aria-hidden="true" />}
+      {!inline && (
+        <p className="vl-eyebrow vl-legend__eyebrow" data-r="fade">
+          <span className="vl-eyebrow__rule" aria-hidden="true" />
+          in section
+        </p>
+      )}
       <ul className="vl-legend__list" aria-label="Section legend">
         {UI.cars.legend.map((item, i) => (
           <li key={item.title} className="vl-legend__item">

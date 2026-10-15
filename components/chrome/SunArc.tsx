@@ -6,7 +6,6 @@ import { useJourney } from "@/lib/store";
 import { CHAPTERS, clamp01, smooth } from "@/lib/timeline";
 import { arcLengthForDay, arcPointForDay, buildArc, dayForPoint } from "@/lib/ui-arc";
 import { UI } from "@/lib/ui-copy";
-import { useCompact } from "@/lib/ui-media";
 import { scrollToChapter } from "@/lib/ui-scroll";
 import { chapterAt, damp, timeWord, timeWordForDay } from "@/lib/ui-time";
 
@@ -22,10 +21,9 @@ const P = 14;
  * "hold the sun" (pointer + keyboard, role=slider) writes store.sunOverride.
  */
 export function SunArc() {
-  const compact = useCompact();
   const mode = useJourney((s) => s.mode);
   const explore = mode === "explore";
-  const g = useMemo(() => (compact ? buildArc(46, 52) : buildArc(58, 66)), [compact]);
+  const g = useMemo(() => buildArc(58, 66), []);
   const vb = { x: -P, y: -P, w: g.w + g.ext + 2 * P, h: g.h + 2 * P };
 
   const progressRef = useRef<SVGPathElement>(null);
@@ -40,6 +38,7 @@ export function SunArc() {
   const raf = useRef(0);
   const [indexOpen, setIndexOpen] = useState(false);
   const btnRef = useRef<HTMLButtonElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
 
   // Store → disc, progress, word. Damped so leaving "hold the sun" glides home.
   useEffect(() => {
@@ -81,6 +80,11 @@ export function SunArc() {
       const s = useJourney.getState();
       const w = timeWord(s);
       if (wordRef.current && wordRef.current.textContent !== w) wordRef.current.textContent = w;
+      // The scale label under the sun steps aside (never "dusk" twice).
+      if (rootRef.current && rootRef.current.dataset.word !== w) rootRef.current.dataset.word = w;
+      // The index button announces where the day is.
+      const label = `${UI.arc.open} — ${UI.arc.now}: ${w}`;
+      if (btnRef.current && btnRef.current.getAttribute("aria-label") !== label) btnRef.current.setAttribute("aria-label", label);
       const sl = sliderRef.current;
       if (sl) {
         const v = s.sunOverride ?? s.journeyDay;
@@ -115,6 +119,11 @@ export function SunArc() {
   };
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     dragging.current = true;
+    if (rootRef.current) {
+      rootRef.current.dataset.dragging = "1";
+      // The hint has done its job once the sun has been held.
+      rootRef.current.dataset.held = "1";
+    }
     e.currentTarget.setPointerCapture(e.pointerId);
     e.currentTarget.focus({ preventScroll: true });
     setFromPointer(e);
@@ -125,6 +134,7 @@ export function SunArc() {
   };
   const onPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
     dragging.current = false;
+    if (rootRef.current) rootRef.current.dataset.dragging = "0";
     if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId);
   };
   const onKeyDown = (e: React.KeyboardEvent) => {
@@ -138,18 +148,25 @@ export function SunArc() {
     if (next != null) {
       e.preventDefault();
       s.setSunOverride(clamp01(next));
+      if (rootRef.current) rootRef.current.dataset.held = "1";
     }
   };
 
-  // Close the chapter index when exploring starts.
+  // Close the chapter index when exploring starts; a new explore shows the hint again.
   useEffect(() => {
     if (explore) setIndexOpen(false);
+    if (rootRef.current) rootRef.current.dataset.held = "0";
   }, [explore]);
+
+  // While the index is open, the chapter text steps back.
+  useEffect(() => {
+    document.documentElement.dataset.index = indexOpen ? "1" : "0";
+  }, [indexOpen]);
 
   const size = { width: vb.w, height: vb.h };
 
   return (
-    <div className="vl-arc" data-explore={explore ? "1" : "0"} data-open={indexOpen ? "1" : "0"} style={{ ["--arc-w" as string]: `${g.w}px`, ["--arc-h" as string]: `${g.h}px`, ["--arc-p" as string]: `${P}px`, ["--arc-ext" as string]: `${g.ext}px` }}>
+    <div ref={rootRef} className="vl-arc" data-explore={explore ? "1" : "0"} data-open={indexOpen ? "1" : "0"} data-dragging="0" data-held="0" style={{ ["--arc-w" as string]: `${g.w}px`, ["--arc-h" as string]: `${g.h}px`, ["--arc-p" as string]: `${P}px`, ["--arc-ext" as string]: `${g.ext}px` }}>
       {indexOpen && !explore && <ChapterIndex onClose={() => setIndexOpen(false)} returnFocus={btnRef} />}
 
       <div className="vl-arc__stage" style={size}>
@@ -160,8 +177,8 @@ export function SunArc() {
           <g ref={discRef}>
             <circle className="vl-arc__ring" r={11} />
             <circle ref={haloRef} className="vl-arc__halo" r={9} />
-            <circle ref={sunRef} className="vl-arc__sun" r={compact ? 3.6 : 4.2} />
-            <circle ref={moonRef} className="vl-arc__moon" r={compact ? 3.4 : 3.9} opacity={0} />
+            <circle ref={sunRef} className="vl-arc__sun" r={4.2} />
+            <circle ref={moonRef} className="vl-arc__moon" r={3.9} opacity={0} />
           </g>
         </svg>
 

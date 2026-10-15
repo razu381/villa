@@ -21,10 +21,15 @@ export function HeroChapter() {
   useReveal(blockRef, { when: (s) => s.t < 0.5, delay: 0.35, reverseSpeed: 1 });
   useReveal(cueRef, { when: (s) => s.t < 0.12, delay: 1.6 });
 
+  // Written only while the value changes (not on every scroll frame of the journey).
+  const lastK = useRef<string | null>(null);
   useJourneyEffect((s) => {
     const el = exitRef.current;
     if (!el) return;
     const k = smooth(0.08, 0.42, s.t);
+    const key = `${k}|${s.reducedMotion}`;
+    if (key === lastK.current) return;
+    lastK.current = key;
     el.style.opacity = String(1 - k);
     el.style.transform = s.reducedMotion ? "" : `translate3d(0, ${(-k * 6).toFixed(3)}vh, 0)`;
     el.style.visibility = k >= 0.999 ? "hidden" : "visible";

@@ -34,6 +34,8 @@ function ToneSync() {
       if (html.dataset.end !== end) html.dataset.end = end;
       const rm = s.reducedMotion ? "1" : "0";
       if (html.dataset.rm !== rm) html.dataset.rm = rm;
+      // Device tier: costly CSS (backdrop blur, animated grain) only on capable devices.
+      if (html.dataset.tier !== s.tier) html.dataset.tier = s.tier;
     };
     apply();
     return useJourney.subscribe(apply);
@@ -59,7 +61,11 @@ export function ArcHaze() {
   return <div className="vl-arc-haze" aria-hidden="true" />;
 }
 
-/** Fine film grain over everything (static in reduced motion). */
+/**
+ * Fine film grain over everything: one layer only slightly larger than the
+ * viewport (steps of ±3 %). Static in reduced motion, on mid / low tiers and on
+ * compact screens.
+ */
 function Grain() {
   return <div className="vl-grain" aria-hidden="true" />;
 }

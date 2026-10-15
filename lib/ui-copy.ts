@@ -8,7 +8,8 @@ export const UI = {
   sound: { on: "Sound on", off: "Sound off" },
   arc: {
     index: "Chapters",
-    open: "Open the chapter index",
+    open: "Chapters",
+    now: "now",
     labels: ["dawn", "noon", "dusk"] as const,
     slider: "Hold the sun",
   },
@@ -31,7 +32,7 @@ export const UI = {
     specs: "Specifications",
   },
   form: {
-    legend: "Request your private visit",
+    legend: "Your private visit",
     name: "Your name",
     email: "Email",
     phone: "Phone",
@@ -53,7 +54,7 @@ export const UI = {
     errors: {
       name: "Please tell us your name.",
       email: "Please enter a valid email address.",
-      date: "Please choose a day from tomorrow on.",
+      date: "Please choose a day for your visit.",
     },
     edit: "Change the details",
   },

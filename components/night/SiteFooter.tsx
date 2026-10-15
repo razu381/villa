@@ -8,7 +8,7 @@ export function SiteFooter() {
     <footer className="vl-footer">
       <div className="vl-footer__dev">
         <PhidiasMark className="vl-footer__phidias" />
-        <span className="vl-footer__sig" aria-label={UI.footer.signature}>
+        <span className="vl-footer__sig">
           {UI.footer.signature}
         </span>
       </div>

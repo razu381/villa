@@ -13,7 +13,7 @@ import { ARCH_PATH, Wordmark } from "../ui/Brand";
  * a gold-foil crest of the three arches, debossed type, one large blind-embossed
  * arch behind the words, the wordmark and the place.
  */
-export function InvitationCard({ data }: { data: VisitRequest }) {
+export function InvitationCard({ data, ref: outerRef }: { data: VisitRequest; ref?: React.Ref<HTMLDivElement> }) {
   const ref = useRef<HTMLDivElement>(null);
   const home = HOMES.find((h) => h.id === data.home);
   const first = data.name.trim().split(/\s+/)[0] || data.name;
@@ -40,7 +40,7 @@ export function InvitationCard({ data }: { data: VisitRequest }) {
 
   return (
     <div className="vl-inv-wrap">
-      <div ref={ref} className="vl-inv" role="img" aria-label={`${UI.card.title} ${UI.card.for} ${data.name}: ${UI.card.visit} ${where}, ${when}, ${TIME_WORDS[data.time]}. Vila Leku, ${UI.card.place}.`}>
+      <div ref={mergeRefs(ref, outerRef)} className="vl-inv" tabIndex={-1} role="img" aria-label={`${UI.card.title} ${UI.card.for} ${data.name}: ${UI.card.visit} ${where}, ${when}, ${TIME_WORDS[data.time]}. Vila Leku, ${UI.card.place}.`}>
         <div className="vl-inv__frame" aria-hidden="true" />
         <svg className="vl-inv__emboss" viewBox="-2 -2 104 116" preserveAspectRatio="none" aria-hidden="true">
           <path d={ARCH_PATH} transform="translate(0 0.45)" />
@@ -75,4 +75,13 @@ export function InvitationCard({ data }: { data: VisitRequest }) {
       </p>
     </div>
   );
+}
+
+function mergeRefs<T>(...refs: (React.Ref<T> | undefined)[]) {
+  return (node: T | null) => {
+    for (const r of refs) {
+      if (typeof r === "function") r(node);
+      else if (r) (r as React.RefObject<T | null>).current = node;
+    }
+  };
 }

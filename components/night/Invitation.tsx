@@ -6,18 +6,12 @@ import { useJourney } from "@/lib/store";
 import { sound } from "@/lib/audio";
 import { TIME_WORDS, UI, type VisitHome, type VisitRequest, type VisitTime } from "@/lib/ui-copy";
 import { debugParam } from "@/lib/ui-media";
-import { formatVisitDate, isoDate } from "@/lib/ui-time";
+import { formatVisitDate, isoDate, visitDays, type VisitDay } from "@/lib/ui-time";
 import { HOMES } from "@/lib/content";
 import { InvitationCard } from "./InvitationCard";
 
 type Status = "idle" | "sending" | "sent";
 type Errors = Partial<Record<"name" | "email" | "date", string>>;
-
-const tomorrow = () => {
-  const d = new Date();
-  d.setDate(d.getDate() + 1);
-  return isoDate(d);
-};
 
 /** Next Saturday (at least two days out) — the demo invitation's date. */
 const demoDate = () => {
@@ -29,11 +23,11 @@ const demoDate = () => {
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-function validate(v: VisitRequest): Errors {
+function validate(v: VisitRequest, days: VisitDay[]): Errors {
   const e: Errors = {};
   if (v.name.trim().length < 2) e.name = UI.form.errors.name;
   if (!EMAIL.test(v.email.trim())) e.email = UI.form.errors.email;
-  if (!v.date || v.date < tomorrow()) e.date = UI.form.errors.date;
+  if (!v.date || !days.some((d) => d.value === v.date)) e.date = UI.form.errors.date;
   return e;
 }
 
@@ -47,11 +41,15 @@ export function Invitation() {
   const [errors, setErrors] = useState<Errors>({});
   const [tried, setTried] = useState(false);
   const [announce, setAnnounce] = useState("");
+  // The next two weeks, from tomorrow (computed on the client: "today" is the visitor's).
+  const [days, setDays] = useState<VisitDay[]>([]);
   const uid = useId();
   const formRef = useRef<HTMLFormElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
   const timer = useRef(0);
 
   useEffect(() => {
+    setDays(visitDays(14));
     if (debugParam("invite") === "demo") {
       setValues({ name: "Inês Almeida", email: "ines@example.com", phone: "", home: "v4", date: demoDate(), time: "golden" });
       setStatus("sent");
@@ -62,18 +60,19 @@ export function Invitation() {
   const set = <K extends keyof VisitRequest>(k: K, v: VisitRequest[K]) => {
     const next = { ...values, [k]: v };
     setValues(next);
-    if (tried) setErrors(validate(next));
+    if (tried) setErrors(validate(next, days));
   };
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (status !== "idle") return;
     setTried(true);
-    const errs = validate(values);
+    const errs = validate(values, days);
     setErrors(errs);
     const firstBad = (["name", "email", "date"] as const).find((k) => errs[k]);
     if (firstBad) {
-      formRef.current?.querySelector<HTMLInputElement>(`[name="${firstBad}"]`)?.focus();
+      const sel = firstBad === "date" ? 'input[name="date"]' : `[name="${firstBad}"]`;
+      formRef.current?.querySelector<HTMLInputElement>(sel)?.focus();
       return;
     }
     setStatus("sending");
@@ -84,6 +83,8 @@ export function Invitation() {
         `${UI.card.title} ${UI.card.for} ${values.name}: ${UI.card.visit} ${home ? "the " + home.name : UI.card.anyHome}, ${formatVisitDate(values.date)}, ${TIME_WORDS[values.time]}. ${COPY.night.confirmBody}`,
       );
       if (useJourney.getState().soundOn) sound.chime();
+      // Keep the visitor's place: focus lands on the card (its label reads the invitation).
+      requestAnimationFrame(() => cardRef.current?.focus({ preventScroll: true }));
     }, 900);
   };
 
@@ -97,7 +98,7 @@ export function Invitation() {
     const id = `${uid}-${name}`;
     const err = name !== "phone" ? errors[name] : undefined;
     return (
-      <div className="vl-field" data-invalid={err ? "1" : undefined}>
+      <div className={`vl-field vl-field--${name}`} data-invalid={err ? "1" : undefined}>
         <input
           id={id}
           name={name}
@@ -142,7 +143,10 @@ export function Invitation() {
     </fieldset>
   );
 
-  const dateId = `${uid}-date`;
+  // Months the strip spans ("october · november"), shown beside the legend.
+  const months = [...new Set(days.map((d) => d.month))].join(" · ");
+  const dateErrId = `${uid}-date-err`;
+
   return (
     <div className="vl-invite" data-status={status}>
       {status !== "sent" ? (
@@ -152,28 +156,38 @@ export function Invitation() {
             {field("name", UI.form.name, "text", "name")}
             {field("email", UI.form.email, "email", "email")}
             {field("phone", UI.form.phone, "tel", "tel", true)}
-            <div className="vl-field vl-field--date" data-invalid={errors.date ? "1" : undefined} data-filled={values.date ? "1" : undefined}>
-              <input
-                id={dateId}
-                name="date"
-                type="date"
-                min={tomorrow()}
-                value={values.date}
-                onChange={(e) => set("date", e.target.value)}
-                aria-invalid={errors.date ? true : undefined}
-                aria-describedby={errors.date ? `${dateId}-err` : undefined}
-                required
-              />
-              <label htmlFor={dateId}>{UI.form.date}</label>
-              <span className="vl-field__line" aria-hidden="true" />
-              {errors.date && (
-                <span className="vl-field__err" id={`${dateId}-err`}>
-                  {errors.date}
-                </span>
-              )}
-            </div>
           </div>
           {choice<VisitHome>("home", UI.form.home, UI.form.homeOptions, values.home, (v) => set("home", v))}
+          <fieldset className="vl-choice vl-days" data-invalid={errors.date ? "1" : undefined} aria-describedby={errors.date ? dateErrId : undefined}>
+            <legend>
+              {UI.form.date}
+              {months && <span className="vl-days__month" aria-hidden="true">{months}</span>}
+            </legend>
+            <div className="vl-days__grid">
+              {days.map((d) => {
+                const id = `${uid}-date-${d.value}`;
+                return (
+                  <span key={d.value} className="vl-days__opt">
+                    <input type="radio" id={id} name="date" value={d.value} checked={values.date === d.value} onChange={() => set("date", d.value)} />
+                    <label htmlFor={id}>
+                      <span className="vl-days__wd" aria-hidden="true">
+                        {d.weekday}
+                      </span>
+                      <span className="vl-days__n" aria-hidden="true">
+                        {d.day}
+                      </span>
+                      <span className="sr-only">{d.label}</span>
+                    </label>
+                  </span>
+                );
+              })}
+            </div>
+            {errors.date && (
+              <span className="vl-field__err" id={dateErrId}>
+                {errors.date}
+              </span>
+            )}
+          </fieldset>
           {choice<VisitTime>("time", UI.form.time, UI.form.timeOptions, values.time, (v) => set("time", v))}
           <button type="submit" className="vl-btn vl-btn--solid vl-form__submit" disabled={status === "sending"}>
             <span>{status === "sending" ? UI.form.sending : COPY.night.submit}</span>
@@ -182,7 +196,7 @@ export function Invitation() {
         </form>
       ) : (
         <>
-          <InvitationCard data={values} />
+          <InvitationCard ref={cardRef} data={values} />
           <button type="button" className="vl-link vl-invite__edit" onClick={edit}>
             {UI.form.edit}
           </button>
