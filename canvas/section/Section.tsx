@@ -128,6 +128,10 @@ export function Section() {
     [garage, shell, capMat, capGeo, cars],
   );
 
+  useEffect(() => {
+    if (DBG) (window as unknown as { __VL_SCENE?: unknown }).__VL_SCENE = scene;
+  }, [scene]);
+
   useFrame((state) => {
     const s = useJourney.getState();
     const t = s.t;

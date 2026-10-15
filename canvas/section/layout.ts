@@ -106,7 +106,7 @@ export const CORES = [COLUMN_X[1], COLUMN_X[4], COLUMN_X[7]].map((x) => ({ x, z0
 export const CAR = { length: 4.5, width: 1.84, height: 1.44 } as const;
 
 /** Muted model-car paints: champagne, graphite, ivory, deep olive, bronze, stone. */
-export const CAR_PAINTS = ["#C9B593", "#4B4C4D", "#E4DDCD", "#5E6440", "#8B6A4B", "#A9A398", "#3A3D3E", "#B9AE98"];
+export const CAR_PAINTS = ["#C9B593", "#4B4C4D", "#E4DDCD", "#5E6440", "#806A55", "#A9A398", "#3A3D3E", "#B9AE98"];
 
 /** Arriving cars: target bay (x, row) and their order of arrival. */
 export const ARRIVALS: { bayX: number; row: "north" | "south"; paint: number }[] = [

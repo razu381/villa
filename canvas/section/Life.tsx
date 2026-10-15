@@ -203,8 +203,16 @@ function buildFigureGeometry() {
     prof.map(([r, y]) => new Vector2(r, y)),
     12,
   );
+  // keep the lathe's own (smooth, profile-derived) normals: recomputing them
+  // leaves zero-length normals at the poles, which shade to NaN and bloom into
+  // a black blot when the camera looks down on the figures' heads
   g.scale(1, 1, 0.66);
-  g.computeVertexNormals();
+  const n = g.attributes.normal;
+  for (let i = 0; i < n.count; i++) {
+    const l = Math.hypot(n.getX(i), n.getY(i), n.getZ(i));
+    if (l < 1e-4) n.setXYZ(i, 0, g.attributes.position.getY(i) > 0.8 ? 1 : -1, 0);
+    else n.setXYZ(i, n.getX(i) / l, n.getY(i) / l, n.getZ(i) / l);
+  }
   return g;
 }
 
