@@ -32,17 +32,20 @@ const BASE_KEYS: CameraKey[] = [
   { t: 1.25, pos: [52, 300, 190], target: [-16, 0, 10], fov: 30 },
   { t: 1.7, pos: [16, 230, 200], target: [-26, 0, 14], fov: 30 },
   { t: 1.98, pos: [-20, 170, 150], target: [-8, 2, -4], fov: 30 },
-  // The model rises — a crane down and around.
-  { t: 2.4, pos: [-120, 95, 150], target: [-6, 4, -4], fov: 30 },
-  { t: 2.95, pos: [-150, 70, 60], target: [-6, 4, -6], fov: 30 },
+  // The model rises — a crane down and around, south-west → south: the
+  // stronghold's bastion faces us as the trees arrive.
+  { t: 2.4, pos: [-110, 100, 160], target: [-10, 4, -6], fov: 30 },
+  { t: 2.95, pos: [10, 78, 190], target: [-4, 2, -8], fov: 30 },
   // The making — the sweep travels east → west; we follow it from the south.
   { t: 3.25, pos: [120, 60, 130], target: [10, 4, -4], fov: 30 },
-  { t: 3.9, pos: [-40, 48, 120], target: [-16, 4, -4], fov: 30 },
+  { t: 3.9, pos: [-40, 48, 124], target: [-18, 2, 6], fov: 30 },
   ...SECTION_KEYS,
   ...HOMES_KEYS,
-  // Night — pull back to see the whole village switch on.
+  // Night — pull back to see the whole village switch on; as the invitation
+  // arrives (title top-left, the form on the right) the village settles low
+  // and left, between them.
   { t: 6.1, pos: [110, 70, 150], target: [-6, 2, -2], fov: 30 },
-  { t: 6.8, pos: [150, 95, 210], target: [-6, 0, -4], fov: 30 },
+  { t: 6.8, pos: [178, 95, 148], target: [22, 0, -66], fov: 30 },
 ];
 
 export const CAMERA_KEYS: CameraKey[] = [...BASE_KEYS].sort((a, b) => a.t - b.t);

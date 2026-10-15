@@ -32,8 +32,8 @@ export interface DayKey {
 /* Tuned for a limestone-paper world: never pure white, never pure black. */
 export const DAY_KEYS: DayKey[] = [
   { day: 0.0, skyTop: "#D9D6CC", skyHorizon: "#EADFD2", fog: "#E6DED3", sunElevation: 4, sunColor: "#FFC9A0", sunIntensity: 1.4, hemiSky: "#EDE7DC", hemiGround: "#CFC6B5", hemiIntensity: 2.6, night: 0, exposure: 1.35 },
-  { day: 0.12, skyTop: "#DCDCD6", skyHorizon: "#F1DFCB", fog: "#ECE2D6", sunElevation: 11, sunColor: "#FFC594", sunIntensity: 2.6, hemiSky: "#EAE6DD", hemiGround: "#CDBFA9", hemiIntensity: 2.2, night: 0, exposure: 1.3 },
-  { day: 0.28, skyTop: "#D3DADB", skyHorizon: "#EDE9DF", fog: "#E9E6DD", sunElevation: 28, sunColor: "#FFE7CC", sunIntensity: 2.4, hemiSky: "#E3E7E6", hemiGround: "#C9C0AC", hemiIntensity: 1.35, night: 0, exposure: 1.15 },
+  { day: 0.12, skyTop: "#DCDCD6", skyHorizon: "#F1DFCB", fog: "#ECE2D6", sunElevation: 11, sunColor: "#FFC594", sunIntensity: 3.0, hemiSky: "#EAE6DD", hemiGround: "#CDBFA9", hemiIntensity: 1.95, night: 0, exposure: 1.3 },
+  { day: 0.28, skyTop: "#D3DADB", skyHorizon: "#EDE9DF", fog: "#E9E6DD", sunElevation: 28, sunColor: "#FFE7CC", sunIntensity: 3.3, hemiSky: "#E3E7E6", hemiGround: "#C9C0AC", hemiIntensity: 0.95, night: 0, exposure: 1.12 },
   { day: 0.5, skyTop: "#CBD6DB", skyHorizon: "#EEEDE6", fog: "#EBEAE3", sunElevation: 60, sunColor: "#FFF6EA", sunIntensity: 2.9, hemiSky: "#E2E8EA", hemiGround: "#C8C1AE", hemiIntensity: 0.8, night: 0, exposure: 1.0 },
   { day: 0.66, skyTop: "#D2C8B6", skyHorizon: "#F2D3A6", fog: "#EDD7B6", sunElevation: 18, sunColor: "#FFC27A", sunIntensity: 2.6, hemiSky: "#E8DCC6", hemiGround: "#BFA98A", hemiIntensity: 0.7, night: 0, exposure: 1.0 },
   { day: 0.76, skyTop: "#B9A79E", skyHorizon: "#F2B27E", fog: "#E3B38F", sunElevation: 5, sunColor: "#FF9A55", sunIntensity: 2.0, hemiSky: "#D9C1AD", hemiGround: "#9C8068", hemiIntensity: 0.55, night: 0.05, exposure: 1.0 },

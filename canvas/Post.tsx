@@ -89,9 +89,9 @@ export function Post() {
 /* ------------------------------------------------------------ tilt-shift */
 
 /** Focus band half-height and its soft edge, in half-screen units (1 = centre → top). */
-const TILT_FOCUS = 0.78;
+const TILT_FOCUS = 0.82;
 const TILT_FEATHER = 0.56;
-const TILT_MAX = 0.85;
+const TILT_MAX = 0.7;
 
 /**
  * The miniature look per journey position: [t, strength 0..1, band offset]
