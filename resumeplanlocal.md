@@ -60,7 +60,11 @@ Notes:
 - `next dev` rewrites an agent-rules block in `AGENTS.md`. Keep it committed.
 - `shots/` is git-ignored scratch space for screenshots.
 
-### 1.1 Make the screenshot tool portable (do this first)
+### ✅ 1.1 Make the screenshot tool portable (do this first)
+
+> **Done.** `shot.mjs` now imports the local `playwright` devDependency and drives an installed browser (`--channel chrome|msedge`, default chrome; `VL_CHROMIUM` overrides with a binary). Real GPU by default, `--swiftshader` for software WebGL, `--headed` for a visible window, screenshot timeout 90 s. `--info` also prints the WebGL renderer string and warns if it is SwiftShader. No `npx playwright install` is needed when Chrome or Edge is installed.
+> **Finding (Linux):** headless Chrome and Edge silently fall back to SwiftShader unless `--enable-gpu` and an ANGLE backend are passed, so the script adds `--enable-gpu` everywhere and `--use-angle=gl` on Linux only (Windows keeps its default D3D11, macOS keeps Metal). On Windows, confirm with `--info` that the gpu line names the real adapter.
+> **No ImageMagick?** Any tiler works; e.g. a 20-line PIL script that pastes the PNGs into a grid.
 
 `scripts/shot.mjs` is hard-wired to the cloud container: it requires Playwright from `/opt/node-tools/node_modules/` and launches `/opt/pw-browsers/chromium` with SwiftShader flags. Locally:
 
