@@ -191,6 +191,7 @@ export function useInViewReveal(ref: RefObject<HTMLElement | null>, { delay = 0,
       splits.forEach((s) => s.revert());
       const s = useJourney.getState();
       ({ tl, splits } = revealTimeline(root, { delay, reduced: s.reducedMotion }));
+      root.dataset.revealReady = "1";
       tl.eventCallback("onComplete", () => {
         splits.forEach((sp) => sp.revert());
         splits = [];

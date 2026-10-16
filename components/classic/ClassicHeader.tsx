@@ -1,0 +1,152 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { CLASSIC, NAV } from "@/lib/classic-content";
+import { scrollToY } from "@/lib/ui-scroll";
+import { Wordmark } from "../ui/Brand";
+
+/** Scroll to a section, just under the header. */
+export function goTo(id: string, focus?: string) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const y = id === "top" ? 0 : el.getBoundingClientRect().top + window.scrollY - (id === "visit" ? 0 : 56);
+  scrollToY(y, () => {
+    if (focus) document.querySelector<HTMLElement>(focus)?.focus({ preventScroll: true });
+  });
+}
+
+/**
+ * Always there (the client: the menu stays in view). Over the film it is the
+ * full menu; past it, the header slims to the leaf, the docked wordmark and a
+ * "Menu" that opens as a small panel when the mouse passes over it (or on click
+ * / focus). The leaf goes back to the top: it sways slowly and turns green on hover.
+ */
+export function ClassicHeader() {
+  const ref = useRef<HTMLElement>(null);
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState<string | null>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    // Docked once the film has (mostly) scrolled away.
+    const hero = document.getElementById("top");
+    const onScroll = () => {
+      const docked = window.scrollY > (hero ? hero.offsetHeight - 80 : 400);
+      if ((el.dataset.docked === "1") !== docked) {
+        el.dataset.docked = docked ? "1" : "0";
+        if (!docked) setOpen(false);
+      }
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    // The section in view, for the menu's marker.
+    const seen = new Map<string, number>();
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => seen.set(e.target.id, e.isIntersecting ? e.intersectionRatio : 0));
+        let best: string | null = null;
+        let r = 0;
+        seen.forEach((v, k) => {
+          if (v > r) {
+            r = v;
+            best = k;
+          }
+        });
+        setActive(best);
+      },
+      { threshold: [0, 0.2, 0.4, 0.6], rootMargin: "-20% 0px -40% 0px" },
+    );
+    NAV.forEach((n) => {
+      const s = document.getElementById(n.id);
+      if (s) io.observe(s);
+    });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      io.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  return (
+    <header ref={ref} className="vc-header" data-docked="0" data-open={open ? "1" : "0"}>
+      <a
+        href="#top"
+        className="vc-header__leaf"
+        aria-label={CLASSIC.top}
+        onClick={(e) => {
+          e.preventDefault();
+          goTo("top");
+        }}
+      >
+        <span className="vc-leaf" />
+      </a>
+      <a
+        href="#top"
+        className="vc-header__mark"
+        tabIndex={-1}
+        aria-hidden="true"
+        onClick={(e) => {
+          e.preventDefault();
+          goTo("top");
+        }}
+      >
+        <Wordmark className="vc-header__wordmark" label={null} />
+      </a>
+      <nav
+        className="vc-nav"
+        aria-label="Main"
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
+        onBlur={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setOpen(false);
+        }}
+      >
+        <button type="button" className="vc-nav__toggle" aria-expanded={open} aria-controls="vc-nav-list" onClick={() => setOpen((o) => !o)}>
+          <span>{CLASSIC.menu}</span>
+          <span className="vc-nav__bars" aria-hidden="true" />
+        </button>
+        <ul id="vc-nav-list" className="vc-nav__list" onFocus={() => setOpen(true)}>
+          {NAV.map((n, i) => (
+            <li key={n.id}>
+              <a
+                href={`#${n.id}`}
+                aria-current={active === n.id ? "true" : undefined}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setOpen(false);
+                  goTo(n.id);
+                }}
+              >
+                <span className="vc-nav__n" aria-hidden="true">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                {n.label}
+              </a>
+            </li>
+          ))}
+          <li className="vc-nav__alt">
+            <a href="/">{CLASSIC.immersive}</a>
+          </li>
+        </ul>
+      </nav>
+      <a
+        href="#visit"
+        className="vl-btn vl-btn--solid vc-header__visit"
+        onClick={(e) => {
+          e.preventDefault();
+          goTo("visit", '#visit input[name="name"]');
+        }}
+      >
+        {CLASSIC.visitCta}
+      </a>
+    </header>
+  );
+}

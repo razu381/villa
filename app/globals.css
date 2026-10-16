@@ -91,7 +91,9 @@ html[data-tier="high"]:not([data-rm="1"]) {
   --glass-filter: blur(20px) saturate(1.05);
 }
 
-html[data-tone="day"] {
+html[data-tone="day"],
+/* The classic site (/classic) is always in the day tone. */
+.vc {
   --fg: #23271a;
   --fg-soft: #4c4f41;
   --hair: rgba(35, 39, 26, 0.42);
