@@ -14,9 +14,9 @@
  * tap opens it.
  */
 
-import { useThree } from "@react-three/fiber";
-import { useEffect } from "react";
-import { Raycaster, Vector2 } from "three";
+import { useFrame, useThree } from "@react-three/fiber";
+import { useEffect, useRef } from "react";
+import { Raycaster, Vector2, Vector3 } from "three";
 import { useJourney, type HomeId } from "@/lib/store";
 import { stagesFromT } from "@/lib/timeline";
 import { FeaturedHome } from "./FeaturedHome";
@@ -39,6 +39,8 @@ export function Homes() {
   const scene = useThree((s) => s.scene);
   const camera = useThree((s) => s.camera);
   const gl = useThree((s) => s.gl);
+  const recheckHover = useRef<() => void>(() => {});
+  const seen = useRef({ pos: new Vector3(), at: 0 });
   useEffect(() => {
     if (process.env.NODE_ENV === "production") return;
     // Dev aid (scripts / console): the scene graph, for isolating render issues.
@@ -116,6 +118,7 @@ export function Homes() {
       if (!last.mouse) return setHover(null);
       setHover(pick(last.x, last.y, document.elementFromPoint(last.x, last.y)));
     };
+    recheckHover.current = recheck;
     const onClick = (e: MouseEvent) => {
       const id = pick(e.clientX, e.clientY, e.target as Element | null);
       if (!id) return;
@@ -148,9 +151,23 @@ export function Homes() {
       document.documentElement.removeEventListener("pointerleave", onLeave);
       window.removeEventListener("scroll", onScroll);
       window.clearTimeout(timer);
+      recheckHover.current = () => {};
       setHover(null);
     };
   }, [camera, gl]);
+
+  // While the camera eases (after a scroll, towards a home) the homes move under a
+  // still pointer: re-pick every ~100 ms until it settles, so hover never lags.
+  // (The idle breathing drift moves it < 1 cm per check and is ignored.)
+  useFrame((state) => {
+    const p = seen.current;
+    if (camera.position.distanceToSquared(p.pos) < 1e-4) return;
+    const now = state.clock.elapsedTime;
+    if (now - p.at < 0.1) return;
+    p.at = now;
+    p.pos.copy(camera.position);
+    recheckHover.current();
+  });
 
   if (disabled()) return null;
   return (

@@ -308,7 +308,7 @@ Each item: **where** → **what to do** → **done when**. Review suggestions ar
   - Lavender is pale at noon.
   - Hedges are plain rounded boxes.
   - The garage floor in the portal recess is dark.
-- **Homes:**
+- ✅ *(2026-10-16: hover re-picks every ~100 ms while the camera moves (`Homes.tsx`), not only 80 ms after the last scroll; tested with a still pointer at the edge of V4's hit box: the hover cleared mid-ease (1.05 s) without the mouse moving. Dawn explore stays as lit (the dawn light itself; the same look question as the golden-hour cast under 3.9/3.10))* **Homes:**
   - Hover state can lag ~1 s while the camera eases.
   - Dawn hold-the-sun (0.1) is soft and pale.
 
