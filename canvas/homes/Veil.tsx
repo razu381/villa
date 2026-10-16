@@ -1,7 +1,9 @@
 "use client";
 
 /**
- * While a home is open, the rest of the village recedes into the air.
+ * While a home is open, the rest of the village recedes into the air; through
+ * "Two ways to live" it does too, around both featured homes, so they read as
+ * the chapter's subject.
  *
  * A camera-facing quad of the day's fog colour drawn over everything in the
  * opaque pass (renderOrder VEIL_ORDER, no depth test, blended) — and the
@@ -18,6 +20,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import { Color, CustomBlending, type Mesh, OneMinusSrcAlphaFactor, ShaderMaterial, SrcAlphaFactor, Vector2, Vector3 } from "three";
 import { useJourney } from "@/lib/store";
+import { stagesFromT } from "@/lib/timeline";
 import { U } from "@/lib/uniforms";
 import { FEATURED } from "@/lib/village";
 import { damp } from "../Driver";
@@ -33,6 +36,8 @@ const STACK_MID = { v3: 9.5, v4: 9.0 } as const;
 const NEAR = 2;
 
 const v = new Vector3();
+/** The veil through "Two ways to live" (1 = as strong as while a home is open). */
+const JOURNEY_VEIL = 0.5;
 
 export function Veil() {
   const camera = useThree((s) => s.camera);
@@ -60,7 +65,7 @@ export function Veil() {
           uNight: U.uNight,
           uCenter: { value: new Vector2(0.4, 0.5) },
           uAspect: { value: 1.6 },
-          uTint: { value: new Color("#F3ECE0") },
+          uDeep: { value: new Color("#1C1E17") },
         },
         vertexShader: /* glsl */ `
           varying vec4 vClip;
@@ -75,7 +80,7 @@ export function Veil() {
           uniform float uNight;
           uniform vec2 uCenter;
           uniform float uAspect;
-          uniform vec3 uTint;
+          uniform vec3 uDeep;
           varying vec4 vClip;
           void main() {
             vec2 uv = vClip.xy / vClip.w * 0.5 + 0.5;
@@ -83,7 +88,9 @@ export function Veil() {
             float r = length(d);
             // Thin around the home (its garden keeps a little air), fuller at the edges.
             float k = mix(0.07, 0.2, smoothstep(0.15, 0.8, r));
-            vec3 col = mix(mix(uFog, uSky, 0.35), uTint, 0.12 * (1.0 - uNight));
+            // By day a mid-tone air (the fog, a little deeper), so the frame never goes milky;
+            // by night the sky-lit haze.
+            vec3 col = mix(mix(uFog, uDeep, 0.18), mix(uFog, uSky, 0.35), uNight);
             gl_FragColor = vec4(col, uAmount * k * mix(1.0, 1.15, uNight));
             #include <colorspace_fragment>
           }`,
@@ -94,16 +101,22 @@ export function Veil() {
   useFrame((_, dtRaw) => {
     const s = useJourney.getState();
     const dt = Math.min(dtRaw, 1 / 20);
-    const want = s.mode === "explore" && s.home ? 1 : 0;
+    const open = s.mode === "explore" && s.home != null;
+    const want = open ? 1 : s.mode === "journey" ? stagesFromT(s.t).homes * JOURNEY_VEIL : 0;
     amt.current = s.snap ? want : damp(amt.current, want, 2.2, dt);
     const m = ref.current;
     if (!m) return;
     m.visible = amt.current > 0.003;
     mat.uniforms.uAmount.value = amt.current;
     if (!m.visible) return;
-    if (s.home) {
+    if (open && s.home) {
       const h = FEATURED[s.home];
       focus.current.set(h.x, h.y + STACK_MID[s.home], h.z);
+    } else if (!s.home) {
+      // Between the two homes.
+      const a = FEATURED.v3;
+      const b = FEATURED.v4;
+      focus.current.set((a.x + b.x) / 2, (a.y + b.y) / 2 + 5, (a.z + b.z) / 2);
     }
     // A quad just in front of the camera, facing it, covering the frustum.
     camera.getWorldDirection(v);

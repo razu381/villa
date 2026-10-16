@@ -96,7 +96,8 @@ const ROOM_BOUNCE = "uPlaster * vec3(1.0, 0.95, 0.86) * 0.45 * (1.0 - uNight)";
  * same objects), then adds a few lines driven by this home's uniforms:
  *  - a multiply before tone mapping (hover brightening),
  *  - with the level open in plan: no fake bounce light in the rooms (they get
- *    real sun now) and no window panes (an architect's model has no glass).
+ *    real sun now), no window panes (an architect's model has no glass) and
+ *    pale wall tops instead of cork.
  * With every uniform at 0 the output is identical to the village's.
  */
 function cloneHouseMaterial(key: HouseMaterialKey, src: MeshStandardMaterial, cut: Plane, hu: HomeUniforms, open: { value: number }) {
@@ -122,6 +123,11 @@ function cloneHouseMaterial(key: HouseMaterialKey, src: MeshStandardMaterial, cu
         "#include <clipping_planes_fragment>",
         "#include <clipping_planes_fragment>\nif (uHomeOpen > 0.02 && vHWin.y > 0.5 && vHWin.y < 2.5) discard;",
       );
+    }
+    if (key === "cork") {
+      // Open in plan: the walls' cut tops read as a model's pale edges around the
+      // rooms; cork stays on the facades (no one-tone orange stack at golden hour).
+      fs = fs.replace("diffuseColor.rgb = cork;", "diffuseColor.rgb = cork;\n  if (vHObjN.y > 0.5) diffuseColor.rgb = mix(diffuseColor.rgb, uPlaster, uHomeOpen);");
     }
     if (key === "solar") {
       // The open home's panels by night: a faint moonlit slate, not a black hole.

@@ -242,9 +242,9 @@ export function FeaturedHome({ id }: { id: HomeId }) {
     mats.hu.uLamp.value = smooth(0.8, 0.9, U.uDay.value);
 
     // While this home is the chosen one it draws after the veil (Veil.tsx), so
-    // the village recedes and the home does not. (Glass stays in the
-    // transparent pass. In the journey the veil is off and order is moot.)
-    const wantOrder = s.home === id ? HOME_ORDER : 0;
+    // the village recedes and the home does not; in "Two ways to live" both
+    // featured homes do. (Glass stays in the transparent pass.)
+    const wantOrder = s.home === id || (s.mode === "journey" && stages.homes > 0) ? HOME_ORDER : 0;
     if (wantOrder !== order.current) {
       order.current = wantOrder;
       for (const m of houseMeshes.current) if (!(m.material as Material).transparent) m.renderOrder = wantOrder;
@@ -282,7 +282,7 @@ export function FeaturedHome({ id }: { id: HomeId }) {
       mk.uHover.value = st.hover;
       mk.uSize.value = 34 * gl.getPixelRatio();
       const ha = mats.halo.uniforms;
-      ha.uAlpha.value = (0.3 + 0.2 * st.hover) * smooth(0.1, 0.8, j) * (1 - 0.5 * U.uNight.value);
+      ha.uAlpha.value = (0.15 + 0.1 * st.hover) * smooth(0.1, 0.8, j) * (1 - 0.5 * U.uNight.value);
     }
   });
 
