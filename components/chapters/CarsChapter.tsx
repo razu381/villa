@@ -22,8 +22,9 @@ export function CarsChapter() {
         <ChapterText eyebrow={c.eyebrow} title={c.title} body={c.body} from={4.06} to={4.9} swapAt={4.38} swap={<Legend from={4.41} inline />} />
       ) : (
         <>
-          <ChapterText eyebrow={c.eyebrow} title={c.title} body={c.body} from={4.06} to={4.9} />
-          <Legend from={4.3} />
+          {/* Title and legend leave as the cut closes (4.82): the gardens and houses re-emerge under them. */}
+          <ChapterText eyebrow={c.eyebrow} title={c.title} body={c.body} from={4.06} to={4.8} />
+          <Legend from={4.3} to={4.84} />
         </>
       )}
     </Pin>
@@ -45,9 +46,9 @@ function Marker({ kind }: { kind: "dashed" | "line" | "circle" }) {
   );
 }
 
-function Legend({ from, inline = false }: { from: number; inline?: boolean }) {
+function Legend({ from, to = 4.9, inline = false }: { from: number; to?: number; inline?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
-  useReveal(ref, { when: (s) => s.t >= from && s.t < 4.9, delay: inline ? 0.15 : 0.05 });
+  useReveal(ref, { when: (s) => s.t >= from && s.t < to, delay: inline ? 0.15 : 0.05 });
   return (
     <div ref={ref} className="vl-legend" data-inline={inline ? "1" : undefined}>
       {!inline && <div className="vl-haze vl-haze--right" data-r="scrim" aria-hidden="true" />}
