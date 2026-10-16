@@ -133,7 +133,7 @@ export const FLOOR_PHOTOS: Photo[] = [PHOTOS.living, PHOTOS.bedroomMaster, PHOTO
  * Map hotspots, as % of the map image (client layout p. 7). Places the map
  * doesn't show have no spot; their list rows simply don't light the map.
  */
-export const MAP_MARKER = { x: 53.1, y: 51.6, box: { l: 47, t: 36.4, r: 59.8, b: 47.2 } };
+export const MAP_MARKER = { x: 53.4, y: 52.2, box: { l: 47, t: 36.4, r: 59.8, b: 47.2 } };
 export const MAP_SPOTS: Record<string, { x: number; y: number }> = {
   Taguspark: { x: 64.4, y: 60.4 },
   "Lagoas Park": { x: 74.9, y: 61.7 },

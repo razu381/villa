@@ -117,6 +117,12 @@ export function AutoGallery({
           <button
             type="button"
             className="vc-ag__view"
+            onMouseMove={(e) => {
+              // The "View" label follows the pointer.
+              const r = e.currentTarget.getBoundingClientRect();
+              e.currentTarget.style.setProperty("--mx", `${e.clientX - r.left}px`);
+              e.currentTarget.style.setProperty("--my", `${e.clientY - r.top}px`);
+            }}
             onClick={() => {
               // A swipe ends in a click too: only a tap opens the viewer.
               if (swiped.current) swiped.current = false;

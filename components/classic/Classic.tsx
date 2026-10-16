@@ -10,6 +10,8 @@ import { Hero } from "./Hero";
 import { Concept } from "./Concept";
 import { VillageHeart } from "./VillageHeart";
 import { Villas } from "./Villas";
+import { Location } from "./Location";
+import { Gallery } from "./Gallery";
 
 /**
  * The classic site: the client's own layout (concept, village heart, villas,
@@ -58,6 +60,8 @@ export default function Classic() {
         <Concept />
         <VillageHeart />
         <Villas />
+        <Location />
+        <Gallery />
       </main>
     </div>
   );
