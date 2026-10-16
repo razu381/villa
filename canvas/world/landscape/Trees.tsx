@@ -192,6 +192,23 @@ const HUE = /* glsl */ `
     reflectedLight.directDiffuse *= mix(vec3(1.0), vec3(1.06, 1.03, 0.88), k);
     reflectedLight.indirectDiffuse *= mix(vec3(1.0), vec3(0.9, 0.99, 1.1), k);
   }
+  // section cap: the inside of a crown the cut has opened is lit as one flat,
+  // slightly darker foliage face (it sits in its own shell's shadow otherwise)
+  #if NUM_DIR_LIGHTS > 0
+  if (!gl_FrontFacing) {
+    vec3 capL = vec3(0.0);
+    for (int i = 0; i < NUM_DIR_LIGHTS; i++) capL += directionalLights[i].color;
+    reflectedLight.directDiffuse = max(reflectedLight.directDiffuse, capL * BRDF_Lambert(diffuseColor.rgb) * 0.5);
+  }
+  #endif
+`;
+
+/** Section cap normal: view-facing, so the cut reads as an evenly lit flat face (no hollow). */
+const CAP = /* glsl */ `
+  if (!gl_FrontFacing) {
+    normal = vec3(0.0, 0.0, 1.0);
+    diffuseColor.rgb *= 0.86;
+  }
 `;
 
 const MOON = /* glsl */ `
@@ -235,7 +252,7 @@ function createTreeMaterial() {
     poche: "#3E4530",
     seam: false,
   });
-  return extendMaterial(mat, "tree-v2", (shader) => {
+  return extendMaterial(mat, "tree-v3", (shader) => {
     treeVertex(shader, true);
     shader.uniforms.uCutZ = uCutZ;
     let fs = shader.fragmentShader;
@@ -243,7 +260,7 @@ function createTreeMaterial() {
     fs = inject(fs, "void main() {", `${FRAG.replace("float tvClump", "float vlMaskT = 0.0;\nfloat tvClump")}\nvoid main() {`, "replace");
     fs = inject(fs, "#include <color_fragment>", COLOR);
     fs = inject(fs, "#include <roughnessmap_fragment>", POST.replace("float vlMaskT = vlMask;", "vlMaskT = vlMask;"), "before");
-    fs = inject(fs, "#include <normal_fragment_maps>", BUMP);
+    fs = inject(fs, "#include <normal_fragment_maps>", BUMP + CAP);
     fs = inject(fs, "#include <lights_fragment_begin>", foliageLights(), "replace");
     fs = inject(fs, "#include <lights_fragment_end>", HUE);
     fs = inject(fs, "#include <emissivemap_fragment>", MOON);

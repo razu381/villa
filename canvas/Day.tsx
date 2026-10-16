@@ -151,11 +151,13 @@ export function Day() {
           void main() {
             float h = clamp(vDir.y, -0.2, 1.0);
             vec3 col = mix(uSkyHorizon, uSkyTop, smoothstep(-0.02, 0.55, h));
-            // Stars: sparse, twinkling, only above the horizon at night.
+            // Stars: sparse, twinkling, at night. The model floats in its own air, so they
+            // also come out faintly in the dark air just above it (the night camera looks
+            // down; the true horizon sits at the very top of its frame).
             vec3 cell = floor(vDir * 420.0);
             float s = step(0.9965, hash(cell));
             float tw = 0.6 + 0.4 * sin(uTime * 1.3 + hash(cell + 3.0) * 40.0);
-            col += vec3(1.0, 0.96, 0.9) * s * tw * uStars * uNight * smoothstep(0.05, 0.35, h);
+            col += vec3(1.0, 0.96, 0.9) * s * tw * uStars * uNight * (0.55 * smoothstep(-0.3, 0.0, h) + 0.45 * smoothstep(0.05, 0.35, h));
             gl_FragColor = vec4(col, 1.0);
             #include <colorspace_fragment>
           }`,

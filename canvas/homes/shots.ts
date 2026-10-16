@@ -6,14 +6,14 @@ import type { HomeId } from "@/lib/store";
  * close-up shots used in explore mode. Owned by the homes module.
  *
  * Journey: a long lens from the south-south-west at golden hour, the two
- * featured homes in the upper band of the frame (the title sits bottom-left,
+ * featured homes in the middle band of the frame (clear of the header) (the title sits bottom-left,
  * the cards bottom-right): the townhouse behind on the left, the villa in
  * front on the right, the low sun raking in from the west across their faces
  * and throwing the shadows east. A slow lateral drift across the chapter.
  */
 export const HOMES_KEYS: CameraKey[] = [
-  { t: 5.08, pos: [-19.5, 45, 101], target: [-4.5, 4, 24], fov: 26 },
-  { t: 5.9, pos: [-10.2, 41.7, 101.5], target: [-3.5, 4, 24.5], fov: 26 },
+  { t: 5.08, pos: [-19.5, 45, 101], target: [-4.5, 8.5, 24], fov: 26 },
+  { t: 5.9, pos: [-10.2, 41.7, 101.5], target: [-3.5, 8.5, 24.5], fov: 26 },
 ];
 
 /*

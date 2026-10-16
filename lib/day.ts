@@ -1,5 +1,5 @@
 import { Color, Vector3 } from "three";
-import { clamp01, lerp } from "./timeline";
+import { clamp01, lerp, smooth } from "./timeline";
 
 /**
  * Time of day → lighting. One source of truth for sun, sky, fog and night.
@@ -35,9 +35,9 @@ export const DAY_KEYS: DayKey[] = [
   { day: 0.12, skyTop: "#DCDCD6", skyHorizon: "#F1DFCB", fog: "#ECE2D6", sunElevation: 11, sunColor: "#FFC594", sunIntensity: 3.0, hemiSky: "#EAE6DD", hemiGround: "#CDBFA9", hemiIntensity: 1.95, night: 0, exposure: 1.3 },
   { day: 0.28, skyTop: "#D3DADB", skyHorizon: "#EDE9DF", fog: "#E9E6DD", sunElevation: 28, sunColor: "#FFE7CC", sunIntensity: 3.3, hemiSky: "#E3E7E6", hemiGround: "#C9C0AC", hemiIntensity: 0.95, night: 0, exposure: 1.12 },
   { day: 0.5, skyTop: "#CBD6DB", skyHorizon: "#EEEDE6", fog: "#EBEAE3", sunElevation: 60, sunColor: "#FFF6EA", sunIntensity: 2.9, hemiSky: "#E2E8EA", hemiGround: "#C8C1AE", hemiIntensity: 0.8, night: 0, exposure: 1.0 },
-  { day: 0.66, skyTop: "#D2C8B6", skyHorizon: "#F2D3A6", fog: "#EDD7B6", sunElevation: 18, sunColor: "#FFC27A", sunIntensity: 2.6, hemiSky: "#E8DCC6", hemiGround: "#BFA98A", hemiIntensity: 0.7, night: 0, exposure: 1.0 },
+  { day: 0.66, skyTop: "#D2C8B6", skyHorizon: "#F2D3A6", fog: "#EDD7B6", sunElevation: 18, sunColor: "#FFCF96", sunIntensity: 2.6, hemiSky: "#D6DCE0", hemiGround: "#BFA98A", hemiIntensity: 0.7, night: 0, exposure: 1.0 },
   { day: 0.76, skyTop: "#B9A79E", skyHorizon: "#F2B27E", fog: "#E3B38F", sunElevation: 5, sunColor: "#FF9A55", sunIntensity: 2.0, hemiSky: "#D9C1AD", hemiGround: "#9C8068", hemiIntensity: 0.55, night: 0.05, exposure: 1.0 },
-  { day: 0.86, skyTop: "#4A4C63", skyHorizon: "#A7787A", fog: "#6E6170", sunElevation: -4, sunColor: "#FF8248", sunIntensity: 0.35, hemiSky: "#6A6A84", hemiGround: "#3E3A3A", hemiIntensity: 0.5, night: 0.55, exposure: 1.05 },
+  { day: 0.86, skyTop: "#2E3346", skyHorizon: "#9A7F78", fog: "#4A4B58", sunElevation: -4, sunColor: "#FF8248", sunIntensity: 0.35, hemiSky: "#5E6678", hemiGround: "#363840", hemiIntensity: 0.5, night: 0.55, exposure: 1.05 },
   { day: 1.0, skyTop: "#121620", skyHorizon: "#272B36", fog: "#1D2029", sunElevation: -12, sunColor: "#A9BCFF", sunIntensity: 0.0, hemiSky: "#3A4460", hemiGround: "#14161B", hemiIntensity: 0.45, night: 1, exposure: 1.1 },
 ];
 
@@ -68,10 +68,18 @@ function mixHex(a: string, b: string, k: number, out: Color) {
   return out.copy(tmpA).lerp(tmpB, k).convertLinearToSRGB();
 }
 
-/** Sun azimuth: east at first light → south at noon → west at sunset. */
+/**
+ * Sun azimuth: east at first light → south at noon → west at sunset — eased so
+ * the sun stays to the SIDE of the journey camera (which mostly looks north from
+ * the south): it lingers in the east-north-east through the morning (raking the
+ * south faces from the right), swings through south during the noon section
+ * (high, a diagram), and settles in the west for golden hour (light across the
+ * faces from the left, shadows east). Still monotonic: the day only moves forward.
+ */
 export function sunAzimuth(day: number) {
   // 0 → east, π/2 → south, π → west
-  return lerp(0.08, Math.PI - 0.12, clamp01(day / 0.82));
+  const morning = 0.2 + 0.16 * smooth(0.0, 0.3, day);
+  return lerp(morning, Math.PI - 0.08, smooth(0.43, 0.6, day));
 }
 
 export function directionFrom(azimuth: number, elevationDeg: number, out = new Vector3()) {

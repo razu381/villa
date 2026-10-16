@@ -29,6 +29,9 @@ function ToneSync() {
       const phase = s.t < 0.36 ? "hero" : "journey";
       if (html.dataset.phase !== phase) html.dataset.phase = phase;
       if (html.dataset.mode !== s.mode) html.dataset.mode = s.mode;
+      // Busy frames (close over roofs and solar panels): the header needs a denser scrim.
+      const busy = s.mode === "explore" || (s.t >= 3.85 && s.t < 6.0) ? "1" : "0";
+      if (html.dataset.busy !== busy) html.dataset.busy = busy;
       // The very end (compact screens hide the arc while the form scrolls by).
       const end = s.t >= 6.6 ? "1" : "0";
       if (html.dataset.end !== end) html.dataset.end = end;

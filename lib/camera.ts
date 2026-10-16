@@ -68,8 +68,11 @@ const BASE_KEYS: CameraKey[] = [
   // arrives (title top-left, the form on the right) the village settles low
   // and left, between them.
   { t: 6.1, pos: [110, 70, 150], target: [-6, 2, -2], fov: 30, portrait: [0.72, 0.4] },
-  { t: 6.3, pos: [203, 110, 166], target: [16, 0, -88], fov: 30, portrait: [0.6, 0.38, 0.84] },
-  { t: 6.8, pos: [208, 112, 164], target: [18, 0, -92], fov: 30, portrait: [0.58, 0.4, 0.84] },
+  // The target sits high above the village so it settles in the lower third, under
+  // dark air (the body copy and the form read on sky, not on lit roofs) with a thin
+  // band of night sky — and the first stars — along the top.
+  { t: 6.3, pos: [226, 121, 195], target: [14, 22, -88], fov: 30, portrait: [0.56, 0.56, 0.84] },
+  { t: 6.8, pos: [231, 123, 193], target: [14, 24, -92], fov: 30, portrait: [0.54, 0.58, 0.84] },
 ];
 
 export const CAMERA_KEYS: CameraKey[] = [...BASE_KEYS].sort((a, b) => a.t - b.t);

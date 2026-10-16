@@ -376,7 +376,7 @@ figure {
 html[data-index="1"] .vl-text > :not(.vl-text__scrim),
 html[data-index="1"] .vl-notes > .vl-note,
 html[data-index="1"] .vl-legend > :not(.vl-haze) {
-  opacity: 0.3;
+  opacity: 0.1;
 }
 
 /* --------------------------------------------------------------- hero */
@@ -657,6 +657,20 @@ html[data-index="1"] .vl-legend > :not(.vl-haze) {
 }
 html[data-tone="day"] .vl-header::before {
   opacity: 0.78;
+}
+/* Busy frames (roofs, panels and trees right under the chrome): a denser band. */
+html[data-tone="day"][data-busy="1"] .vl-header::before {
+  opacity: 1;
+  height: 160px;
+  background: linear-gradient(
+    to bottom,
+    rgba(236, 233, 224, 0.9) 0%,
+    rgba(236, 233, 224, 0.86) 30%,
+    rgba(236, 233, 224, 0.7) 45%,
+    rgba(236, 233, 224, 0.4) 62%,
+    rgba(236, 233, 224, 0.14) 82%,
+    rgba(236, 233, 224, 0) 100%
+  );
 }
 .vl-header__nav {
   animation: vl-fade-in 1.6s var(--ease-quart) 0.6s both;
@@ -1511,6 +1525,31 @@ html .vl-arc[data-word="dusk"] .vl-arc__label--dusk {
 .vl-night__action > div {
   width: 100%;
 }
+/* The form on its own quiet surface: no lit roofs or cypresses through the date grid. */
+.vl-night__action > div {
+  padding: 28px;
+  border-radius: 2px;
+  background: rgba(16, 18, 21, 0.58);
+  box-shadow: inset 0 0 0 1px rgba(239, 236, 226, 0.08);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+html[data-tier="low"] .vl-night__action > div,
+html[data-rm="1"] .vl-night__action > div {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background: rgba(16, 18, 21, 0.8);
+}
+/* Night title: a deeper falloff so the body copy sits on dark air, not on lit windows. */
+html[data-tone="night"] .vl-night .vl-text[data-place="top"] .vl-text__scrim {
+  background: radial-gradient(
+    ellipse 70% 95% at 0% 38%,
+    rgba(14, 16, 18, 0.72) 0%,
+    rgba(14, 16, 18, 0.52) 42%,
+    rgba(14, 16, 18, 0.18) 72%,
+    transparent 100%
+  );
+}
 .vl-night__foot {
   position: absolute;
   left: calc(var(--gutter) + 150px);
@@ -2002,6 +2041,8 @@ html .vl-arc[data-word="dusk"] .vl-arc__label--dusk {
   margin-top: -35vh;
   margin-top: -35svh;
   padding: 30vh 20px 34px;
+  /* Deep enough that the form's first line stays below the fold until the title leaves. */
+  padding-top: 37svh;
   color: var(--fg);
   background: linear-gradient(to bottom, rgba(16, 18, 20, 0) 0%, rgba(16, 18, 20, 0.78) 18vh, rgba(16, 18, 20, 0.9) 100%);
 }
