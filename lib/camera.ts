@@ -58,7 +58,7 @@ const BASE_KEYS: CameraKey[] = [
   // The model rises — a crane down and around, south-west → south: the
   // stronghold's bastion faces us as the trees arrive.
   { t: 2.4, pos: [-110, 100, 160], target: [-10, 4, -6], fov: 30, portrait: P_MODEL },
-  { t: 2.95, pos: [10, 78, 190], target: [-4, 2, -8], fov: 30, portrait: P_MODEL },
+  { t: 2.95, pos: [10, 68, 190], target: [-4, 6, -8], fov: 30, portrait: P_MODEL },
   // The making — the sweep travels east → west; we follow it from the south.
   { t: 3.25, pos: [120, 60, 130], target: [10, 4, -4], fov: 30, portrait: P_MODEL },
   // (Pulled back a touch and aimed a little higher: air around the two notes.)

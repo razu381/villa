@@ -278,8 +278,8 @@ Each item: **where** → **what to do** → **done when**. Review suggestions ar
 
 - ✅ *(already handled, checked 2026-10-16: `PARKED` keeps the rows off the same x; at 4.45–4.7 they read as one car per bay)* **Garage elevation (t 4.5):** north and south car rows overlap like a traffic jam. Offset one row by half a bay (`canvas/section/cars.ts`).
 - ✅ *(checked 2026-10-16: at 4.55 the cut already ends in a crisp edge, the plinth's shadow line on the table; an extra darkening band made no visible difference, so no change)* **Section base:** the strata stop in a hard line, then haze. Fade them into the fog over the last ~1.5 m, or add a crisp plinth base line.
-- **Explore foreground smear:** near-camera planting smears next to the sun control. Cull planting within about 8 m of the camera in explore.
-- **t 3.0 composition:** empty haze across the top 25% and cut-off foam trees. Drop the camera ~10 m, raise the target ~4 m.
+- ✅ *(checked 2026-10-16, desktop: no smear by the sun control in V3 or V4 explore; the near ground is softly veiled. Likely the closer portrait camera: ⏸ mobile)* **Explore foreground smear:** near-camera planting smears next to the sun control. Cull planting within about 8 m of the camera in explore.
+- ✅ *(done 2026-10-16: the 2.95 key `pos [10, 78, 190] → [10, 68, 190]`, `target y 2 → 6`; the back foam trees now sit fully in frame and the model is more central; checked 2.8–3.1)* **t 3.0 composition:** empty haze across the top 25% and cut-off foam trees. Drop the camera ~10 m, raise the target ~4 m.
 - **Invitation card:** the embossed arch crosses the lettering. Shrink it to frame only the monogram and date, or put it behind a knockout (`components/night/InvitationCard.tsx`).
 - **Shadow box size:** the fitted box changes size every frame and edges can crawl during scroll. Quantise the extents to powers of 1.25 with ~10% hysteresis (`canvas/Day.tsx fitShadow`).
 - ⏸ *Deferred (mobile).* **Mid-tier geometry:**
