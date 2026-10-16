@@ -342,7 +342,9 @@ const POST_CODE = /* glsl */ `
     float podK = mix(1.0, dash * 0.55 * (1.0 - 0.75 * uRise), onPod * (1.0 - side) * uPodRise);
     float sideK = mix(1.0, 0.55, side);
     float ghost = mix(1.0, 0.13, vlMask);
-    float ink = max(minor * 0.4 * revMinor, major * 0.72 * revMajor) * podK * sideK * ghost;
+    // the deck is the plan's now: the hill's lines leave it as its outline draws
+    float offDeck = 1.0 - onPod * (1.0 - side) * smoothstep(0.45, 0.7, uPlan);
+    float ink = max(minor * 0.4 * revMinor, major * 0.72 * revMajor) * podK * sideK * ghost * offDeck;
 
     // --- plan lines: podium outline, terrace steps, paths, decks, kerbs (uLines)
     if (side < 0.5) {
