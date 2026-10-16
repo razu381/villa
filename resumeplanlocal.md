@@ -137,7 +137,7 @@ Each item: **where** → **what to do** → **done when**. Review suggestions ar
 - *Done when:* no black frame anywhere in a slow scroll through 4.1–4.5 (sampled every frame) at tier high and mid.
 - *Done:* the source was a single NaN pixel from the planting's derivative bump (`normalize` of a zero vector when a near-camera shrub is seen edge-on). The same guard `houses/materials.ts` already had now covers `Planting.tsx` and the stone walls (`wallsMaterial.ts`). A float-target scan finds no non-finite pixel over 40 frames at t 4.26–4.34, 1.6, 2.6, 3.5, 4.5, 4.8, 5.5, 6.6 and explore v3/v4 (before: one at frame 0 at 4.3). A 12 s scroll 4.1 → 4.5 on the prod build: 46 sampled frames at tier high and mid, none dark.
 
-**3.1 Compile shaders up front, so stages don't stall when they first appear.**
+✅ **3.1 Compile shaders up front, so stages don't stall when they first appear.**
 - *Where:* new `Warmup` component in `canvas/Experience.tsx`; first Explore click in `canvas/homes/FeaturedHome.tsx`.
 - *Problem:* every stage starts hidden, so its shader programs compile and its buffers upload on the first frame it appears. That's 18 programs at once at t≈2.2 as the houses rise, 3–4 at later chapters, and 5 programs plus 31 geometry uploads on the first Explore click. Each blocks about 30 ms or more, and much longer on Windows/ANGLE and phones.
 - *Do:* after the ready signal, while the hero film still covers the canvas (t < 0.5):
@@ -147,6 +147,27 @@ Each item: **where** → **what to do** → **done when**. Review suggestions ar
   4. Restore the visibility flags and dispose of the target.
   5. On tier low (no composer), render to the canvas with a 1-px scissor instead.
 - *Done when:* the program count from `--info` is already final (~59) at t 0.5 and stays flat to the end, including the first Explore.
+- *Done:* `Warmup` in `canvas/Experience.tsx` replaces `ReadySignal`, and `ready` now waits for it. HeroMedia already holds the still until ready and eases the dissolve in if the visitor got there first, so nothing changes on screen. What differs from the plan:
+  - **No visibility toggling for compile.** `compile()` walks hidden objects anyway. It runs with a 1×1 half-float target bound, so the programs match the composer's RenderPass (linear, untonemapped). On tier low it uses the canvas.
+  - **The render step is spread over frames.** Each object is drawn once on its own (visible, unculled), with an 8 ms budget per frame. The shadow pass compiles its 9 depth programs synchronously, and one full-scene render blocked the main thread for one long stretch.
+  - **The scene is hidden until ready**, so the frames behind the film stay light.
+  - **An empty render starts each upload frame.** three's shadow pass keys its depth programs on the lights of the *previous* render of the scene. Without that render it compiled 0-light variants the journey never uses (seen as 62 → 66 programs).
+  - *Result (prod build, `scripts/perf.mjs`, quiet machine, same protocol as the baseline):*
+
+    | | before | after |
+    |---|---|---|
+    | Average fps | 11.8 | 12.3 |
+    | p99 / max frame | 250 / 700 ms | 167 / 300 ms |
+    | Worst frame after t 0.5 | 433 ms | 217 ms, the scene's normal cost |
+    | Program jumps through the scroll | 11 | none |
+    | Houses rise (t 2.0–2.5) max | 700 ms | 83 ms |
+    | First Explore | +6 programs, +29 geometries, 800–870 ms freeze | +0 / +0, max frame 150 ms (V4) / 267 ms (V3) |
+    | Time to ready | 2.6 s | 4.2 s, behind the film |
+
+  - *Program count:* `--info` shows 62 on high, 60 on mid, 45 on low, at ready on a t 0 load, flat through the whole scroll and the first Explore. A cold load deeper in (`?t=6.6`, `?home=v4`) shows 63–65. Its first frame compiles throwaway 0-light shadow variants (the same three quirk, on a fresh render state), still before ready and flat afterwards.
+  - *Dev machine caveat:* on Linux (ANGLE → OpenGL → Mesa), `compileAsync` resolves before the driver has really compiled. The first synchronous compile then waits for the whole backlog, so the parallel compile shows little benefit here. On Windows/D3D11 the parallel compile is real.
+  - *Check on the pitch laptop:* time to ready, and that `--info` stays flat.
+  - *Also seen, not 3D:* under heavy GPU contention from another browser, a 5–7 s hitch at t ≈ 0.8 when scrolling in from t 0, with no main-thread work and no compiles. It wasn't present on the quiet machine (t 0.5–1.0 max 167 ms). It's likely the hero stills' first composite. Recheck on the laptop with 3.3.
 
 **3.2 Stop the device check from creating a second WebGL context.**
 - *Where:* `lib/tier.ts detectTier()`, called from `components/SmoothScroll.tsx`.
