@@ -1914,7 +1914,11 @@ html[data-tone="night"] .vl-night .vl-text[data-place="top"] .vl-text__scrim {
   padding: 11% 12% 9%;
   text-shadow:
     0 1px 0 rgba(255, 255, 255, 0.65),
-    0 -0.5px 0 rgba(40, 40, 20, 0.18);
+    0 -0.5px 0 rgba(40, 40, 20, 0.18),
+    /* A knockout in the paper's tone: the embossed arch fades out behind the words. */
+    0 0 0.3em rgba(234, 230, 218, 0.95),
+    0 0 0.65em rgba(234, 230, 218, 0.9),
+    0 0 0.65em rgba(234, 230, 218, 0.9);
 }
 .vl-inv__crest {
   display: block;
