@@ -22,21 +22,23 @@ export function baseDpr() {
 }
 
 /**
- * Lighter and lighter, in the order the eye notices least: pixel ratio first
- * (2 → 1.5 → 1.25 → 1, never below 60 % of the start: a soft frame reads cheap),
- * then tilt-shift fades out, then the shadow map halves.
+ * Lighter and lighter, sharpness last: tilt-shift fades out first (a blur
+ * itself, and one full-screen pass less), then the shadow map halves, and only
+ * then the pixel ratio steps down (2 → 1.5 → 1.25 → 1), never below 80 % of
+ * the start or below 1: a soft frame reads cheap.
  */
 export function qualitySteps(tier: Tier, base: number): QualityStep[] {
   if (tier === "low") return [{ dpr: 1, tilt: false, shadow: 1024 }];
   const top = tier === "high" ? base : Math.min(base, 1.5);
-  const shadow = tier === "high" ? 4096 : 2048;
-  const dprs = [top, ...[1.5, 1.25, 1].filter((d) => d < top - 0.01 && d >= top * 0.6 - 1e-3)];
-  const steps = dprs.map((dpr) => ({ dpr, tilt: tier === "high", shadow }));
-  if (tier === "high") {
-    const last = steps[steps.length - 1];
-    steps.push({ ...last, tilt: false }, { ...last, tilt: false, shadow: 2048 });
-  }
-  return steps;
+  const floor = Math.max(1, top * 0.8);
+  const dprs = [top, ...[1.5, 1.25, 1].filter((d) => d < top - 0.01 && d >= floor - 1e-3)];
+  if (dprs[dprs.length - 1] - floor > 0.05) dprs.push(floor);
+  if (tier === "mid") return dprs.map((dpr) => ({ dpr, tilt: false, shadow: 2048 }));
+  return [
+    { dpr: top, tilt: true, shadow: 4096 },
+    { dpr: top, tilt: false, shadow: 4096 },
+    ...dprs.map((dpr) => ({ dpr, tilt: false, shadow: 2048 })),
+  ];
 }
 
 /** `?quality=N` pins a rung (shots, comparisons); `?snap=1` pins the top one. */
