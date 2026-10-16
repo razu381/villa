@@ -1217,6 +1217,29 @@ html .vl-arc[data-word="dusk"] .vl-arc__label--dusk {
   display: block;
   line-height: 0;
 }
+/* Leaders from the legend's markers to the picture (CarsChapter Leaders): above
+   the canvas and the legend's haze, under the header. */
+.vl-leaders {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 3;
+  pointer-events: none;
+  overflow: visible;
+  transition: opacity 0.6s var(--ease-quart);
+}
+.vl-leaders line {
+  stroke: var(--fg);
+  stroke-width: 1;
+  stroke-opacity: 0.72;
+}
+.vl-leaders circle {
+  fill: var(--fg);
+}
+html[data-index="1"] .vl-leaders {
+  opacity: 0;
+}
 .vl-legend__marker {
   width: 48px;
   height: 12px;

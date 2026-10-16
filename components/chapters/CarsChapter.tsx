@@ -1,7 +1,11 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { SECTION_ANCHORS } from "@/lib/anchors";
 import { COPY } from "@/lib/content";
+import { useJourney } from "@/lib/store";
+import { damp } from "@/lib/ui-time";
 import { UI } from "@/lib/ui-copy";
 import { useReveal } from "@/lib/ui-reveal";
 import { useCompact } from "@/lib/ui-media";
@@ -25,6 +29,7 @@ export function CarsChapter() {
           {/* Title and legend leave as the cut closes (4.82): the gardens and houses re-emerge under them. */}
           <ChapterText eyebrow={c.eyebrow} title={c.title} body={c.body} from={4.06} to={4.8} />
           <Legend from={4.3} to={4.84} />
+          <Leaders from={4.3} to={4.84} />
         </>
       )}
     </Pin>
@@ -74,5 +79,84 @@ function Legend({ from, to = 4.9, inline = false }: { from: number; to?: number;
         ))}
       </ul>
     </div>
+  );
+}
+
+/** The legend rows that point at something on screen while the legend is up (the playground only re-emerges after it). */
+const LEADERS = [
+  { key: "parking", dash: "3 3" },
+  { key: "streets", dash: undefined },
+] as const;
+
+/**
+ * Hairline leaders from the legend's markers to their places in the picture
+ * (lib/anchors.ts, written by the 3D every frame). A fixed SVG on <body>, drawn
+ * by a rAF loop only while the legend is up; each leader eases in once its
+ * subject is on screen, in the marker's own dash.
+ */
+function Leaders({ from, to }: { from: number; to: number }) {
+  const [host, setHost] = useState<HTMLElement | null>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
+  useEffect(() => setHost(document.body), []);
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg) return;
+    const groups = LEADERS.map((l) => svg.querySelector<SVGGElement>(`[data-k="${l.key}"]`)!);
+    const k = LEADERS.map(() => 0);
+    let raf = 0;
+    let last = 0;
+    const tick = (now: number) => {
+      const dt = Math.min(0.1, (now - last) / 1000);
+      last = now;
+      const s = useJourney.getState();
+      const on = s.t >= from && s.t < to && s.mode === "journey";
+      const marks = document.querySelectorAll<HTMLElement>(".vl-legend:not([data-inline]) .vl-legend__mk");
+      let busy = on;
+      LEADERS.forEach((l, i) => {
+        const a = SECTION_ANCHORS[l.key];
+        const mk = marks[i];
+        const want = on && a.visible && mk ? 1 : 0;
+        k[i] = s.snap || s.reducedMotion ? want : damp(k[i], want, 5, dt);
+        if (k[i] < 0.002) k[i] = want;
+        const g = groups[i];
+        g.style.opacity = k[i].toFixed(3);
+        if (k[i] > 0 && mk) {
+          const r = mk.getBoundingClientRect();
+          const line = g.firstElementChild as SVGLineElement;
+          const dot = g.lastElementChild as SVGCircleElement;
+          line.setAttribute("x1", (r.left - 10).toFixed(1));
+          line.setAttribute("y1", (r.top + r.height / 2).toFixed(1));
+          line.setAttribute("x2", a.x.toFixed(1));
+          line.setAttribute("y2", a.y.toFixed(1));
+          dot.setAttribute("cx", a.x.toFixed(1));
+          dot.setAttribute("cy", a.y.toFixed(1));
+          busy = true;
+        }
+      });
+      raf = busy ? requestAnimationFrame(tick) : 0;
+    };
+    const kick = () => {
+      if (raf) return;
+      last = performance.now();
+      raf = requestAnimationFrame(tick);
+    };
+    kick();
+    const unsub = useJourney.subscribe(kick);
+    return () => {
+      cancelAnimationFrame(raf);
+      unsub();
+    };
+  }, [host, from, to]);
+  if (!host) return null;
+  return createPortal(
+    <svg ref={svgRef} className="vl-leaders" aria-hidden="true">
+      {LEADERS.map((l) => (
+        <g key={l.key} data-k={l.key} style={{ opacity: 0 }}>
+          <line strokeDasharray={l.dash} />
+          <circle r={2.4} />
+        </g>
+      ))}
+    </svg>,
+    host,
   );
 }

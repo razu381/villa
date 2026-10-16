@@ -1,14 +1,10 @@
 /**
  * Annotation anchors for the section chapter's legend.
  *
- * SECTION_ANCHORS is a plain module-level object, rewritten every frame by the
- * section module with the screen position (CSS px, from the canvas's top-left)
- * of three world points, so the HTML layer can draw hairline leader lines to
- * them without any React re-render:
- *
- *   import { SECTION_ANCHORS } from "@/canvas/section/anchors";
- *   // in a rAF / gsap ticker:
- *   const a = SECTION_ANCHORS.parking; if (a.visible) drawLeader(a.x, a.y);
+ * SECTION_ANCHORS (lib/anchors.ts, three-free) is a plain module-level object,
+ * rewritten every frame here with the screen position (CSS px, from the
+ * canvas's top-left) of three world points, so the HTML legend draws hairline
+ * leader lines to them without any React re-render (CarsChapter Leaders).
  *
  * `visible` is true only while the point is in front of the camera, inside
  * the viewport (with a margin), not cut away by the section, and its subject
@@ -18,21 +14,10 @@ import type { Camera } from "three";
 import { Vector3 } from "three";
 import { PATH_WIDTH, PLAYGROUND, TERRACES } from "@/lib/village";
 import { smooth } from "@/lib/timeline";
+import { SECTION_ANCHORS, type SectionAnchor } from "@/lib/anchors";
 import { AISLE_Z, HALL } from "./layout";
 
-export interface SectionAnchor {
-  /** CSS px from the canvas's left edge. */
-  x: number;
-  /** CSS px from the canvas's top edge. */
-  y: number;
-  visible: boolean;
-}
-
-export const SECTION_ANCHORS: { parking: SectionAnchor; streets: SectionAnchor; playground: SectionAnchor } = {
-  parking: { x: 0, y: 0, visible: false },
-  streets: { x: 0, y: 0, visible: false },
-  playground: { x: 0, y: 0, visible: false },
-};
+export { SECTION_ANCHORS, type SectionAnchor };
 
 /** World points the anchors follow. */
 export const ANCHOR_POINTS = {
