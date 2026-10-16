@@ -63,6 +63,7 @@ export function Gallery() {
               label={`${CLASSIC.gallery.eyebrow}: ${group.label}`}
               onIndex={setIndex}
               onOpen={setViewer}
+              captions={group.items}
               labels={{ ...CLASSIC.villas, view: CLASSIC.gallery.view }}
             />
           </div>

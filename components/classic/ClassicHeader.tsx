@@ -10,21 +10,28 @@ export function goTo(id: string, focus?: string) {
   const el = document.getElementById(id);
   if (!el) return;
   const y = id === "top" ? 0 : el.getBoundingClientRect().top + window.scrollY - (id === "visit" ? 0 : 56);
+  // Not on touch: focusing a field opens the keyboard and jumps the page to it.
+  const field = focus && !window.matchMedia("(pointer: coarse)").matches ? focus : null;
   scrollToY(y, () => {
-    if (focus) document.querySelector<HTMLElement>(focus)?.focus({ preventScroll: true });
+    if (field) document.querySelector<HTMLElement>(field)?.focus({ preventScroll: true });
   });
 }
+
+/** Phones: the menu is a full-screen sheet behind a "Menu" button (see classic.css). */
+const SHEET = "(max-width: 820px)";
 
 /**
  * Always there (the client: the menu stays in view). Over the film it is the
  * full menu; past it, the header slims to the leaf, the docked wordmark and a
  * "Menu" that opens as a small panel when the mouse passes over it (or on click
  * / focus). The leaf goes back to the top: it sways slowly and turns green on hover.
+ * On a phone, "Menu" opens the whole screen: the sections, the 3D, the visit.
  */
 export function ClassicHeader() {
   const ref = useRef<HTMLElement>(null);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState<string | null>(null);
+  const [sheet, setSheet] = useState(false);
 
   useEffect(() => {
     const el = ref.current;
@@ -69,11 +76,40 @@ export function ClassicHeader() {
   }, []);
 
   useEffect(() => {
+    const mq = window.matchMedia(SHEET);
+    const on = () => {
+      setSheet(mq.matches);
+      setOpen(false);
+    };
+    setSheet(mq.matches);
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, []);
+
+  useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open]);
+    // The sheet holds the page still beneath it.
+    const lenis = window.__lenis;
+    if (sheet) {
+      lenis?.stop();
+      document.documentElement.classList.add("vc-locked");
+    }
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      if (sheet) {
+        lenis?.start();
+        document.documentElement.classList.remove("vc-locked");
+      }
+    };
+  }, [open, sheet]);
+
+  /** Close the menu, then go: the sheet holds the page until it has closed. */
+  const leave = (go: () => void) => {
+    setOpen(false);
+    requestAnimationFrame(() => requestAnimationFrame(go));
+  };
 
   return (
     <header ref={ref} className="vc-header" data-docked="0" data-open={open ? "1" : "0"}>
@@ -103,26 +139,26 @@ export function ClassicHeader() {
       <nav
         className="vc-nav"
         aria-label="Main"
-        onMouseEnter={() => setOpen(true)}
-        onMouseLeave={() => setOpen(false)}
+        // The mouse only: a tap would open on "enter" and close again on the click.
+        onPointerEnter={(e) => e.pointerType === "mouse" && !sheet && setOpen(true)}
+        onPointerLeave={(e) => e.pointerType === "mouse" && !sheet && setOpen(false)}
         onBlur={(e) => {
           if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setOpen(false);
         }}
       >
         <button type="button" className="vc-nav__toggle" aria-expanded={open} aria-controls="vc-nav-list" onClick={() => setOpen((o) => !o)}>
-          <span>{CLASSIC.menu}</span>
+          <span>{open && sheet ? CLASSIC.menuClose : CLASSIC.menu}</span>
           <span className="vc-nav__bars" aria-hidden="true" />
         </button>
         <ul id="vc-nav-list" className="vc-nav__list" onFocus={() => setOpen(true)}>
           {NAV.map((n, i) => (
-            <li key={n.id}>
+            <li key={n.id} style={{ "--i": i } as React.CSSProperties}>
               <a
                 href={`#${n.id}`}
                 aria-current={active === n.id ? "true" : undefined}
                 onClick={(e) => {
                   e.preventDefault();
-                  setOpen(false);
-                  goTo(n.id);
+                  leave(() => goTo(n.id));
                 }}
               >
                 <span className="vc-nav__n" aria-hidden="true">
@@ -132,8 +168,20 @@ export function ClassicHeader() {
               </a>
             </li>
           ))}
-          <li className="vc-nav__alt">
+          <li className="vc-nav__alt" style={{ "--i": NAV.length } as React.CSSProperties}>
             <a href="/">{CLASSIC.immersive}</a>
+          </li>
+          <li className="vc-nav__cta" style={{ "--i": NAV.length + 1 } as React.CSSProperties}>
+            <a
+              href="#visit"
+              className="vl-btn vl-btn--solid"
+              onClick={(e) => {
+                e.preventDefault();
+                leave(() => goTo("visit", '#visit input[name="name"]'));
+              }}
+            >
+              {CLASSIC.visitCta}
+            </a>
           </li>
         </ul>
       </nav>

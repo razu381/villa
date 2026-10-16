@@ -259,6 +259,10 @@ html[data-rm="1"] .vc-leaf {
 .vc-nav__alt a {
   opacity: 0.78;
 }
+/* The visit, inside the phone's menu sheet only. */
+.vc-nav__cta {
+  display: none;
+}
 
 /* Docked: "Menu", and the list as a small panel that opens on hover. */
 .vc-header[data-docked="1"] .vc-nav__toggle {
@@ -1325,6 +1329,7 @@ html[data-rm="1"] .vc-ag__slide[data-state="active"] img {
 }
 
 .vc-map {
+  position: relative;
   grid-column: 7 / -1;
 }
 .vc-map__frame {
@@ -1435,6 +1440,8 @@ html[data-rm="1"] .vc-map__halo {
 .vc-map__card {
   position: absolute;
   z-index: 3;
+  left: var(--x);
+  top: var(--y);
   width: min(320px, 37%);
   padding: 24px 24px 22px;
   background: var(--vc-white);
@@ -1624,6 +1631,10 @@ html[data-rm="1"] .vc-map__halo {
 }
 .vc-gallery__rise {
   height: 100%;
+}
+/* The stage's own caption is the phone's (under the photo); wide, the side column carries it. */
+.vc-gallery__stage .vc-ag__caption {
+  display: none;
 }
 
 /* "View": a soft disc that follows the pointer over a photo that opens. */
@@ -2054,22 +2065,621 @@ html[data-rm="1"] .vc-lightbox__slide[data-state="active"] {
   opacity: 0.68;
 }
 
-/* ------------------------------------------------- narrow windows */
+/* ------------------------------------------------------------ phones */
+/* The client's mobile layout, made calmer: one column, photos to the edges,
+   the menu as a sheet, the amenities full screen, cards to swipe sideways. */
 
 @media (max-width: 820px) {
-  .vc-nav,
-  .vc-header__mark {
+  .vc {
+    --vc-header: 60px;
+    --vc-section: clamp(84px, 12vh, 120px);
+    overflow-x: clip;
+    font-size: 16px;
+  }
+  /* The grid keeps its outer lines and the middle one. */
+  .vc-grid span:nth-child(2),
+  .vc-grid span:nth-child(4) {
     display: none;
   }
+  .vc-eyebrow {
+    margin-bottom: 22px;
+    font-size: 11px;
+  }
+  .vc-title {
+    font-size: clamp(36px, 10.4vw, 48px);
+  }
+  .vc-body {
+    font-size: 16px;
+  }
+
+  /* Header: the leaf, the docked wordmark in the middle, "Menu". */
+  .vc-header {
+    gap: 12px;
+  }
+  .vc-header[data-docked="1"] {
+    height: 56px;
+  }
+  .vc-leaf {
+    width: 44px;
+  }
+  .vc-header__wordmark {
+    width: 104px;
+  }
+  .vc-header__visit {
+    display: none;
+  }
+  .vc-header .vc-nav__toggle {
+    display: inline-flex;
+    margin-right: -4px;
+  }
+  .vc-header[data-open="1"] {
+    z-index: 60;
+    color: var(--vc-ink);
+  }
+
+  /* The menu: the whole screen, the sections large, the 3D and the visit after. */
+  .vc-header .vc-nav__list,
+  .vc-header[data-docked="1"] .vc-nav__list {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: stretch;
+    gap: 0;
+    min-width: 0;
+    padding: calc(var(--vc-header) + 24px) var(--vc-gutter) calc(28px + env(safe-area-inset-bottom));
+    background: var(--limestone);
+    border: 0;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    opacity: 0;
+    visibility: hidden;
+    transform: none;
+    transition:
+      opacity 0.5s var(--ease-out),
+      visibility 0s linear 0.5s;
+  }
+  .vc-header[data-open="1"] .vc-nav__list,
+  .vc-header[data-docked="1"][data-open="1"] .vc-nav__list {
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 0s;
+  }
+  .vc-header[data-docked="1"] .vc-nav__list::before {
+    display: none;
+  }
+  .vc-nav__list li {
+    opacity: 0;
+    transform: translateY(14px);
+    transition:
+      opacity 0.5s var(--ease-out),
+      transform 0.9s var(--ease-out);
+  }
+  .vc-header[data-open="1"] .vc-nav__list li {
+    opacity: 1;
+    transform: none;
+    transition-delay: calc(0.08s + var(--i) * 0.05s);
+  }
+  .vc-header .vc-nav__list a,
+  .vc-header[data-docked="1"] .vc-nav__list a {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--vc-line);
+    background-image: none;
+    font-family: var(--font-display);
+    font-size: clamp(32px, 8.6vw, 42px);
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+  }
+  .vc-nav__list li:first-child a {
+    border-top: 1px solid var(--vc-line);
+  }
+  .vc-header .vc-nav__n,
+  .vc-header[data-docked="1"] .vc-nav__n {
+    display: inline;
+    min-width: 22px;
+    font-family: var(--font-sans);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--vc-mute);
+  }
+  .vc-header .vc-nav__list a[aria-current="true"]::after {
+    content: "";
+    align-self: center;
+    width: 6px;
+    height: 6px;
+    margin-left: auto;
+    border-radius: 50%;
+    background: var(--olive);
+  }
+  .vc-header .vc-nav__alt,
+  .vc-header[data-docked="1"] .vc-nav__alt {
+    margin-top: 16px;
+    padding-top: 0;
+    border-top: 0;
+  }
+  .vc-header .vc-nav__alt a,
+  .vc-header[data-docked="1"] .vc-nav__alt a {
+    padding: 8px 0;
+    border: 0;
+    font-family: var(--font-sans);
+    font-size: 15px;
+    letter-spacing: 0.02em;
+    opacity: 1;
+  }
+  .vc-nav__cta {
+    display: block;
+    margin-top: 16px;
+  }
+  .vc-header .vc-nav__list .vc-nav__cta a.vl-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 52px;
+    padding: 0 24px;
+    border: 0;
+    background-color: var(--btn-bg);
+    color: var(--btn-fg);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    letter-spacing: 0.015em;
+  }
+  .vc-header .vc-nav__list .vc-nav__cta a.vl-btn:hover {
+    color: var(--btn-fg);
+  }
+
+  /* Concept: the text, then the arch photo set to the right. */
   .vc-concept__text,
   .vc-concept__visual {
     grid-column: 1 / -1;
   }
   .vc-concept__visual {
-    margin-top: 56px;
+    justify-self: end;
+    width: 88%;
+    margin-top: 64px;
   }
-  .vc-pillars__list {
+  .vc-concept__archline {
+    right: -5%;
+    top: -7%;
+  }
+  .vc-ink {
+    margin-top: 28px;
+    font-size: clamp(20px, 5.6vw, 24px);
+  }
+
+  /* The pillars and the three floors: a row of cards to swipe, the next one showing. */
+  .vc-pillars__list,
+  .vc-floors__list {
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--vc-gutter);
+    scrollbar-width: none;
+  }
+  .vc-pillars__list::-webkit-scrollbar,
+  .vc-floors__list::-webkit-scrollbar {
+    display: none;
+  }
+  .vc-floors__list {
+    margin-inline: calc(var(--vc-gutter) * -1);
+    padding-inline: var(--vc-gutter);
+  }
+  .vc-pillar,
+  .vc-floors__list > li {
+    flex: 0 0 min(80%, 340px);
+    scroll-snap-align: start;
+  }
+  .vc-pillar__img {
+    margin-bottom: 20px;
+  }
+  .vc-pillar__title,
+  .vc-floors__title {
+    font-size: 26px;
+  }
+
+  /* Village Heart: each amenity fills the screen (held by sticky, not a pin), the
+     title over the photo's sky, the amenity's words on a card below. */
+  .vc-heart:not(.is-still) {
+    height: calc(100svh * (1 + var(--steps)));
+    min-height: 0;
+  }
+  .vc-heart:not(.is-still) .vc-heart__inner {
+    position: sticky;
+    top: 0;
+    display: block;
+    height: 100lvh;
+    padding: 0;
+    overflow: hidden;
+  }
+  .vc-heart:not(.is-still) .vc-heart__stage {
+    position: absolute;
+    inset: 0;
+  }
+  .vc-heart:not(.is-still) .vc-heart__stage::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    z-index: 10;
+    height: 48%;
+    background: linear-gradient(to bottom, rgba(18, 19, 15, 0.55), rgba(18, 19, 15, 0.2) 55%, rgba(18, 19, 15, 0));
+    pointer-events: none;
+  }
+  .vc-heart:not(.is-still) .vc-heart__side {
+    position: absolute;
+    z-index: 11;
+    top: calc(var(--vc-header) + 26px);
+    left: var(--vc-gutter);
+    right: var(--vc-gutter);
+    display: block;
+    padding: 0;
+  }
+  .vc-heart:not(.is-still) .vc-eyebrow,
+  .vc-heart:not(.is-still) .vc-eyebrow span {
+    color: rgba(251, 250, 246, 0.88);
+  }
+  .vc-heart:not(.is-still) .vc-heart__title {
+    font-size: clamp(34px, 9.6vw, 44px);
+    color: #fbfaf6;
+  }
+  .vc-heart:not(.is-still) .vc-heart__title em {
+    color: #e6e8c9;
+  }
+  .vc-heart:not(.is-still) .vc-heart__list,
+  .vc-heart:not(.is-still) .vc-heart__detail,
+  .vc-heart:not(.is-still) .vc-heart__slide::after {
+    display: none;
+  }
+  .vc-heart:not(.is-still) .vc-heart__cap {
+    left: var(--vc-gutter);
+    right: var(--vc-gutter);
+    /* Above the browser's bar while it shows (the stage is the large viewport). */
+    bottom: calc(100lvh - 100svh + 20px + env(safe-area-inset-bottom));
+    max-width: 520px;
+    flex-wrap: wrap;
+    gap: 0 6px;
+    padding: 16px 20px 18px;
+    background: rgba(240, 238, 230, 0.92);
+    font-size: 11px;
+    color: var(--vc-mute);
+  }
+  .vc-heart:not(.is-still) .vc-heart__cap span {
+    color: var(--olive);
+  }
+  .vc-heart:not(.is-still) .vc-heart__cap b {
+    flex-basis: 100%;
+    margin: 8px 0 0;
+    font-size: 26px;
+    color: var(--vc-ink);
+  }
+  .vc-heart:not(.is-still) .vc-heart__cap i {
+    display: block;
+    flex-basis: 100%;
+    margin-top: 6px;
+    font-style: normal;
+    font-size: 14.5px;
+    line-height: 1.5;
+    letter-spacing: 0;
+    color: var(--vc-soft);
+  }
+  .vc-heart.is-still .vc-heart__side {
+    grid-column: 1 / -1;
+  }
+  .vc-heart.is-still .vc-heart__stage {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  /* Photo stages: compact controls (the dots share what's left). */
+  .vc-ag__controls {
+    gap: 14px;
+  }
+  .vc-ag__count {
+    min-width: 0;
+  }
+  .vc-ag__dots {
+    gap: 4px;
+    min-width: 0;
+  }
+  .vc-ag__dot {
+    flex: 1 1 0;
+    width: auto;
+    max-width: 30px;
+    height: 36px;
+  }
+  .vc-ag__arrows {
+    gap: 6px;
+  }
+  .vc-ag__btn {
+    width: 38px;
+    height: 38px;
+  }
+  .vc-ag__caption {
+    min-height: 5.4em;
+    padding: 18px var(--vc-gutter) 0;
+  }
+  .vc-ag__cap {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    animation: vc-cap-in 0.9s var(--ease-out) both;
+  }
+  .vc-ag__cap-title {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 22px;
+    line-height: 1.1;
+  }
+  .vc-ag__cap-line {
+    font-size: 14.5px;
+    line-height: 1.5;
+    color: var(--vc-soft);
+  }
+
+  /* Villas: the switch under the title, the photos to the edges, then the words. */
+  .vc-villas__head {
+    display: block;
+    margin-bottom: 36px;
+  }
+  .vc-tabs {
+    justify-self: stretch;
+    justify-content: flex-start;
+    gap: 32px;
+    margin-top: 30px;
+  }
+  .vc-tabs button {
+    font-size: 24px;
+  }
+  .vc-villa {
+    display: block;
+  }
+  .vc-villa__media {
+    height: auto;
+    margin-inline: calc(var(--vc-gutter) * -1);
+  }
+  .vc-villa__media .vc-ag__stage,
+  .vc-villa__still {
+    flex: none;
+    height: auto;
+    aspect-ratio: 4 / 5;
+    max-height: 78svh;
+  }
+  .vc-villa__media .vc-ag__controls {
+    padding-inline: var(--vc-gutter);
+  }
+  .vc-villa__info {
+    margin-top: 36px;
+    padding-bottom: 0;
+  }
+  .vc-villa__name {
+    margin: 16px 0 10px;
+    font-size: 40px;
+  }
+  .vc-villa__specs {
+    column-gap: 20px;
+    margin: 28px 0 32px;
+  }
+  .vc-villa__specs li {
+    padding: 12px 0;
+    font-size: 14.5px;
+  }
+  .vc-villa__cta {
+    flex-wrap: wrap;
+    gap: 12px 18px;
+  }
+  .vc-villa__cta .vc-btn {
+    flex: 1 1 auto;
+    height: 52px;
+  }
+
+  /* Location: the view, then the map to the edges (the client's order), then the words. */
+  .vc-location__band {
+    height: 72svh;
+    min-height: 420px;
+  }
+  .vc-location__band-cap b {
+    font-size: 34px;
+  }
+  .vc-location__panel {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding-top: 48px;
+  }
+  .vc-map {
+    order: -1;
+    margin: 0 calc(var(--vc-gutter) * -1) 64px;
+  }
+  .vc-times {
+    grid-template-columns: 1fr;
+    gap: 26px;
+    margin-top: 32px;
+  }
+  /* The marker's card opens under the map, in the page. */
+  .vc-map__card {
+    position: relative;
+    left: 0;
+    top: 0;
+    display: none;
+    width: auto;
+    margin: 14px var(--vc-gutter) 0;
+  }
+  .vc-map__card[data-open="1"] {
+    display: block;
+    animation: vc-cap-in 0.7s var(--ease-out) both;
+  }
+
+  /* Gallery: the categories as a row of chips, the photo to the edges, its caption below. */
+  .vc-gallery__inner {
+    display: block;
+  }
+  .vc-gallery__side {
+    padding-right: 0;
+  }
+  .vc-cats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 28px;
+    border-top: 0;
+  }
+  .vc-cats li {
+    border-bottom: 0;
+  }
+  .vc-cats button {
+    width: auto;
+    gap: 8px;
+    padding: 9px 14px;
+    border: 1px solid var(--vc-line);
+    border-radius: 999px;
+    font-family: var(--font-sans);
+    font-size: 12.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition:
+      color 0.5s var(--ease-out),
+      background-color 0.5s var(--ease-out),
+      border-color 0.5s var(--ease-out);
+  }
+  .vc-cats button[aria-pressed="true"] {
+    background: var(--vc-ink);
+    border-color: var(--vc-ink);
+    color: var(--limestone);
+  }
+  .vc-cats__dot,
+  .vc-gallery__cap {
+    display: none;
+  }
+  .vc-cats button small {
+    margin-left: 0;
+    font-size: 10.5px;
+    opacity: 0.6;
+  }
+  .vc-gallery__stage {
+    height: auto;
+    margin: 28px calc(var(--vc-gutter) * -1) 0;
+  }
+  .vc-gallery__rise {
+    height: auto;
+  }
+  .vc-gallery__stage .vc-ag__stage {
+    flex: none;
+    aspect-ratio: 4 / 5;
+    max-height: 78svh;
+  }
+  .vc-gallery__stage .vc-ag__caption {
+    display: block;
+  }
+  .vc-gallery__stage .vc-ag__controls {
+    padding-inline: var(--vc-gutter);
+  }
+
+  /* Viewer: the photo edge to edge, the caption over the controls. */
+  .vc-lightbox__stage {
+    margin: 64px 0 0;
+  }
+  .vc-lightbox__bar {
+    flex-wrap: wrap;
+    gap: 12px 18px;
+    padding: 18px var(--vc-gutter) calc(22px + env(safe-area-inset-bottom));
+  }
+  .vc-lightbox__cap {
+    flex-basis: 100%;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .vc-lightbox__count {
+    margin-right: auto;
+  }
+  .vc-lightbox__close {
+    top: 12px;
+    height: 38px;
+  }
+
+  /* Private visit: the words, the advisor (arches across the width), the form to the edges. */
+  .vc-visit__inner {
+    display: block;
+  }
+  .vc-visit__advisor {
+    margin-top: 44px;
+  }
+  .vc-visit__build {
+    width: 100%;
+    gap: 10px;
+  }
+  .vc-visit__arch.is-1 {
+    width: 17%;
+  }
+  .vc-visit__arch.is-2 {
+    width: 25%;
+  }
+  .vc-visit__portrait {
+    width: 50%;
+  }
+  .vc-visit__form {
+    margin: 56px calc(var(--vc-gutter) * -1) 0;
+    padding: 36px var(--vc-gutter) 40px;
+  }
+
+  /* Footer: the wordmark across, the links in two columns, the partners below. */
+  .vc-footer__top {
+    padding-block: 64px 44px;
+  }
+  .vc-footer__arches {
+    display: none;
+  }
+  .vc-footer__mark {
+    width: 100%;
+  }
+  .vc-footer__cols {
     grid-template-columns: 1fr 1fr;
-    row-gap: 44px;
+    gap: 36px 20px;
+    margin-top: 36px;
+  }
+  .vc-footer__about {
+    grid-column: 1 / -1;
+  }
+  .vc-footer__base {
+    grid-template-columns: 1fr;
+    gap: 26px;
+    padding-block: 34px calc(24px + env(safe-area-inset-bottom));
+  }
+  .vc-footer__partners {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .vc-footer__legal {
+    flex-direction: column;
+    gap: 6px;
+  }
+}
+
+@media (min-width: 521px) and (max-width: 820px) {
+  .vc-times {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Touch: no pointer to follow, so the "View" disc rests in the photo's corner. */
+@media (hover: none) {
+  .vc-ag__view span {
+    left: auto;
+    top: auto;
+    right: 16px;
+    bottom: 16px;
+    width: 64px;
+    height: 64px;
+    margin: 0;
+    font-size: 10.5px;
+    opacity: 1;
+    transform: none;
   }
 }

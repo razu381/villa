@@ -29,6 +29,11 @@ const PER = 1.15;
  * 1.4x): the fewest slow frames of the variants tried. A feathered edge (moving
  * gradient mask) and a transform-only wipe (three layers per photo) both
  * dropped more frames there, so neither is used.
+ *
+ * On a phone (the client's mobile layout) each amenity fills the screen, the
+ * title over the photo and its words on a card below. The same scroll drives
+ * it, but the screen is held by CSS (sticky, the browser's own scrolling)
+ * rather than a pin, which lags a touch scroll by a frame.
  */
 export function VillageHeart() {
   const ref = useRef<HTMLElement>(null);
@@ -63,39 +68,44 @@ export function VillageHeart() {
     setStill(s);
     const el = ref.current;
     if (!el || s) return;
-    const slides = el.querySelectorAll<HTMLElement>(".vc-heart__slide");
-    const n = slides.length;
-    const tl = gsap.timeline({ defaults: { ease: "none" } });
-    slides.forEach((slide, i) => {
-      if (i === 0) return;
-      const at = HOLD + (i - 1) * STEP;
-      tl.fromTo(slide, { clipPath: "inset(100% 0% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 1, ease: "sine.inOut" }, at);
-      const img = slide.querySelector("img");
-      if (img) tl.fromTo(img, { scale: 1.08 }, { scale: 1, duration: 1.3, ease: "power1.out" }, at);
+    // Rebuilt (and its styles undone) when the window crosses the phone width.
+    const mm = gsap.matchMedia();
+    mm.add({ phone: "(max-width: 820px)", wide: "(min-width: 821px)" }, (ctx) => {
+      const phone = !!ctx.conditions?.phone;
+      const slides = el.querySelectorAll<HTMLElement>(".vc-heart__slide");
+      const n = slides.length;
+      const tl = gsap.timeline({ defaults: { ease: "none" } });
+      slides.forEach((slide, i) => {
+        if (i === 0) return;
+        const at = HOLD + (i - 1) * STEP;
+        tl.fromTo(slide, { clipPath: "inset(100% 0% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 1, ease: "sine.inOut" }, at);
+        const img = slide.querySelector("img");
+        if (img) tl.fromTo(img, { scale: 1.08 }, { scale: 1, duration: 1.3, ease: "power1.out" }, at);
+      });
+      tl.to({}, { duration: HOLD }, HOLD + (n - 1) * STEP - 0.001);
+      const total = tl.duration();
+      st.current = ScrollTrigger.create({
+        trigger: el,
+        start: "top top",
+        // Phone: the section is as tall as the changes (--steps in classic.css).
+        end: phone ? "bottom bottom" : () => `+=${Math.round((n - 1) * window.innerHeight * PER)}`,
+        pin: !phone,
+        anticipatePin: phone ? 0 : 1,
+        scrub: 0.5,
+        animation: tl,
+        onUpdate: (self) => {
+          const time = self.progress * total;
+          // An amenity is "current" once its photo has wiped past halfway.
+          let a = 0;
+          for (let i = 1; i < n; i++) if (time >= HOLD + (i - 1) * STEP + 0.5) a = i;
+          setActive(a);
+        },
+      });
+      return () => {
+        st.current = null;
+      };
     });
-    tl.to({}, { duration: HOLD }, HOLD + (n - 1) * STEP - 0.001);
-    const total = tl.duration();
-    st.current = ScrollTrigger.create({
-      trigger: el,
-      start: "top top",
-      end: () => `+=${Math.round((n - 1) * window.innerHeight * PER)}`,
-      pin: true,
-      anticipatePin: 1,
-      scrub: 0.5,
-      animation: tl,
-      onUpdate: (self) => {
-        const time = self.progress * total;
-        // An amenity is "current" once its photo has wiped past halfway.
-        let a = 0;
-        for (let i = 1; i < n; i++) if (time >= HOLD + (i - 1) * STEP + 0.5) a = i;
-        setActive(a);
-      },
-    });
-    return () => {
-      st.current?.kill();
-      st.current = null;
-      tl.kill();
-    };
+    return () => mm.revert();
   }, []);
 
   /** Scroll to where amenity i is fully shown. */
@@ -110,7 +120,13 @@ export function VillageHeart() {
 
   const [lead, tail] = CLASSIC.villageHeart.title.split(" around ");
   return (
-    <section ref={ref} id="village-heart" className={`vc-heart${still ? " is-still" : ""}`} aria-labelledby="vc-heart-title">
+    <section
+      ref={ref}
+      id="village-heart"
+      className={`vc-heart${still ? " is-still" : ""}`}
+      aria-labelledby="vc-heart-title"
+      style={{ "--steps": (AMENITIES.length - 1) * PER } as React.CSSProperties}
+    >
       <div className="vc-heart__inner vc-wrap">
         <div ref={head} className="vc-heart__side">
           <Eyebrow n="02">{CLASSIC.villageHeart.eyebrow}</Eyebrow>

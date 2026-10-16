@@ -141,38 +141,39 @@ export function Location() {
               <span className="vc-map__halo" aria-hidden="true" />
               <span className="vc-map__hint">{CLASSIC.location.marker}</span>
             </button>
-            <div
-              ref={card}
-              id="vc-map-card"
-              className="vc-map__card"
-              role="dialog"
-              aria-label={CLASSIC.location.marker}
-              tabIndex={-1}
-              data-open={open ? "1" : "0"}
-              // Beside the marker, high enough that the whole card stays on the map.
-              style={{ left: `${MAP_MARKER.box.r + 1.5}%`, top: "5%" }}
-            >
-              <Wordmark className="vc-map__card-mark" label={BRAND.name} />
-              <p className="vc-map__card-place">{BRAND.place}</p>
-              <p className="vc-map__card-text">{LOCATION.body.split(". ")[0]}.</p>
-              <p className="vc-map__card-text">{CONCEPT.intro.split(",")[0]}.</p>
-              <ul className="vc-map__card-times">
-                {CARD_PLACES.map((n) => (
-                  <li key={n}>
-                    <span>{n}</span>
-                    <b>{minutesOf(n)} min</b>
-                  </li>
-                ))}
-              </ul>
-              <a className="vl-link" href={MAPS_LINK} target="_blank" rel="noopener noreferrer">
-                {CLASSIC.location.openMap} ↗
-              </a>
-              <button type="button" className="vc-map__close" onClick={() => setOpen(false)} aria-label={CLASSIC.location.close}>
-                <svg viewBox="0 0 16 16" aria-hidden="true">
-                  <path d="m4 4 8 8M12 4l-8 8" />
-                </svg>
-              </button>
-            </div>
+          </div>
+          <div
+            ref={card}
+            id="vc-map-card"
+            className="vc-map__card"
+            role="dialog"
+            aria-label={CLASSIC.location.marker}
+            tabIndex={-1}
+            data-open={open ? "1" : "0"}
+            // Beside the marker, high enough that the whole card stays on the map
+            // (a phone opens it under the map instead).
+            style={{ "--x": `${MAP_MARKER.box.r + 1.5}%`, "--y": "5%" } as React.CSSProperties}
+          >
+            <Wordmark className="vc-map__card-mark" label={BRAND.name} />
+            <p className="vc-map__card-place">{BRAND.place}</p>
+            <p className="vc-map__card-text">{LOCATION.body.split(". ")[0]}.</p>
+            <p className="vc-map__card-text">{CONCEPT.intro.split(",")[0]}.</p>
+            <ul className="vc-map__card-times">
+              {CARD_PLACES.map((n) => (
+                <li key={n}>
+                  <span>{n}</span>
+                  <b>{minutesOf(n)} min</b>
+                </li>
+              ))}
+            </ul>
+            <a className="vl-link" href={MAPS_LINK} target="_blank" rel="noopener noreferrer">
+              {CLASSIC.location.openMap} ↗
+            </a>
+            <button type="button" className="vc-map__close" onClick={() => setOpen(false)} aria-label={CLASSIC.location.close}>
+              <svg viewBox="0 0 16 16" aria-hidden="true">
+                <path d="m4 4 8 8M12 4l-8 8" />
+              </svg>
+            </button>
           </div>
         </div>
       </div>

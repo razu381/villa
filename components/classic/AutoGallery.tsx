@@ -76,9 +76,10 @@ export function AutoGallery({
       aria-roledescription="carousel"
       aria-label={label}
       data-running={running ? "1" : "0"}
-      onMouseEnter={() => setHeld(true)}
-      onMouseLeave={() => setHeld(false)}
-      onFocus={() => setHeld(true)}
+      // Held by a resting mouse or keyboard focus; a tap or a swipe leaves it turning.
+      onPointerEnter={(e) => e.pointerType === "mouse" && setHeld(true)}
+      onPointerLeave={(e) => e.pointerType === "mouse" && setHeld(false)}
+      onFocus={(e) => e.target.matches(":focus-visible") && setHeld(true)}
       onBlur={(e) => {
         if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setHeld(false);
       }}

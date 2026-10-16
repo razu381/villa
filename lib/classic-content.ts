@@ -57,6 +57,7 @@ export const CLASSIC = {
   immersive: "Immersive 3D",
   visitCta: "Private visit",
   menu: "Menu",
+  menuClose: "Close",
   top: "Vila Leku — back to the top",
   scroll: "Scroll",
   pillars: "Four pillars",
