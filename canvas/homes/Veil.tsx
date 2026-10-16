@@ -36,6 +36,7 @@ const STACK_MID = { v3: 9.5, v4: 9.0 } as const;
 const NEAR = 2;
 
 const v = new Vector3();
+const stagesScratch = stagesFromT(0);
 /** The veil through "Two ways to live" (1 = as strong as while a home is open). */
 const JOURNEY_VEIL = 0.5;
 
@@ -102,7 +103,7 @@ export function Veil() {
     const s = useJourney.getState();
     const dt = Math.min(dtRaw, 1 / 20);
     const open = s.mode === "explore" && s.home != null;
-    const want = open ? 1 : s.mode === "journey" ? stagesFromT(s.t).homes * JOURNEY_VEIL : 0;
+    const want = open ? 1 : s.mode === "journey" ? stagesFromT(s.t, stagesScratch).homes * JOURNEY_VEIL : 0;
     amt.current = s.snap ? want : damp(amt.current, want, 2.2, dt);
     const m = ref.current;
     if (!m) return;

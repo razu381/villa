@@ -295,7 +295,7 @@ Each item: **where** → **what to do** → **done when**. Review suggestions ar
   - Optionally move geometry builders into a Worker.
 - ✅ *(2026-10-16: ScrollTrigger removed (import, registration, update and refresh); Lenis stays on the GSAP ticker. The iOS-toolbar re-measure part is ⏸ mobile)* **Dead code:** `ScrollTrigger` is imported, registered and refreshed on every resize, but never used (`components/SmoothScroll.tsx`). Remove it. Also skip the re-measure when only `innerHeight` changes on touch devices (iOS toolbar).
 - **First paint weight:** re-encode `hero-poster.jpg` (484 KB), `aerial-village.jpg` and `aerial-village-drawing.jpg` as AVIF/WebP with a `<picture>` JPEG fallback (poster ~150 KB). Add `loading="lazy"` to the HomePanel image and `fetchPriority="low"` to the aerials.
-- **Hygiene:**
+- ✅ *(2026-10-16: `stagesFromT(t, out?)` fills a scratch object; the per-frame callers (Driver, FeaturedHome, Veil) pass one, so no allocation per frame; `skyMat` disposed on unmount; the `THREE.Clock` warning accepted. Journey re-checked)* **Hygiene:**
   - `stagesFromT(t, out)` writing into a scratch object (called 3+ times per frame).
   - Dispose `skyMat` in `canvas/Day.tsx`.
   - The `THREE.Clock` deprecation warning comes from R3F on three r186; accept it or track R3F.

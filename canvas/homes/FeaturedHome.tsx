@@ -47,6 +47,9 @@ import { homesState } from "./state";
 import { HOME_ORDER } from "./Veil";
 
 const ease = (k: number) => k * k * (3 - 2 * k);
+/** Scratch for the per-frame build stages (both homes use it in turn, synchronously). */
+const stagesScratch = stagesFromT(0);
+
 /** Length of the explode / close tween (quart-out; the staggered levels make it read ~1.4 s). */
 const EXPLODE_SECONDS = 2.2;
 
@@ -149,7 +152,7 @@ export function FeaturedHome({ id }: { id: HomeId }) {
     const dt = Math.min(dtRaw, 1 / 20);
     const st = sim.current;
     const snap = s.snap;
-    const stages = stagesFromT(s.t);
+    const stages = stagesFromT(s.t, stagesScratch);
     const selected = s.mode === "explore" && s.home === id;
     const target = selected ? Math.min(1, Math.max(0, s.explode)) : 0;
 

@@ -177,6 +177,8 @@ export function Day({ shadowSize }: { shadowSize: number }) {
     [],
   );
 
+  useEffect(() => () => skyMat.dispose(), [skyMat]);
+
   useFrame(() => {
     const p = dayParams;
     if (sun.current) {

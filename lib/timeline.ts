@@ -117,23 +117,23 @@ export interface Stages {
   stars: number;
 }
 
-export function stagesFromT(t: number): Stages {
-  return {
-    heroFade: smooth(0.55, 1.05, t),
-    // contours → podium outline → podium rises → house lines on the podium → houses rise
-    contours: ramp(0.8, 1.38, t),
-    plan: ramp(1.2, 1.74, t),
-    lines: ramp(1.74, 2.16, t),
-    rise: ramp(2.1, 2.76, t),
-    foam: ramp(2.4, 2.96, t),
-    material: ramp(2.95, 3.7, t),
-    life: smooth(3.55, 4.05, t),
-    section: bump(4.12, 4.42, 4.82, 5.02, t),
-    cars: ramp(4.22, 4.85, t),
-    homes: bump(5.0, 5.12, 5.92, 6.02, t),
-    night: smooth(6.0, 6.4, t),
-    windows: ramp(6.02, 6.5, t),
-    pathLights: ramp(6.15, 6.55, t),
-    stars: smooth(6.2, 6.65, t),
-  };
+/** Build stages at journey time t. Per-frame callers pass a scratch `out` (no allocation). */
+export function stagesFromT(t: number, out: Stages = {} as Stages): Stages {
+  out.heroFade = smooth(0.55, 1.05, t);
+  // contours → podium outline → podium rises → house lines on the podium → houses rise
+  out.contours = ramp(0.8, 1.38, t);
+  out.plan = ramp(1.2, 1.74, t);
+  out.lines = ramp(1.74, 2.16, t);
+  out.rise = ramp(2.1, 2.76, t);
+  out.foam = ramp(2.4, 2.96, t);
+  out.material = ramp(2.95, 3.7, t);
+  out.life = smooth(3.55, 4.05, t);
+  out.section = bump(4.12, 4.42, 4.82, 5.02, t);
+  out.cars = ramp(4.22, 4.85, t);
+  out.homes = bump(5.0, 5.12, 5.92, 6.02, t);
+  out.night = smooth(6.0, 6.4, t);
+  out.windows = ramp(6.02, 6.5, t);
+  out.pathLights = ramp(6.15, 6.55, t);
+  out.stars = smooth(6.2, 6.65, t);
+  return out;
 }

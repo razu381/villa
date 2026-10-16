@@ -28,6 +28,7 @@ const STAGE_TO_UNIFORM: [keyof Stages, keyof typeof U][] = [
 
 /** Shared day parameters, updated every frame (read-only for consumers). */
 export const dayParams = createDayParams();
+const stagesScratch = stagesFromT(0);
 
 /**
  * Writes all shared uniforms once per frame from the store:
@@ -41,7 +42,7 @@ export function Driver() {
     const s = useJourney.getState();
     const d = Math.min(dt, 1 / 20);
     const snap = s.snap;
-    const stages = stagesFromT(s.t);
+    const stages = stagesFromT(s.t, stagesScratch);
 
     U.uTime.value = state.clock.elapsedTime;
     for (const [stage, uni] of STAGE_TO_UNIFORM) {
