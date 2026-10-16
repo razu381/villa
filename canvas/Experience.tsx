@@ -1,7 +1,7 @@
 "use client";
 
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Suspense, useEffect, useRef } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { HalfFloatType, WebGLRenderTarget, type Light, type Line, type Mesh, type Object3D, type Points, type Sprite } from "three";
 import { useJourney } from "@/lib/store";
 import { CameraRig } from "./CameraRig";
@@ -13,12 +13,15 @@ import { Landscape } from "./world/Landscape";
 import { Houses } from "./world/Houses";
 import { Section } from "./section/Section";
 import { Homes } from "./homes/Homes";
+import { FrameGate, Quality, baseDpr, pinnedQuality, qualitySteps } from "./Quality";
 
 declare global {
   interface Window {
     __VL_READY?: boolean;
     /** Renderer stats for scripts/shot.mjs --info (draw calls, triangles, programs). */
     __VL_STATS?: () => { calls: number; triangles: number; programs: number; geometries: number; textures: number };
+    /** The adaptive quality rung in use (canvas/Quality.tsx), for scripts/perf.mjs. */
+    __VL_QUALITY?: { level: number; dpr: number; tilt: boolean; shadow: number };
   }
 }
 
@@ -130,11 +133,24 @@ function Warmup() {
 /** The single persistent 3D canvas — fixed behind the HTML journey. */
 export default function Experience() {
   const tier = useJourney((s) => s.tier);
-  const dpr: [number, number] = tier === "high" ? [1, 2] : tier === "mid" ? [1, 1.5] : [1, 1];
+  const [base, setBase] = useState(baseDpr);
+  useEffect(() => {
+    // Window resizes, browser zoom and moves to another display all fire resize.
+    const onResize = () => setBase(baseDpr());
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+  const steps = useMemo(() => qualitySteps(tier, base), [tier, base]);
+  const [level, setLevel] = useState(() => pinnedQuality() ?? 0);
+  const at = Math.min(level, steps.length - 1);
+  const step = steps[at];
+  useEffect(() => {
+    window.__VL_QUALITY = { level: at, ...step };
+  }, [at, step]);
   return (
     <Canvas
       shadows={tier !== "low" ? "percentage" : false}
-      dpr={dpr}
+      dpr={step.dpr}
       gl={{ antialias: false, powerPreference: "high-performance", stencil: false, preserveDrawingBuffer: false }}
       camera={{ fov: 30, near: 1, far: 6000, position: [70, 190, 180] }}
       onCreated={({ gl }) => {
@@ -143,8 +159,10 @@ export default function Experience() {
       aria-hidden="true"
     >
       <Driver />
+      <FrameGate />
+      <Quality steps={steps.length} level={at} setLevel={setLevel} />
       <CameraRig />
-      <Day />
+      <Day shadowSize={step.shadow} />
       <Suspense fallback={null}>
         <Terrain />
         <Landscape />
@@ -153,7 +171,7 @@ export default function Experience() {
         <Homes />
         <Warmup />
       </Suspense>
-      <Post />
+      <Post tilt={step.tilt} />
     </Canvas>
   );
 }

@@ -109,8 +109,9 @@ function fitShadow(light: DirectionalLight, sunDir: Vector3, mapSize: number) {
 /**
  * Sun, moon, sky and fog — all from the shared day parameters.
  * The sky is a gradient dome; fog matches the horizon so the model floats in its own air.
+ * `shadowSize` is the sun's shadow map (the quality ladder, canvas/Quality.tsx).
  */
-export function Day() {
+export function Day({ shadowSize }: { shadowSize: number }) {
   const sun = useRef<DirectionalLight>(null);
   const moon = useRef<DirectionalLight>(null);
   const hemi = useRef<HemisphereLight>(null);
@@ -191,8 +192,6 @@ export function Day() {
     gl.toneMappingExposure = p.exposure;
   });
 
-  const mapSize = tier === "high" ? 4096 : tier === "mid" ? 2048 : 1024;
-
   return (
     <>
       <mesh scale={2600} material={skyMat} renderOrder={-1000} frustumCulled={false}>
@@ -202,7 +201,7 @@ export function Day() {
       <directionalLight
         ref={sun}
         castShadow={tier !== "low"}
-        shadow-mapSize={[mapSize, mapSize]}
+        shadow-mapSize={[shadowSize, shadowSize]}
         shadow-bias={-0.0004}
         shadow-normalBias={0.04}
         shadow-camera-left={-SHADOW_EXTENT}

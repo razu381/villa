@@ -123,6 +123,8 @@ Each item: **where** → **what to do** → **done when**. Review suggestions ar
 
 ### P0: must do before the pitch
 
+> **Order (decided 2026-10-16): finish the demo first, optimize later.** Keep performance work general (clients' devices are usually better than the dev machine, but cheaper ones must still work). Don't tune to one machine. Feature and story items come before further optimization.
+>
 > **Scope (decided 2026-10-16): desktop only.** This is a pitch demo for the Windows laptop. Mobile and tablet optimization is deferred (⏸) until the client asks for it: 3.8, 3.20, 3.21, P2 mid-tier geometry, and the phone parts of other items (e.g. 3.3's phone fps). Don't spend time on them, and don't break the mobile layout either.
 
 > The pitch runs on a **Windows laptop**. Chrome and Edge there go through ANGLE → Direct3D 11, where shader compilation is the slowest of any platform, and the GPU is often an Intel or AMD integrated chip. So 3.1 (warm-up) and 3.2/3.3 (tiering and adaptive quality) come first.
@@ -185,7 +187,7 @@ Each item: **where** → **what to do** → **done when**. Review suggestions ar
   - *Dropped:* the Mali-G5x / Adreno 5xx/60x rule. Every touch device is mid already, so no GPU string is needed.
   - *Still open:* the "about 60 fps on the pitch laptop" half is 3.3 work and needs the laptop.
 
-**3.3 Adaptive quality and pause rendering when the 3D isn't visible.**
+✅ **3.3 Adaptive quality and pause rendering when the 3D isn't visible.**
 - *Where:* `canvas/Experience.tsx` (dpr), `canvas/Day.tsx` (4096 shadow map), `canvas/Post.tsx`.
 - *Problem:* nothing caps pixel count or reacts at runtime. On a 4K/5K screen or an Intel iGPU it will drop well below 60 fps. The canvas also renders at full rate behind the opaque hero film, competing with video decode and heating phones.
 - *Do:*
@@ -195,6 +197,13 @@ Each item: **where** → **what to do** → **done when**. Review suggestions ar
   - **Shadows:** set `gl.shadowMap.autoUpdate = false` and set `needsUpdate` only while the camera, sun, stages, cars, people or explode are changing.
   - **Bloom:** `resolutionScale={0.5}` on high. On mid, drop it or use 4 levels at half resolution.
 - *Done when:* steady 60 fps on the pitch laptop at the native display, and the GPU is idle during the hero film. (≥30 fps on a mid phone: ⏸ deferred, mobile.)
+- **Done (2026-10-16), general settings, not tuned to any one machine.** `canvas/Quality.tsx`:
+  - **Pixel cap:** start DPR = min(device, 2, √(4.5 MP ÷ viewport)), recomputed on resize/zoom, set through the Canvas `dpr` prop (R3F re-applies the prop on every render, so a runtime `setDpr` wouldn't stick).
+  - **Ladder:** drei `PerformanceMonitor` (mounted after ready, `flipflops={3}`; at 60 Hz it steps down below ~52 fps and up at 59+) lowers DPR 2 → 1.5 → 1.25 → 1 (never below 60 % of the start), then fades tilt-shift out (no unmount, no recompile), then halves the shadow map (three resizes it in place, no recompile). After 3 flip-flops it settles on the lightest rung it needed. `?quality=N` pins a rung; `?snap=1` pins the top, so shots stay deterministic. `window.__VL_QUALITY` shows the rung in use.
+  - **FrameGate:** the render loop stops once ready while `heroFade < 0.02` and restarts as the scroll begins (the clock is kept continuous). Hero: 0 render calls in 5 s, was ~3,000.
+  - **Tilt-shift** skips its blur pass while its strength is ~0 (before the rise, exploring, faded out).
+  - *Not done, on purpose:* shadow updates on demand (the tree sway, walkers and cars animate in the shadow pass, so frozen shadows would lag them), and bloom `resolutionScale` (a no-op with `mipmapBlur`: postprocessing sizes the luminance and mip passes at full resolution; the real levers are `luminancePass.resolution.scale` or fewer `levels`). Revisit only if the laptop needs it.
+  - *Still to check on the pitch laptop:* that it holds 60 fps at the top rung, or which rung it settles on.
 
 **3.4 Explore mode shouldn't freeze scrolling.**
 - *Where:* `components/chapters/HomesChapter.tsx useExploreGuard`, `components/homes/explore.ts`.

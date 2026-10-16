@@ -3,7 +3,7 @@
 import { Bloom, EffectComposer, SMAA, ToneMapping, Vignette } from "@react-three/postprocessing";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
-import { AgXToneMapping, NoToneMapping, Uniform } from "three";
+import { AgXToneMapping, NoToneMapping, Uniform, type WebGLRenderer, type WebGLRenderTarget } from "three";
 import { BlendFunction, Effect, KernelSize, TiltShiftEffect, ToneMappingMode, type BloomEffect, type VignetteEffect } from "postprocessing";
 import { useJourney } from "@/lib/store";
 import { lerp, smooth } from "@/lib/timeline";
@@ -17,8 +17,9 @@ import { damp } from "./Driver";
  * AgX filmic tone mapping, a light vignette and a fine film grain that rests in
  * the mid-tones (bright panes and deep night stay clean).
  * Low: no composer — renderer tone mapping only.
+ * `tilt` false (the quality ladder, canvas/Quality.tsx) fades the tilt-shift out.
  */
-export function Post() {
+export function Post({ tilt: tiltOn }: { tilt: boolean }) {
   const tier = useJourney((s) => s.tier);
   const reduced = useJourney((s) => s.reducedMotion);
   const gl = useThree((s) => s.gl);
@@ -29,7 +30,7 @@ export function Post() {
 
   const tilt = useMemo(
     () =>
-      new TiltShiftEffect({
+      new TiltShift({
         blendFunction: BlendFunction.NORMAL,
         focusArea: TILT_FOCUS,
         feather: TILT_FEATHER,
@@ -66,7 +67,7 @@ export function Post() {
     if (v) v.darkness = lerp(0.18, 0.24, night);
     if (withTilt) {
       const [k, off] = tiltAt(s.t);
-      const want = k * (1 - rigView.explore) * TILT_MAX;
+      const want = tiltOn ? k * (1 - rigView.explore) * TILT_MAX : 0;
       tiltK.current = s.snap ? want : damp(tiltK.current, want, 3, Math.min(dt, 1 / 20));
       tilt.blendMode.opacity.value = tiltK.current;
       if (Math.abs(tilt.offset - off) > 1e-3) tilt.offset = off;
@@ -87,6 +88,13 @@ export function Post() {
 }
 
 /* ------------------------------------------------------------ tilt-shift */
+
+/** Tilt-shift that skips its blur while it shows nothing (before the rise, exploring, faded out). */
+class TiltShift extends TiltShiftEffect {
+  update(renderer: WebGLRenderer, inputBuffer: WebGLRenderTarget, deltaTime?: number) {
+    if (this.blendMode.opacity.value > 1e-3) super.update(renderer, inputBuffer, deltaTime);
+  }
+}
 
 /** Focus band half-height and its soft edge, in half-screen units (1 = centre → top). */
 const TILT_FOCUS = 0.82;
