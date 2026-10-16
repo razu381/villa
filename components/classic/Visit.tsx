@@ -9,10 +9,10 @@ import { ARCH_PATH } from "../ui/Brand";
 import { Eyebrow } from "./Concept";
 import { Pic } from "./Pic";
 
-function Arch({ className = "" }: { className?: string }) {
+function Arch({ className = "", at }: { className?: string; at: number }) {
   return (
     <svg className={`vc-visit__arch ${className}`} viewBox="-4 -4 108 120" aria-hidden="true">
-      <path d={ARCH_PATH} pathLength={1} data-r="draw" />
+      <path d={ARCH_PATH} pathLength={1} data-r="draw" data-r-at={at} />
     </svg>
   );
 }
@@ -20,7 +20,9 @@ function Arch({ className = "" }: { className?: string }) {
 /**
  * Private visit: the client's words, the advisor, the form. The three brand
  * arches build one after another, then the advisor's photo rises into the
- * last (the client's note: construction, evolution, then the photo).
+ * last (the client's note: construction, evolution, then the photo), the name
+ * just behind it. It starts as soon as the arches show, so a visitor passing
+ * on to the footer still meets the advisor whole.
  */
 export function Visit() {
   const text = useRef<HTMLDivElement>(null);
@@ -28,7 +30,7 @@ export function Visit() {
   const form = useRef<HTMLDivElement>(null);
   const [preset, setPreset] = useState<{ home: VisitHome; at: number } | undefined>();
   useInViewReveal(text);
-  useInViewReveal(arches, { delay: 0.2 });
+  useInViewReveal(arches, { margin: "0px" });
   useInViewReveal(form, { delay: 0.3 });
 
   useEffect(() => {
@@ -56,18 +58,18 @@ export function Visit() {
 
           <div ref={arches} className="vc-visit__advisor">
             <div className="vc-visit__build">
-              <Arch className="is-1" />
-              <Arch className="is-2" />
+              <Arch className="is-1" at={0} />
+              <Arch className="is-2" at={0.3} />
               <div className="vc-visit__portrait">
-                <Arch className="is-3" />
+                <Arch className="is-3" at={0.6} />
                 <div className="vc-visit__clip">
-                  <div className="vc-visit__photo" data-r="rise" data-r-at="1.9">
+                  <div className="vc-visit__photo" data-r="rise" data-r-at="1">
                     <Pic photo={PHOTOS.advisor} sizes="(max-width: 820px) 50vw, 16vw" />
                   </div>
                 </div>
               </div>
             </div>
-            <div className="vc-visit__contact" data-r="fade">
+            <div className="vc-visit__contact" data-r="fade" data-r-at="1.2">
               <p className="vc-visit__name">{ADVISOR.name}</p>
               <p className="vc-visit__role">{ADVISOR.role}</p>
               <ul>

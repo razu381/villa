@@ -6,17 +6,21 @@ import { CLASSIC, NAV, PARTNERS } from "@/lib/classic-content";
 import { UI } from "@/lib/ui-copy";
 import { PhidiasMark, Wordmark } from "../ui/Brand";
 import { goTo } from "./ClassicHeader";
+import { gsap, stillMode } from "./env";
 import { ARCH_BOX } from "./Pic";
 
 /**
  * The footer (the client: a fixed footer, with no logos but Vila Leku and
  * Phidias; partners as words). It waits underneath and the page lifts off it,
- * like a curtain; a spacer of its height keeps the page long enough. Taller
- * than the window, it simply follows the page.
+ * like a curtain; a spacer of its height keeps the page long enough. It rises
+ * into place at half the page's pace, out of the page's shadow, so its top
+ * arrives first and the change of colour never cuts. Taller than the window,
+ * it simply follows the page.
  */
 export function ClassicFooter() {
   const ref = useRef<HTMLElement>(null);
   const spacer = useRef<HTMLDivElement>(null);
+  const veil = useRef<HTMLDivElement>(null);
   const [h, setH] = useState(0);
   const [on, setOn] = useState(false);
   const [fits, setFits] = useState(true);
@@ -42,6 +46,20 @@ export function ClassicFooter() {
       window.removeEventListener("resize", measure);
     };
   }, []);
+
+  // The curtain lifts: scrubbed by the scroll across the spacer (Lenis smooths it).
+  useEffect(() => {
+    const el = ref.current;
+    const sp = spacer.current;
+    if (!el || !sp || !fits || stillMode()) return;
+    const tl = gsap.timeline({ scrollTrigger: { trigger: sp, start: "top bottom", end: "bottom bottom", scrub: true, invalidateOnRefresh: true } });
+    tl.fromTo(el, { y: () => el.offsetHeight * 0.5 }, { y: 0, ease: "none" }, 0).fromTo(veil.current, { opacity: 1 }, { opacity: 0, ease: "none" }, 0);
+    return () => {
+      tl.scrollTrigger?.kill();
+      tl.kill();
+      gsap.set([el, veil.current], { clearProps: "transform,opacity" });
+    };
+  }, [fits]);
 
   return (
     <>
@@ -124,6 +142,7 @@ export function ClassicFooter() {
             <span>{UI.footer.copyright}</span>
           </p>
         </div>
+        <div ref={veil} className="vc-footer__veil" aria-hidden="true" />
       </footer>
     </>
   );

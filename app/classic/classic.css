@@ -1819,7 +1819,7 @@ html[data-rm="1"] .vc-lightbox__slide[data-state="active"] {
   flex-wrap: wrap;
   align-items: flex-end;
   gap: 24px 30px;
-  margin-top: clamp(44px, 7vh, 72px);
+  margin-top: clamp(36px, 5.5vh, 72px);
 }
 .vc-visit__build {
   display: flex;
@@ -1839,15 +1839,17 @@ html[data-rm="1"] .vc-lightbox__slide[data-state="active"] {
   stroke-dasharray: 1;
   stroke-dashoffset: 0;
 }
+/* Sized so the advisor's name stays beside the portrait on a laptop, in view
+   with the title (wrapped below, it fell under the fold). */
 .vc-visit__arch.is-1 {
-  width: clamp(48px, 4.4vw, 70px);
+  width: clamp(44px, 3.6vw, 70px);
 }
 .vc-visit__arch.is-2 {
-  width: clamp(70px, 6.4vw, 104px);
+  width: clamp(64px, 5.4vw, 104px);
 }
 .vc-visit__portrait {
   position: relative;
-  width: clamp(150px, 13vw, 214px);
+  width: clamp(140px, 12vw, 214px);
   aspect-ratio: 108 / 120;
 }
 .vc-visit__arch.is-3 {
@@ -1915,8 +1917,20 @@ html[data-rm="1"] .vc-lightbox__slide[data-state="active"] {
 .vc-footer[data-on="1"] {
   visibility: visible;
 }
+.vc-footer[data-fixed="1"] {
+  will-change: transform;
+}
 .vc-footer[data-fixed="0"] {
   position: relative;
+}
+/* The page's shadow on the footer as it lifts off (faded by the scroll). */
+.vc-footer__veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(35, 39, 26, 0.5), rgba(35, 39, 26, 0.28) 40%, rgba(35, 39, 26, 0.18));
+  opacity: 0;
+  pointer-events: none;
+  will-change: opacity;
 }
 .vc-footer__top {
   position: relative;
