@@ -211,10 +211,11 @@ Each item: **where** → **what to do** → **done when**. Review suggestions ar
 - *Do:* record `tEnter` when explore starts. In the guard, call `backToVillage()` once `|t − tEnter| > 0.06` (about 180 px), so a scroll in either direction releases the home smoothly. Keep the t ≥ 6 exit as a fallback.
 - **Done (2026-10-16).** `useExploreGuard` records `tEnter` when the visitor opens a home and calls `backToVillage()` past `EXPLORE_RELEASE` (0.06, `components/homes/explore.ts`); leaving the chapter still exits. `enterExplore` first settles any Lenis glide still running, so a click mid-glide can't carry the scroll past the threshold and close the home at once. A debug `?home=` load (no visitor click) isn't armed. Tested with real wheel input: ~100 px keeps the home, ~300 px releases it (both directions), the camera eases back, focus returns to the card.
 
-**3.5 The time-of-day word is wrong in the homes chapter.**
+✅ **3.5 The time-of-day word is wrong in the homes chapter.**
 - *Where:* `lib/ui-time.ts timeWordForDay` vs `lib/timeline.ts CHAPTERS`.
 - *Problem:* the homes chapter says "golden hour", but its day ≈ 0.63 maps to "afternoon". The arc word flips the moment you touch the sun, and the slider's `aria-valuetext` reads "afternoon".
 - *Do:* align the ranges: `<0.06` first light · `<0.18` dawn · `<0.34` morning · `<0.47` late morning · `<0.57` noon · `<0.76` golden hour · `<0.88` dusk · else night.
+- **Done (2026-10-16).** Ranges aligned as above ("afternoon" is gone). Checked under the arc at t 5.5: journey "golden hour"; held sun 0.63 and 0.72 "golden hour", 0.8 "dusk", 0.92 "night". The slider's `aria-valuetext` uses the same function.
 
 **3.6 Recover if the browser drops the WebGL context.**
 - *Where:* `canvas/Experience.tsx onCreated`.

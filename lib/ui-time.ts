@@ -16,16 +16,19 @@ export const damp = (current: number, target: number, lambda: number, dt: number
 
 export const chapterAt = (t: number) => Math.min(CHAPTERS.length - 1, Math.max(0, Math.floor(t)));
 
-/** A time word for any day value (used while the sun is held). Never numbers. */
+/**
+ * A time word for any day value (used while the sun is held). Never numbers.
+ * The ranges match the chapters' days (lib/timeline.ts CHAPTERS), so touching
+ * the sun never changes the word by itself.
+ */
 export function timeWordForDay(d: number): string {
   if (d < 0.06) return "first light";
   if (d < 0.18) return "dawn";
   if (d < 0.34) return "morning";
   if (d < 0.47) return "late morning";
   if (d < 0.57) return "noon";
-  if (d < 0.66) return "afternoon";
-  if (d < 0.8) return "golden hour";
-  if (d < 0.9) return "dusk";
+  if (d < 0.76) return "golden hour";
+  if (d < 0.88) return "dusk";
   return "night";
 }
 
