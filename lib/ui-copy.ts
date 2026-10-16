@@ -2,6 +2,10 @@
  * Interface copy that lives with the HTML layer (lib/content.ts holds the story copy).
  */
 
+import { CONCEPT } from "./content";
+
+const pillar = (title: string) => CONCEPT.pillars.find((p) => p.title === title)?.text ?? "";
+
 export const UI = {
   skip: "Skip to the homes",
   nav: { homes: "The homes", visit: "Private visit", classic: "Classic site" },
@@ -20,15 +24,16 @@ export const UI = {
   },
   making: {
     notes: [
-      { title: "Durability", text: "Stone and cork that grow more beautiful with age." },
-      { title: "Autonomy", text: "Sun-powered, water-wise, quietly self-reliant." },
+      // The client's own words (Site Vila Leku_textos.docx).
+      { title: "Durability", text: pillar("Durability") },
+      { title: "Autonomy", text: pillar("Autonomy") },
     ],
   },
   cars: {
     legend: [
       { title: "Underground parking", where: "below", marker: "dashed" as const },
-      { title: "Car-free streets", where: "above", marker: "line" as const },
-      { title: "Botanical playground", where: "the heart", marker: "circle" as const },
+      { title: "Pedestrian sanctuary", where: "above", marker: "line" as const },
+      { title: "The Garden", where: "the heart", marker: "circle" as const },
     ],
   },
   homes: {
@@ -45,7 +50,7 @@ export const UI = {
     home: "Preferred home",
     homeOptions: [
       { id: "v3", label: "V3 Townhouse" },
-      { id: "v4", label: "V4 Villa" },
+      { id: "v4", label: "V4 Premium Villa" },
       { id: "any", label: "Not sure yet" },
     ] as const,
     date: "Preferred date",

@@ -17,51 +17,6 @@ export const BRAND = {
   ],
 };
 
-export const COPY = {
-  hero: {
-    eyebrow: "leceia · oeiras · lisbon coast",
-    line: "A quiet hill above the Atlantic.",
-    cue: "scroll to begin the day",
-  },
-  drawing: {
-    eyebrow: "dawn",
-    title: "It begins with a line.",
-    body: "Every home was drawn around the hill — its slope, its light, its long view to the river.",
-  },
-  model: {
-    eyebrow: "morning",
-    title: "A contemporary stronghold.",
-    body: "Living spaces raised to the light. Everything technical, buried below. A clear boundary between the outer world and an inner sanctuary.",
-  },
-  making: {
-    eyebrow: "late morning",
-    title: "Made to age with the land.",
-    body: "Limestone and cork, chosen to weather gracefully. Solar energy and recycled water for quiet autonomy.",
-    notes: ["Durability", "Autonomy"],
-  },
-  cars: {
-    eyebrow: "noon",
-    title: "Cars below. Life above.",
-    body: "Every car arrives underground. Above, the village belongs to people — gardens, paths and children at play.",
-    annotations: ["Underground parking", "Car-free streets", "Botanical playground"],
-  },
-  homes: {
-    eyebrow: "golden hour",
-    title: "Two ways to live.",
-    hint: "Hold the sun — drag it across the arch.",
-    explore: "Explore",
-    back: "Back to the village",
-  },
-  night: {
-    eyebrow: "evening",
-    title: "Come experience Vila Leku.",
-    body: "Discover the homes, the landscape and the shared spaces with your private advisor.",
-    submit: "Request your private visit",
-    confirmTitle: "An invitation",
-    confirmBody: "Your advisor will confirm your visit within one day.",
-  },
-};
-
 /*
  * The client's own copy (Site Vila Leku_textos.docx, EN), shared by both sites.
  */
@@ -126,6 +81,51 @@ export const LOCATION = {
   ],
 };
 
+export const COPY = {
+  hero: {
+    eyebrow: "leceia · oeiras · lisbon coast",
+    line: "A quiet hill above the Atlantic.",
+    cue: "scroll to begin the day",
+  },
+  drawing: {
+    eyebrow: "dawn",
+    title: "It begins with a line.",
+    body: "Every home was drawn around the hill — its slope, its light, its long view to the river.",
+  },
+  model: {
+    eyebrow: "morning",
+    title: CONCEPT.title,
+    body: CONCEPT.intro,
+  },
+  making: {
+    eyebrow: "late morning",
+    title: "Made to age with the land.",
+    body: "Limestone and cork, chosen to weather gracefully. Solar energy and recycled water for quiet autonomy.",
+    notes: ["Durability", "Autonomy"],
+  },
+  cars: {
+    eyebrow: "noon",
+    title: "Cars below. Life above.",
+    body: CONCEPT.pillars[0].text,
+    annotations: ["Underground parking", "Pedestrian sanctuary", "The Garden"],
+  },
+  homes: {
+    eyebrow: "golden hour",
+    title: "Two ways to live.",
+    hint: "Hold the sun — drag it across the arch.",
+    explore: "Explore",
+    back: "Back to the village",
+  },
+  night: {
+    eyebrow: "evening",
+    title: "Come experience Vila Leku.",
+    body: "Discover the homes, the landscape and the shared spaces with your private advisor.",
+    submit: "Request your private visit",
+    confirmTitle: "An invitation",
+    confirmBody: "Your advisor will confirm your visit within one day.",
+  },
+};
+
 export interface HomeContent {
   id: "v3" | "v4";
   name: string;
@@ -148,7 +148,7 @@ export const HOMES: HomeContent[] = [
   },
   {
     id: "v4",
-    name: "V4 Villa",
+    name: "V4 Premium Villa",
     kind: "Premium villa",
     status: "Coming 2028",
     area: "+400 m²",
