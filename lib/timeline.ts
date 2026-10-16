@@ -126,7 +126,7 @@ export function stagesFromT(t: number): Stages {
     lines: ramp(1.74, 2.16, t),
     rise: ramp(2.1, 2.76, t),
     foam: ramp(2.4, 2.96, t),
-    material: ramp(3.0, 3.8, t),
+    material: ramp(2.95, 3.7, t),
     life: smooth(3.55, 4.05, t),
     section: bump(4.12, 4.42, 4.82, 5.02, t),
     cars: ramp(4.22, 4.85, t),

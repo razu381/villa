@@ -60,7 +60,8 @@ vec3 vl_strata(vec3 p, vec3 base) {
 float vl_seam(vec3 wp) {
   float d = vl_sweepDist(wp);
   float vlOn = smoothstep(0.0, 0.02, uMaterial) * (1.0 - smoothstep(0.98, 1.0, uMaterial));
-  return (1.0 - smoothstep(0.0, 1.8, abs(d - 1.0))) * vlOn;
+  // A soft band of light, not a burning edge.
+  return (1.0 - smoothstep(0.0, 4.5, abs(d - 1.0))) * vlOn;
 }
 `;
 
@@ -122,7 +123,8 @@ export function patchVillageMaterial<T extends MeshStandardMaterial>(mat: T, opt
   const uModelColor = { value: new Color(o.modelColor) };
   const uModelRough = { value: o.modelRoughness };
   const uPoche = { value: new Color(o.poche ?? "#000000") };
-  const uSeamColor = { value: new Color("#FFB866").multiplyScalar(2.2) };
+  // Warm white, below the daylight bloom knee: the sweep front reads as light, not fire.
+  const uSeamColor = { value: new Color("#FFF1DC").multiplyScalar(1.1) };
 
   mat.onBeforeCompile = (shader: WebGLProgramParametersWithUniforms) => {
     Object.assign(shader.uniforms, sharedUniformsFor(["uTime", "uMaterial", "uLife", "uNight", "uWindows", "uSweepFrom", "uSweepTo", "uSectionZ"]), {
