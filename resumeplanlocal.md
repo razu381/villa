@@ -303,7 +303,7 @@ Each item: **where** → **what to do** → **done when**. Review suggestions ar
 - ✅ *(done 2026-10-16: the x −12 link now crosses row C at x −4, in the gap between C-1-2 and the pavilion, and rejoins x −12 along the row-D lane; the x 33 link stops at the communal pool and resumes past it. No lane centreline crosses a house, the pool or the pavilion (checked numerically); journey re-checked 1.8–6.6. The tree keep-out already applies everywhere: every renderer, the AO texture included, reads `LANDSCAPE_TREES`)* **Layout data (`lib/village.ts`):**
   - The `PATHS` link at x = −12 runs through house C-1-2; the link at x = 33 crosses the communal pool. The section module works around this, but the landscape paths and lights may still show the overlap.
   - Exclude the entrance-stair and portal-apron keep-out from `TREES` at the source.
-- **Landscape finish:**
+- ✅ *(2026-10-16: water's sky reflection capped at 65 % by day (85 % at night as before), so a grazing pool stays aqua; lavender spikes one step deeper (`#7E6EA8` / `#9282B8`). Checked close and wide at noon. Left as is: the portal recess floor reads fine (a lit tunnel floor under the arriving cars); hedges stay smooth model boxes, new geometry for little gain)* **Landscape finish:**
   - Water is milky at grazing angles at noon.
   - Lavender is pale at noon.
   - Hedges are plain rounded boxes.

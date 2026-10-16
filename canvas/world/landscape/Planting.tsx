@@ -207,8 +207,8 @@ const VERT_BODY = /* glsl */ `
 const FRAG = /* glsl */ `
 #define C_LAV_LEAF ${lin("#6E7A52")}
 #define C_LAV_STEM ${lin("#7C8768")}
-#define C_LAV_TOP ${lin("#8E80AE")}
-#define C_LAV_TOP2 ${lin("#A194BE")}
+#define C_LAV_TOP ${lin("#7E6EA8")}
+#define C_LAV_TOP2 ${lin("#9282B8")}
 #define C_GRASS_BASE ${lin("#76825A")}
 #define C_GRASS_TOP ${lin("#ABA67E")}
 #define C_SHRUB_A ${lin("#56603F")}

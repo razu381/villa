@@ -220,7 +220,8 @@ void main() {
     float deep = clamp((y0 - B.y) / max(D, 0.01), 0.0, 1.0);
     refr = mix(refr, refr * 0.35, uNight);
     refr += C_GLOW * uNight * fill * (0.22 + 0.95 * wallNear * lamps) * mix(1.0, 0.6, deep) * exp(-tB * 0.25);
-    col = mix(refr, sky * mix(1.0, 0.35, uNight), clamp(F * 1.15, 0.0, 0.85) * mix(1.0, 0.5, uNight)) + uSunColor * glint;
+    // (capped by day: at grazing angles the sky would otherwise turn the basin milky)
+    col = mix(refr, sky * mix(1.0, 0.35, uNight), clamp(F * 1.15, 0.0, mix(0.65, 0.85, uNight)) * mix(1.0, 0.5, uNight)) + uSunColor * glint;
     // the waterline: a thin wet darkening on the walls just above
   } else {
     vec3 P = o + V * tI;
