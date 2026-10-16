@@ -10,9 +10,8 @@
  *     crosses the hall or the tunnel, so the earth reads solid (Cap)
  *   - model cars, instanced: parked ones, and a few that arrive from the
  *     street, turn into the portal, glide down the aisle and ease into bays
- *   - life above: luminous hairlines along the car-free lanes and small model
- *     figures walking, playing and resting by the pool (Life), and furnished
- *     rooms in the houses the plane cuts (Interiors)
+ *   - life above: luminous hairlines along the car-free lanes (Life), and
+ *     furnished rooms in the houses the plane cuts (Interiors)
  *   - annotation anchors for the HTML legend (anchors.ts)
  *
  * While the section is closed the tunnel is seen through the real portal

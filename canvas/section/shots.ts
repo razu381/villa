@@ -9,7 +9,7 @@ import type { CameraKey } from "@/lib/camera";
  *   (b) 4.42 → 4.64  the iconic frame — a long-lens elevation of the cut face:
  *                    strata, the lit hall with its cars, the gardens and houses, sky
  *   (c) 4.66 → 4.82  a slow rise over the cut: the hall below, the car-free
- *                    gardens above, lanes lit, people walking — then on east
+ *                    gardens above, the lanes lit — then on east
  *                    towards the homes as the cut closes
  *
  * Neighbours: 3.9 [-40,48,120]→[-16,4,-4] (making) · 5.1 [90,55,120]→[-8,5,14] (homes).

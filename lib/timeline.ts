@@ -99,7 +99,7 @@ export interface Stages {
   foam: number;
   /** Material sweep — white model → cork, limestone, glass, planting. */
   material: number;
-  /** Life — foliage colour + wind, water fills, people. */
+  /** Life — foliage colour + wind, water fills. */
   life: number;
   /** Section cut open amount (opens then closes inside the cars chapter). */
   section: number;

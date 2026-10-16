@@ -312,6 +312,13 @@ Each item: **where** → **what to do** → **done when**. Review suggestions ar
   - Hover state can lag ~1 s while the camera eases.
   - Dawn hold-the-sun (0.1) is soft and pale.
 
+### Requested by the user (2026-10-16)
+
+Trees and people stay stylised model pieces (PLAN.md §5.1: photoreal belongs to the film and renders).
+
+- ✅ *(2026-10-16: the model figures are gone (walkers, children, people by the pool); the lane hairlines and the playground ring stay. Checked 4.7–5.6)* **Remove the people.**
+- **Portuguese trees:** stone (umbrella) pine, cypress and olive, plus a few cork oaks with the stripped, cinnamon-red cork trunk (ties in with the cork on the houses). Same positions as before.
+
 ---
 
 ## ✅ 4. Critique and polish for section + homes (never independently reviewed)
