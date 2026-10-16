@@ -19,6 +19,17 @@ const SHADOW_BOUNDS = { minX: -150, maxX: 150, minZ: -125, maxZ: 125 };
 /** Heights the footprint is sampled at: the ground and the top of the houses (m). */
 const SHADOW_YS = [-2, 22];
 
+/**
+ * The box's half-size steps in powers of 1.25 from SHADOW_MIN, and only steps down
+ * once it is ~10 % past the next step: the texel size changes rarely, so shadow
+ * edges don't crawl while the view moves (the centre is texel-snapped as well).
+ */
+function stepSize(need: number, current: number) {
+  if (need <= current && need >= current / 1.25 / 1.1) return current;
+  const k = Math.ceil(Math.log(Math.max(need, SHADOW_MIN) / SHADOW_MIN) / Math.log(1.25) - 1e-6);
+  return Math.min(SHADOW_EXTENT, SHADOW_MIN * Math.pow(1.25, k));
+}
+
 const UP = new Vector3(0, 1, 0);
 const ORIGIN = new Vector3();
 const basis = new Matrix4();
@@ -84,8 +95,9 @@ function fitShadow(light: DirectionalLight, sunDir: Vector3, mapSize: number) {
     }
   }
   const pad = 1.1;
-  const hx = Math.min(SHADOW_EXTENT, Math.max(SHADOW_MIN, ((maxX - minX) / 2) * pad + 4));
-  const hy = Math.min(SHADOW_EXTENT, Math.max(SHADOW_MIN, ((maxY - minY) / 2) * pad + 4));
+  const cam = light.shadow.camera;
+  const hx = stepSize(Math.min(SHADOW_EXTENT, Math.max(SHADOW_MIN, ((maxX - minX) / 2) * pad + 4)), cam.right);
+  const hy = stepSize(Math.min(SHADOW_EXTENT, Math.max(SHADOW_MIN, ((maxY - minY) / 2) * pad + 4)), cam.top);
   // Centre in the sun's frame, snapped to whole texels → a world-fixed texel grid.
   const sx = (2 * hx) / mapSize;
   const sy = (2 * hy) / mapSize;
@@ -96,7 +108,6 @@ function fitShadow(light: DirectionalLight, sunDir: Vector3, mapSize: number) {
   target.set(0, 0, 0).addScaledVector(ax, cx).addScaledVector(ay, cy).addScaledVector(az, cz);
   light.position.copy(target).addScaledVector(sunDir, 300);
   light.target.updateMatrixWorld();
-  const cam = light.shadow.camera;
   if (cam.right !== hx || cam.top !== hy) {
     cam.left = -hx;
     cam.right = hx;
