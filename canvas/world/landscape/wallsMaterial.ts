@@ -147,7 +147,10 @@ const BUMP_CODE = /* glsl */ `
     vec3 r2 = cross(normal, sx);
     float det = dot(sx, r1);
     vec3 grad = sign(det) * (dFdx(wlH) * r1 + dFdy(wlH) * r2);
-    normal = normalize(mix(normal, abs(det) * normal - grad, wlK));
+    // a zero vector on degenerate derivatives (grazing / sub-pixel faces) would give a NaN
+    // normal, which the bloom mip chain spreads into a black frame (as in houses/materials.ts)
+    vec3 pn = abs(det) * normal - grad;
+    normal = normalize(mix(normal, dot(pn, pn) > 1e-24 ? pn : normal, wlK));
   }
 `;
 
@@ -163,7 +166,7 @@ export function createStoneMaterial() {
   const mat = patchVillageMaterial(new MeshStandardMaterial({ color: "#ffffff", roughness: 0.88, metalness: 0 }), {
     poche: PALETTE.poche,
   });
-  return extendMaterial(mat, "stone-v2", (shader) => {
+  return extendMaterial(mat, "stone-v3", (shader) => {
     shader.uniforms.uPodRise = uPodRise;
     shader.uniforms.uPathLights = U.uPathLights;
     shader.uniforms.uTrH = { value: heightTexture() };

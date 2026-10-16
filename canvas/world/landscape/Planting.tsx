@@ -284,7 +284,7 @@ function createPlantMaterial() {
     modelColor: "#DADCCD",
     seam: false,
   });
-  return extendMaterial(mat, "plant-v2", (shader) => {
+  return extendMaterial(mat, "plant-v3", (shader) => {
     shader.uniforms.uWind = uWind;
     let vs = shader.vertexShader;
     vs = inject(vs, "#include <common>", VERT_PARS);
@@ -316,7 +316,10 @@ function createPlantMaterial() {
         float det = dot(sx, r1);
         float h = plBump * 0.09;
         vec3 grad = sign(det) * (dFdx(h) * r1 + dFdy(h) * r2);
-        normal = normalize(mix(normal, abs(det) * normal - grad, vlMask));
+        // a zero vector on degenerate derivatives (grazing / sub-pixel faces) would give a NaN
+        // normal, which the bloom mip chain spreads into a black frame (as in houses/materials.ts)
+        vec3 pn = abs(det) * normal - grad;
+        normal = normalize(mix(normal, dot(pn, pn) > 1e-24 ? pn : normal, vlMask));
       }`,
     );
     shader.fragmentShader = fs;

@@ -125,10 +125,11 @@ Each item: **where** → **what to do** → **done when**. Review suggestions ar
 > The pitch runs on a **Windows laptop**. Chrome and Edge there go through ANGLE → Direct3D 11, where shader compilation is the slowest of any platform, and the GPU is often an Intel or AMD integrated chip. So 3.1 (warm-up) and 3.2/3.3 (tiering and adaptive quality) come first.
 > Step zero: open `chrome://gpu` on the pitch laptop and note the GPU string, and check whether it switches to a discrete GPU on battery vs mains power. Present on mains power.
 
-**3.0 Black flash in the section dive (t ≈ 4.28–4.32).** *(found in §2)*
+✅ **3.0 Black flash in the section dive (t ≈ 4.28–4.32).** *(found in §2)*
 - *Where:* some scene shader emits NaN/Inf in the descending camera pose while the section plane sweeps in; the bloom mip pyramid (`canvas/Post.tsx`, always on) smears it into a near-black frame.
 - *Seen:* prod build, real GPU: intermittent black frames on arrival by scroll and on a cold `?t=4.3`. Tier low (no composer) renders fine; t 4.25 and 4.35 are fine.
 - *Done when:* no black frame anywhere in a slow scroll through 4.1–4.5 (sampled every frame) at tier high and mid.
+- *Done:* the source was a single NaN pixel from the planting's derivative bump (`normalize` of a zero vector when a near-camera shrub is seen edge-on). The same guard `houses/materials.ts` already had now covers `Planting.tsx` and the stone walls (`wallsMaterial.ts`). A float-target scan finds no non-finite pixel over 40 frames at t 4.26–4.34, 1.6, 2.6, 3.5, 4.5, 4.8, 5.5, 6.6 and explore v3/v4 (before: one at frame 0 at 4.3). A 12 s scroll 4.1 → 4.5 on the prod build: 46 sampled frames at tier high and mid, none dark.
 
 **3.1 Compile shaders up front, so stages don't stall when they first appear.**
 - *Where:* new `Warmup` component in `canvas/Experience.tsx`; first Explore click in `canvas/homes/FeaturedHome.tsx`.
