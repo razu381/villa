@@ -8,6 +8,8 @@ import { ClassicHeader } from "./ClassicHeader";
 import { GridLines } from "./GridLines";
 import { Hero } from "./Hero";
 import { Concept } from "./Concept";
+import { VillageHeart } from "./VillageHeart";
+import { Villas } from "./Villas";
 
 /**
  * The classic site: the client's own layout (concept, village heart, villas,
@@ -54,6 +56,8 @@ export default function Classic() {
       <main id="main" className="vc-main">
         <Hero />
         <Concept />
+        <VillageHeart />
+        <Villas />
       </main>
     </div>
   );
