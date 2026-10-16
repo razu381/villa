@@ -205,10 +205,11 @@ Each item: **where** → **what to do** → **done when**. Review suggestions ar
   - *Not done, on purpose:* shadow updates on demand (the tree sway, walkers and cars animate in the shadow pass, so frozen shadows would lag them), and bloom `resolutionScale` (a no-op with `mipmapBlur`: postprocessing sizes the luminance and mip passes at full resolution; the real levers are `luminancePass.resolution.scale` or fewer `levels`). Revisit only if the laptop needs it.
   - *Still to check on the pitch laptop:* that it holds 60 fps at the top rung, or which rung it settles on.
 
-**3.4 Explore mode shouldn't freeze scrolling.**
+✅ **3.4 Explore mode shouldn't freeze scrolling.**
 - *Where:* `components/chapters/HomesChapter.tsx useExploreGuard`, `components/homes/explore.ts`.
 - *Problem:* while a home is open the camera is locked, so scrolling does nothing visible for about 2,000 px, then jumps to night once t ≥ 6.
 - *Do:* record `tEnter` when explore starts. In the guard, call `backToVillage()` once `|t − tEnter| > 0.06` (about 180 px), so a scroll in either direction releases the home smoothly. Keep the t ≥ 6 exit as a fallback.
+- **Done (2026-10-16).** `useExploreGuard` records `tEnter` when the visitor opens a home and calls `backToVillage()` past `EXPLORE_RELEASE` (0.06, `components/homes/explore.ts`); leaving the chapter still exits. `enterExplore` first settles any Lenis glide still running, so a click mid-glide can't carry the scroll past the threshold and close the home at once. A debug `?home=` load (no visitor click) isn't armed. Tested with real wheel input: ~100 px keeps the home, ~300 px releases it (both directions), the camera eases back, focus returns to the card.
 
 **3.5 The time-of-day word is wrong in the homes chapter.**
 - *Where:* `lib/ui-time.ts timeWordForDay` vs `lib/timeline.ts CHAPTERS`.

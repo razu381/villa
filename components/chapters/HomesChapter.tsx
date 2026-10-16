@@ -8,7 +8,7 @@ import { useReveal } from "@/lib/ui-reveal";
 import { Pin } from "../ui/Pin";
 import { ChapterText } from "./ChapterText";
 import { HomePanel } from "../homes/HomePanel";
-import { backToVillage, enterExplore, exitExplore, inHomes } from "../homes/explore";
+import { EXPLORE_RELEASE, backToVillage, enterExplore, exitExplore, inHomes } from "../homes/explore";
 
 /**
  * Golden hour — two ways to live. The Action layer: two selectable cards;
@@ -26,11 +26,22 @@ export function HomesChapter() {
   );
 }
 
-/** Scrolling out of the chapter, or Escape, leaves explore mode. */
+/**
+ * A scroll either way, scrolling out of the chapter, or Escape leaves explore
+ * mode: the camera is locked on the home, so scrolling must never feel dead.
+ */
 function useExploreGuard() {
   useEffect(() => {
+    // Where the visitor opened the home (a debug ?home= load, outside the chapter, has none).
+    let tEnter: number | null = null;
     const unsub = useJourney.subscribe((s, p) => {
-      if (s.mode === "explore" && inHomes(p.t) && !inHomes(s.t)) exitExplore();
+      if (s.mode !== "explore") {
+        tEnter = null;
+        return;
+      }
+      if (p.mode !== "explore") tEnter = inHomes(s.t) ? s.t : null;
+      if (inHomes(p.t) && !inHomes(s.t)) exitExplore();
+      else if (tEnter != null && Math.abs(s.t - tEnter) > EXPLORE_RELEASE) backToVillage();
     });
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape" && useJourney.getState().mode === "explore") {

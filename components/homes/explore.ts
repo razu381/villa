@@ -11,6 +11,8 @@ export const focusIntent = { panel: false };
 /** Enter the interactive moment: the camera cranes in, the home opens, the day pauses. */
 export function enterExplore(id: HomeId, opts: { focusPanel?: boolean } = {}) {
   if (opts.focusPanel) focusIntent.panel = true;
+  // Settle any scroll still gliding: from here on, scrolling means "let the home go".
+  window.__lenis?.scrollTo(window.scrollY, { immediate: true, force: true });
   const s = useJourney.getState();
   s.setHome(id);
   s.setExplode(1);
@@ -42,3 +44,6 @@ export function backToVillage() {
 }
 
 export const inHomes = (t: number) => t >= 5 && t < 6;
+
+/** Scrolling this far (journey t, ~180 px) either way from where a home was opened closes it. */
+export const EXPLORE_RELEASE = 0.06;
