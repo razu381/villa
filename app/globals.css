@@ -348,6 +348,16 @@ figure {
     transparent 100%
   );
 }
+/* The making notes reach further left than a corner glow: widen it to cover both. */
+.vl-notes > .vl-haze--right {
+  background: radial-gradient(
+    ellipse 68% 82% at 100% 100%,
+    var(--scrim) 0%,
+    color-mix(in srgb, var(--scrim) 80%, transparent) 40%,
+    color-mix(in srgb, var(--scrim) 34%, transparent) 70%,
+    transparent 100%
+  );
+}
 
 /* Compact: the body and the chapter's notes / legend share one cell under the title. */
 .vl-text__swap {

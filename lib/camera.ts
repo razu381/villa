@@ -61,7 +61,8 @@ const BASE_KEYS: CameraKey[] = [
   { t: 2.95, pos: [10, 78, 190], target: [-4, 2, -8], fov: 30, portrait: P_MODEL },
   // The making — the sweep travels east → west; we follow it from the south.
   { t: 3.25, pos: [120, 60, 130], target: [10, 4, -4], fov: 30, portrait: P_MODEL },
-  { t: 3.9, pos: [-40, 48, 124], target: [-18, 2, 6], fov: 30, portrait: [0.78, 0.36] },
+  // (Pulled back a touch and aimed a little higher: air around the two notes.)
+  { t: 3.9, pos: [-42, 52.5, 136], target: [-18, 5, 6], fov: 30, portrait: [0.78, 0.36] },
   ...SECTION_KEYS,
   ...HOMES_KEYS,
   // Night — pull back to see the whole village switch on; as the invitation
