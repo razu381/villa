@@ -618,8 +618,9 @@ const PARAPET = 0.5;
 const GRAVEL_TAG = 10;
 
 /**
- * A terrace edge: limestone upstand + frameless glass with a slim bronze top
- * rail. Along x or z (whichever is longer).
+ * A terrace edge: limestone upstand + frameless glass with a slim pale top
+ * rail (a model's clear balustrade: a dark bronze rail over invisible glass read,
+ * from afar, as a stray hairline). Along x or z (whichever is longer).
  */
 function balustrade(k: HouseKit, level: HouseLevel, y: number, a: [number, number], b: [number, number], skip: Face[] = []) {
   const up = 0.22;
@@ -637,14 +638,14 @@ function balustrade(k: HouseKit, level: HouseLevel, y: number, a: [number, numbe
     const xa = Math.min(ax, bx) + 0.06;
     const xb = Math.max(ax, bx) - 0.06;
     k.box(level, "glass", [xa, y + up, zc - g], [xb, gt, zc + g], ["ny", "py"]);
-    k.box(level, "frame", [xa - 0.01, gt, zc - rw], [xb + 0.01, gt + rh, zc + rw]);
+    k.box(level, "limestone", [xa - 0.01, gt, zc - rw], [xb + 0.01, gt + rh, zc + rw]);
     k.lines.seg([Math.min(ax, bx), gt, zc], [Math.max(ax, bx), gt, zc], 0.8);
   } else {
     const xc = (ax + bx) / 2;
     const za = Math.min(az, bz) + 0.06;
     const zb = Math.max(az, bz) - 0.06;
     k.box(level, "glass", [xc - g, y + up, za], [xc + g, gt, zb], ["ny", "py"]);
-    k.box(level, "frame", [xc - rw, gt, za - 0.01], [xc + rw, gt + rh, zb + 0.01]);
+    k.box(level, "limestone", [xc - rw, gt, za - 0.01], [xc + rw, gt + rh, zb + 0.01]);
     k.lines.seg([xc, gt, Math.min(az, bz)], [xc, gt, Math.max(az, bz)], 0.8);
   }
 }
