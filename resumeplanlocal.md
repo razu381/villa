@@ -245,7 +245,7 @@ Each item: **where** → **what to do** → **done when**. Review suggestions ar
 | # | Item | Where | Fix |
 |---|---|---|---|
 | 3.9 | Featured homes don't pop as the chapter's subject; white halo around the V4 plinth reads as fog | `canvas/homes/Veil.tsx`, homes jewel/halo code, `shots.ts` | Run the veil at ~0.2–0.25 through t 5.1–5.9 (not only in explore). Halve or remove the plinth halo glow. Confirm framing after 3.1–3.3. |
-| 3.10 | Explore at golden hour is milky and one-tone (exploded floors all orange cork) | `canvas/homes/Veil.tsx`, `canvas/homes/materials.ts` | Veil toward a mid-tone `mix(uFog, #1C1E17, 0.18)`, capped at ~0.4 by day. Interior floor slabs and inner walls in limestone (#E5E3D7-ish); cork only on exterior cladding. Night explore (sun 0.92) is already excellent; keep it. |
+| 3.10 | Explore at golden hour is milky and one-tone (exploded floors all orange cork); dawn (sun 0.1) is washed out too (found in §4) | `canvas/homes/Veil.tsx`, `canvas/homes/materials.ts` | Veil toward a mid-tone `mix(uFog, #1C1E17, 0.18)`, capped at ~0.4 by day. Interior floor slabs and inner walls in limestone (#E5E3D7-ish); cork only on exterior cladding. Night explore (sun 0.92) is already excellent; keep it. |
 | 3.11 | Hill contours keep drawing across the risen podium deck (t 1.4–1.8) | terrain contour shader (`canvas/world/terrain/terrainMaterial.ts`) with `uPlan` | Contour alpha `*= 1 - podiumMask * smoothstep(0.45, 0.7, uPlan)`. |
 | 3.12 | Material sweep seam looks like a burning, game-like dissolve, right behind "Made to age" (t 3.5) | seam in `lib/materials.ts` (`uSeamColor`, `vl_seam`) and the house/terrain patches | Halve the emission, widen the falloff 2–3×, colour → warm white `#FFF1DC`. Retime so the seam clears the text column before t 3.45. |
 | 3.13 | Making notes ("Durability", "Autonomy") sit on stairs and trees; 3.9 frame crowded | `components/chapters/MakingChapter.tsx`, `lib/camera.ts` key ~3.9 | Add the `.vl-haze--right` scrim behind the notes. Pull the 3.9 key back ~10% and raise the target ~3 m. |
@@ -300,7 +300,11 @@ Each item: **where** → **what to do** → **done when**. Review suggestions ar
 
 ---
 
-## 4. Critique and polish for section + homes (never independently reviewed)
+## ✅ 4. Critique and polish for section + homes (never independently reviewed)
+
+> **Reviewed 2026-10-16 (desktop, real GPU).** Nothing new needs fixing outside the backlog; what's off is already itemised:
+> - **Section:** the cars arrive one by one (≈0.075 t apart), turn off the street and into the portal without reversing or showing through the back face. The elevation is calm, the hall evenly lit (not blown out), the playground figures and lane hairlines read as a model. Already listed: flat beige ground at 4.1–4.25 (3.15), hollow cut townhouses at 4.55–4.8 (3.14), text over the gardens at 4.85 (3.18), overlapping car rows (P2), the legend (3.19). The 4.95 → 5.1 handover is smooth.
+> - **Homes:** the featured homes match their neighbours at 2.7 / 3.6 / 4.5. Explode is a 2.2 s quart-out, no overshoot. Noon and night explore read well: interiors legible, lamps on after dusk, the panel never covers the house. Hover lifts the home and shows the "open" cursor; clicking the house opens it (document-level raycast). Already listed: the featured homes don't pop at 5.5–5.9 (3.9); golden-hour explore is milky (3.10), and so is **dawn (sun 0.1)**, now added to 3.10.
 
 These two modules were finished and self-verified, but their critic agents were cut off. Before the pitch, review them deliberately:
 
