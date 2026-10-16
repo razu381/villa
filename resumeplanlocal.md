@@ -293,7 +293,7 @@ Each item: **where** → **what to do** → **done when**. Review suggestions ar
   - Bake ground height once into a shared 0.5 m `Float32Array` with bilinear sampling, and reuse it for the plinth, AO, height texture, trees and people.
   - Mount Section and Homes in `requestIdleCallback` after ready.
   - Optionally move geometry builders into a Worker.
-- **Dead code:** `ScrollTrigger` is imported, registered and refreshed on every resize, but never used (`components/SmoothScroll.tsx`). Remove it. Also skip the re-measure when only `innerHeight` changes on touch devices (iOS toolbar).
+- ✅ *(2026-10-16: ScrollTrigger removed (import, registration, update and refresh); Lenis stays on the GSAP ticker. The iOS-toolbar re-measure part is ⏸ mobile)* **Dead code:** `ScrollTrigger` is imported, registered and refreshed on every resize, but never used (`components/SmoothScroll.tsx`). Remove it. Also skip the re-measure when only `innerHeight` changes on touch devices (iOS toolbar).
 - **First paint weight:** re-encode `hero-poster.jpg` (484 KB), `aerial-village.jpg` and `aerial-village-drawing.jpg` as AVIF/WebP with a `<picture>` JPEG fallback (poster ~150 KB). Add `loading="lazy"` to the HomePanel image and `fetchPriority="low"` to the aerials.
 - **Hygiene:**
   - `stagesFromT(t, out)` writing into a scratch object (called 3+ times per frame).

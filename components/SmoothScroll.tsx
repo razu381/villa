@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 import Lenis from "lenis";
 import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { CHAPTERS, clamp01, dayFromT } from "@/lib/timeline";
 import { useJourney, type HomeId } from "@/lib/store";
 import { detectTier } from "@/lib/tier";
@@ -15,8 +14,8 @@ declare global {
 }
 
 /**
- * Lenis (wheel smoothing only — touch stays native) synced with GSAP ScrollTrigger,
- * and the scroll → journey `t` mapping.
+ * Lenis (wheel smoothing only — touch stays native) on the GSAP ticker, and the
+ * scroll → journey `t` mapping.
  *
  * Debug / screenshot params:
  *   ?t=3.4        jump to journey position 3.4
@@ -42,12 +41,10 @@ export function SmoothScroll() {
     const sun = params.get("sun");
     if (sun != null) store.setSunOverride(clamp01(parseFloat(sun)));
 
-    gsap.registerPlugin(ScrollTrigger);
     const lenis = reduced ? null : new Lenis({ lerp: 0.085, wheelMultiplier: 0.85, smoothWheel: true, syncTouch: false });
     window.__lenis = lenis;
     const tick = (time: number) => lenis?.raf(time * 1000);
     if (lenis) {
-      lenis.on("scroll", ScrollTrigger.update);
       gsap.ticker.add(tick);
       gsap.ticker.lagSmoothing(0);
     }
@@ -76,7 +73,6 @@ export function SmoothScroll() {
     const onResize = () => {
       measure();
       compute();
-      ScrollTrigger.refresh();
     };
     measure();
     compute();
