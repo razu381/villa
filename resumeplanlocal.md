@@ -169,13 +169,18 @@ Each item: **where** → **what to do** → **done when**. Review suggestions ar
   - *Check on the pitch laptop:* time to ready, and that `--info` stays flat.
   - *Also seen, not 3D:* under heavy GPU contention from another browser, a 5–7 s hitch at t ≈ 0.8 when scrolling in from t 0, with no main-thread work and no compiles. It wasn't present on the quiet machine (t 0.5–1.0 max 167 ms). It's likely the hero stills' first composite. Recheck on the laptop with 3.3.
 
-**3.2 Stop the device check from creating a second WebGL context.**
+✅ **3.2 Stop the device check from creating a second WebGL context.**
 - *Where:* `lib/tier.ts detectTier()`, called from `components/SmoothScroll.tsx`.
 - *Problem:* it creates a throwaway canvas and WebGL2 context on every load and never releases it. That cost 1.9 s on SwiftShader (tens of ms to ~150 ms on Windows) and uses up iOS's context budget.
 - *Do:* use `typeof WebGL2RenderingContext === "undefined"` → `'low'`. If you keep a real probe, call `getExtension('WEBGL_lose_context')?.loseContext()` straight after. Better: decide the tier inside R3F's `onCreated` from `gl.capabilities.isWebGL2` plus the GPU string from `WEBGL_debug_renderer_info`.
 - *Also fix the policy:* `cores <= 4 || mem <= 4 → mid` drops ordinary 4-core laptops to mid, which turns off tilt-shift and lightens post. Only demote when the device is (coarse pointer or small screen) **and** low on cores/memory. Treat `Mali-G5x` and `Adreno 5xx/60x` as mid.
 - *Careful with Intel:* the pitch laptop may well have Intel Iris Xe / Arc graphics. Don't blanket-demote `Intel` to mid. Make the high tier hold 60 fps there through 3.3 (DPR cap and PerformanceMonitor). Only if it truly can't, demote just the specific weak GPUs.
 - *Done when:* there's no second context in DevTools, and the **pitch laptop** gets `high` and holds about 60 fps without needing `?tier=high`. Keep `?tier=high` as the emergency override.
+- *Done:* `detectTier()` no longer creates a probe context. It checks `typeof WebGL2RenderingContext`, and three needs WebGL2 anyway. A page load now makes one WebGL context instead of two. Before, the detached probe took 1,082 ms on a cold desktop load here (it also paid the GPU start-up), plus 43 ms on emulated mobile.
+  - *Policy (decided 2026-10-16):* phones and tablets stay mid. Laptops and desktops (fine pointer, screen ≥ 600 px) are no longer demoted for ≤ 4 cores or ≤ 4 GB. ≤ 2 cores, ≤ 2 GB, Save-Data or no WebGL2 → low. `?tier=` still overrides.
+  - *Checked with emulated devices:* 4 cores / 4 GB desktop → high (was mid). 2 cores or 2 GB → low. iPad Pro, Pixel 7 (8 cores / 8 GB), iPhone 15 → mid. A 900×560 window → mid, as before.
+  - *Dropped:* the Mali-G5x / Adreno 5xx/60x rule. Every touch device is mid already, so no GPU string is needed.
+  - *Still open:* the "about 60 fps on the pitch laptop" half is 3.3 work and needs the laptop.
 
 **3.3 Adaptive quality and pause rendering when the 3D isn't visible.**
 - *Where:* `canvas/Experience.tsx` (dpr), `canvas/Day.tsx` (4096 shadow map), `canvas/Post.tsx`.
