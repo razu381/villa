@@ -229,10 +229,11 @@ Each item: **where** → **what to do** → **done when**. Review suggestions ar
   - Restored: the Warmup remounts (new key), recompiles and uploads, then `ready` returns and the existing late-ready easing dissolves back into the 3D. Tested with `WEBGL_lose_context`: back in 1.9 s, the same frame as before.
   - Not back within 3 s: "gone" for the session: a late restore is ignored, the aerial stays and FrameGate stops the render loop.
 
-**3.7 Single film grain.**
+✅ **3.7 Single film grain.**
 - *Where:* `components/chrome/Chrome.tsx` (CSS `.vl-grain`, `globals.css` ~l.2108) and `canvas/Post.tsx GrainEffect`.
 - *Problem:* two grains stack over the 3D, flickering at different rates.
 - *Do:* hide the CSS grain once the 3D is on screen with `html[data-phase]:not([data-phase="hero"]) .vl-grain { display:none }`, or keep it on the hero film only.
+- **Done (2026-10-16).** Keyed on `data-tone` instead of `data-phase`: `data-phase` turns at t 0.36, which would strip the grain off the aerial still before the 3D (and its own grain) shows. `html[data-tone]:not([data-tone="film"]):not([data-tier="low"]) .vl-grain { display: none }`: the CSS grain stays over the film, the aerial still and a lost-canvas fallback, and on tier low (no composer, no 3D grain). Checked: on at t 0.3/0.8, off from 0.95 (the 3D shows), off in explore and at night, on at tier low.
 
 ⏸ *Deferred (mobile).* **3.8 Mobile match cut (t 0.85–1.05).**
 - *Where:* the line-drawing overlay in `components/HeroMedia.tsx` and the portrait setting of the ~t 1.0 key in `lib/camera.ts`.

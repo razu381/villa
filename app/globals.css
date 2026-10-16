@@ -2141,6 +2141,11 @@ html[data-tier="mid"] .vl-grain,
 html[data-tier="low"] .vl-grain {
   animation: none;
 }
+/* One grain at a time: once the 3D is on screen it carries its own (canvas/Post.tsx
+   GrainEffect). The film, the aerial still and tier low (no composer) keep this one. */
+html[data-tone]:not([data-tone="film"]):not([data-tier="low"]) .vl-grain {
+  display: none;
+}
 @media (max-width: 820px), (max-height: 620px) {
   .vl-grain {
     animation: none;
