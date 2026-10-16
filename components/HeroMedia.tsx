@@ -16,7 +16,7 @@ import { useJourneyEffect } from "@/lib/ui-media";
  *     → the drawing dissolves into the 3D canvas, whose contours and line
  *       drawing take over from the same high oblique angle (kd 0.55 → 1).
  *
- * The drawing (public/media/aerial-village-drawing.jpg) is pre-baked from the
+ * The drawing (public/media/aerial-village-drawing.*) is pre-baked from the
  * aerial: Canny edges (ImageMagick `-canny 0x2.2+10%+28%`), inked in graphite
  * olive on limestone paper, strongest around the village, with a 10 % ghost
  * wash of the photo's tones.
@@ -154,10 +154,19 @@ export function HeroMedia() {
     <div ref={rootRef} className="vl-heromedia" aria-hidden="true">
       <div ref={aerialRef} className="vl-heromedia__aerial">
         <div ref={viewRef} className="vl-heromedia__view" style={{ ["--ix" as string]: PIN.x, ["--iy" as string]: PIN.y }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img ref={photoRef} className="vl-heromedia__photo" src="/media/aerial-village.jpg" alt="" decoding="async" />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img ref={drawingRef} className="vl-heromedia__drawing" src="/media/aerial-village-drawing.jpg" alt="" decoding="async" />
+          {/* AVIF / WebP with a JPEG fallback; the stills load after the poster and the film. */}
+          <picture>
+            <source srcSet="/media/aerial-village.avif" type="image/avif" />
+            <source srcSet="/media/aerial-village.webp" type="image/webp" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img ref={photoRef} className="vl-heromedia__photo" src="/media/aerial-village.jpg" alt="" decoding="async" fetchPriority="low" />
+          </picture>
+          <picture>
+            <source srcSet="/media/aerial-village-drawing.avif" type="image/avif" />
+            <source srcSet="/media/aerial-village-drawing.webp" type="image/webp" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img ref={drawingRef} className="vl-heromedia__drawing" src="/media/aerial-village-drawing.jpg" alt="" decoding="async" fetchPriority="low" />
+          </picture>
         </div>
         <div ref={scrimRef} className="vl-heromedia__aerialscrim" />
         <div ref={noteRef} className="vl-site-note" style={{ ["--ix" as string]: PIN.x, ["--iy" as string]: PIN.y }}>
@@ -170,8 +179,12 @@ export function HeroMedia() {
         </div>
       </div>
       <div ref={filmRef} className="vl-heromedia__film">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="vl-heromedia__poster" src="/media/hero-poster.jpg" alt="" fetchPriority="high" />
+        <picture>
+          <source srcSet="/media/hero-poster.avif" type="image/avif" />
+          <source srcSet="/media/hero-poster.webp" type="image/webp" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="vl-heromedia__poster" src="/media/hero-poster.jpg" alt="" fetchPriority="high" />
+        </picture>
         <video ref={videoRef} className="vl-heromedia__video" muted loop playsInline preload="auto" disablePictureInPicture />
         <div className="vl-heromedia__scrim" />
       </div>

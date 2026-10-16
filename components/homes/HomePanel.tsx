@@ -89,7 +89,7 @@ function PanelBody({ id }: { id: HomeId }) {
       </div>
       <figure className="vl-arch-img" data-r="rise" data-r-at="0.3">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={h.image} alt={`${h.name} — architectural render`} decoding="async" />
+        <img src={h.image} alt={`${h.name} — architectural render`} loading="lazy" decoding="async" />
       </figure>
       <button type="button" className="vl-panel__more" aria-expanded={open} aria-controls={`vl-specs-${id}`} onClick={() => setOpen((o) => !o)} data-r="fade">
         {UI.homes.specs}
