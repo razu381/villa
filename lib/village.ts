@@ -274,10 +274,13 @@ export const PATHS: [number, number][][] = [
   [[-70, -24.2], [56, -24.2]],
   [[-70, -4.6], [56, -4.6]],
   [[-70, 15.8], [56, 15.8]],
-  // North–south links (meandering between blocks).
-  [[-32.2, -42], [-32.2, -24.2], [-23.2, -24.2], [-23.2, -4.6], [-12, -4.6], [-12, 15.8], [-12, 40]],
+  // North–south links (meandering between blocks). Row C is crossed in the gap
+  // east of its last house (x −4), never through a house; the east link stops at
+  // the communal pool and resumes past it.
+  [[-32.2, -42], [-32.2, -24.2], [-23.2, -24.2], [-23.2, -4.6], [-4, -4.6], [-4, 15.8], [-12, 15.8], [-12, 40]],
   [[-0.2, -42], [-0.2, -24.2], [2.2, -24.2], [2.2, -4.6]],
-  [[33, -24.2], [33, 15.8], [33, 40]],
+  [[33, -24.2], [33, -4.6]],
+  [[33, 15.8], [33, 40]],
 ];
 export const PATH_WIDTH = 3.2;
 

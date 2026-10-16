@@ -300,7 +300,7 @@ Each item: **where** → **what to do** → **done when**. Review suggestions ar
   - Dispose `skyMat` in `canvas/Day.tsx`.
   - The `THREE.Clock` deprecation warning comes from R3F on three r186; accept it or track R3F.
 - **Portrait keys** are chosen once at load. Re-pick them on orientation change.
-- **Layout data (`lib/village.ts`):**
+- ✅ *(done 2026-10-16: the x −12 link now crosses row C at x −4, in the gap between C-1-2 and the pavilion, and rejoins x −12 along the row-D lane; the x 33 link stops at the communal pool and resumes past it. No lane centreline crosses a house, the pool or the pavilion (checked numerically); journey re-checked 1.8–6.6. The tree keep-out already applies everywhere: every renderer, the AO texture included, reads `LANDSCAPE_TREES`)* **Layout data (`lib/village.ts`):**
   - The `PATHS` link at x = −12 runs through house C-1-2; the link at x = 33 crosses the communal pool. The section module works around this, but the landscape paths and lights may still show the overlap.
   - Exclude the entrance-stair and portal-apron keep-out from `TREES` at the source.
 - **Landscape finish:**
