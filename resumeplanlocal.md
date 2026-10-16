@@ -125,6 +125,12 @@ Each item: **where** → **what to do** → **done when**. Review suggestions ar
 > The pitch runs on a **Windows laptop**. Chrome and Edge there go through ANGLE → Direct3D 11, where shader compilation is the slowest of any platform, and the GPU is often an Intel or AMD integrated chip. So 3.1 (warm-up) and 3.2/3.3 (tiering and adaptive quality) come first.
 > Step zero: open `chrome://gpu` on the pitch laptop and note the GPU string, and check whether it switches to a discrete GPU on battery vs mains power. Present on mains power.
 
+> **Baseline (2026-10-16, after `307df3d`), the reference for 3.1–3.3.** Dev machine, not the pitch laptop: Linux, Intel UHD Graphics CML GT2 (CometLake-U, 24 EU, a weak iGPU; Iris Xe is roughly 3–4× faster), Chrome 154, `ANGLE (Intel, Mesa Intel(R) UHD Graphics (CML GT2), OpenGL 4.6)`. Prod build, `node scripts/perf.mjs` (1536×864 @1.25 = 1920×1080 canvas, tier high, 60 s scroll):
+> - **12.5 fps average** (median 83 ms, p95 133 ms, max 567 ms). By band: 23 fps behind the hero film (t < 1, where the GPU should idle), 22 at the contours, 13 as the houses rise (t 2.0–2.5, max 567 ms), 8–10 from the sweep to dusk, 8 in the homes chapter, 12.5 at night.
+> - **GPU-bound.** The main thread is 5–15% busy (4–17 ms CPU per frame).
+> - **Pixel count isn't the main cost.** DPR 1.0 gives 16.5 fps. `?tier=low` (no post, no shadows) gives 10–15 fps in the heavy chapters, with a 2.6 s stall at t ≈ 2.5.
+> - **Programs compile on first sight:** 12 → 15 at t 1.48, 17 → 35 at 2.11 (the 567 ms stall), 40 → 44 at 3.59, 44 → 48 at 3.85, 49 → 52 at 4.6, 52 → 55 at 5.02, 56 at 6.04. `--info` at 6.6: ~100 draw calls, ~720k triangles.
+
 ✅ **3.0 Black flash in the section dive (t ≈ 4.28–4.32).** *(found in §2)*
 - *Where:* some scene shader emits NaN/Inf in the descending camera pose while the section plane sweeps in; the bloom mip pyramid (`canvas/Post.tsx`, always on) smears it into a near-black frame.
 - *Seen:* prod build, real GPU: intermittent black frames on arrival by scroll and on a cold `?t=4.3`. Tier low (no composer) renders fine; t 4.25 and 4.35 are fine.
