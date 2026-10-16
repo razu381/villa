@@ -34,8 +34,10 @@ function validate(v: VisitRequest, days: VisitDay[]): Errors {
 /**
  * The private-visit request (no backend: a calm ~900 ms pause), replaced by the
  * invitation card. `?invite=demo` shows the card pre-filled for screenshots.
+ * `preset` chooses a home from outside (the classic site's villas); `at` makes
+ * the same choice count again.
  */
-export function Invitation() {
+export function Invitation({ preset }: { preset?: { home: VisitHome; at: number } } = {}) {
   const [status, setStatus] = useState<Status>("idle");
   const [values, setValues] = useState<VisitRequest>({ name: "", email: "", phone: "", home: "any", date: "", time: "golden" });
   const [errors, setErrors] = useState<Errors>({});
@@ -56,6 +58,13 @@ export function Invitation() {
     }
     return () => window.clearTimeout(timer.current);
   }, []);
+
+  useEffect(() => {
+    if (!preset) return;
+    setStatus((s) => (s === "sent" ? "idle" : s));
+    setValues((v) => ({ ...v, home: preset.home }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preset?.at]);
 
   const set = <K extends keyof VisitRequest>(k: K, v: VisitRequest[K]) => {
     const next = { ...values, [k]: v };

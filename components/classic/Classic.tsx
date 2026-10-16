@@ -12,6 +12,8 @@ import { VillageHeart } from "./VillageHeart";
 import { Villas } from "./Villas";
 import { Location } from "./Location";
 import { Gallery } from "./Gallery";
+import { Visit } from "./Visit";
+import { ClassicFooter } from "./ClassicFooter";
 
 /**
  * The classic site: the client's own layout (concept, village heart, villas,
@@ -62,7 +64,9 @@ export default function Classic() {
         <Villas />
         <Location />
         <Gallery />
+        <Visit />
       </main>
+      <ClassicFooter />
     </div>
   );
 }
