@@ -39,7 +39,7 @@ export function Terrain() {
   }, -50);
   return (
     <group>
-      <mesh geometry={geo} material={mat} receiveShadow />
+      <mesh name="terrain" geometry={geo} material={mat} receiveShadow />
       <mesh rotation-x={-Math.PI / 2} position-y={TABLE_Y} material={tableMat} renderOrder={-10}>
         <planeGeometry args={[6000, 6000]} />
       </mesh>

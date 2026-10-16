@@ -293,8 +293,11 @@ export function buildWalls() {
   R.quad([[rx0 + 0.6, rT - 0.02, zBack + 0.5], [rx1 - 0.6, rT - 0.02, zBack + 0.5], [rx1 - 0.6, rT - 0.02, zBack + 0.8], [rx0 + 0.6, rT - 0.02, zBack + 0.8]], [0, -1, 0], [[0, 0], [1, 0], [1, 1], [0, 1]], KIND.light);
 
   /* ------------------------------------------------------ terrace walls */
-  const xIn0 = PODIUM.minX - BASTION.inner - 0.05;
-  const xIn1 = PODIUM.maxX + BASTION.inner + 0.05;
+  // Run each wall on through the bastion (to just inside its outer face): where the
+  // bastion's top steps down at the terrace step, a wall stopping at its inner face
+  // left a narrow slot whose inside faces read as dark poché on the white model.
+  const xIn0 = PODIUM.minX - BASTION.outer + 0.05;
+  const xIn1 = PODIUM.maxX + BASTION.outer - 0.05;
   for (const s of STEPS) {
     const gaps = CROSSINGS.filter((c) => Math.abs(c.stepZ - s.z) < 1e-3)
       .map((c) => [c.x - PATH_WIDTH / 2, c.x + PATH_WIDTH / 2] as [number, number])

@@ -37,8 +37,8 @@ export function Walls() {
   });
   return (
     <group ref={group} visible={false}>
-      <mesh geometry={geo.stone} material={stone} customDepthMaterial={depth} castShadow receiveShadow />
-      <mesh geometry={geo.recess} material={recess} receiveShadow />
+      <mesh name="landscape-stone" geometry={geo.stone} material={stone} customDepthMaterial={depth} castShadow receiveShadow />
+      <mesh name="landscape-recess" geometry={geo.recess} material={recess} receiveShadow />
       <mesh name="landscape-portal-back" geometry={geo.recessBack} material={recess} receiveShadow />
     </group>
   );
