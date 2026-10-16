@@ -122,6 +122,8 @@ Each item: **where** → **what to do** → **done when**. Review suggestions ar
 
 ### P0: must do before the pitch
 
+> **Scope (decided 2026-10-16): desktop only.** This is a pitch demo for the Windows laptop. Mobile and tablet optimization is deferred (⏸) until the client asks for it: 3.8, 3.20, 3.21, P2 mid-tier geometry, and the phone parts of other items (e.g. 3.3's phone fps). Don't spend time on them, and don't break the mobile layout either.
+
 > The pitch runs on a **Windows laptop**. Chrome and Edge there go through ANGLE → Direct3D 11, where shader compilation is the slowest of any platform, and the GPU is often an Intel or AMD integrated chip. So 3.1 (warm-up) and 3.2/3.3 (tiering and adaptive quality) come first.
 > Step zero: open `chrome://gpu` on the pitch laptop and note the GPU string, and check whether it switches to a discrete GPU on battery vs mains power. Present on mains power.
 
@@ -191,7 +193,7 @@ Each item: **where** → **what to do** → **done when**. Review suggestions ar
   - **Pause behind the film:** add a FrameGate. Use `setFrameloop('never')` while `ready && heroFade < 0.02`, back to `'always'` when it rises. Optionally drop to 30 fps when idle.
   - **Shadows:** set `gl.shadowMap.autoUpdate = false` and set `needsUpdate` only while the camera, sun, stages, cars, people or explode are changing.
   - **Bloom:** `resolutionScale={0.5}` on high. On mid, drop it or use 4 levels at half resolution.
-- *Done when:* steady 60 fps on the pitch laptop at the native display, ≥30 fps on a mid phone, and the GPU is idle during the hero film.
+- *Done when:* steady 60 fps on the pitch laptop at the native display, and the GPU is idle during the hero film. (≥30 fps on a mid phone: ⏸ deferred, mobile.)
 
 **3.4 Explore mode shouldn't freeze scrolling.**
 - *Where:* `components/chapters/HomesChapter.tsx useExploreGuard`, `components/homes/explore.ts`.
@@ -216,7 +218,7 @@ Each item: **where** → **what to do** → **done when**. Review suggestions ar
 - *Problem:* two grains stack over the 3D, flickering at different rates.
 - *Do:* hide the CSS grain once the 3D is on screen with `html[data-phase]:not([data-phase="hero"]) .vl-grain { display:none }`, or keep it on the hero film only.
 
-**3.8 Mobile match cut (t 0.85–1.05).**
+⏸ *Deferred (mobile).* **3.8 Mobile match cut (t 0.85–1.05).**
 - *Where:* the line-drawing overlay in `components/HeroMedia.tsx` and the portrait setting of the ~t 1.0 key in `lib/camera.ts`.
 - *Problem:* on phones, t 0.9 is a dense, noisy edge-traced map, then t 1.0 jumps to a small slab at a different scale, so the "film becomes the drawing" moment doesn't read.
 - *Do:* give the ~1.0 key a portrait zoom/lift so the slab fills about 80% of the width at the film crop's orientation. On compact screens, thin the overlay (keep only major outlines) and fade it out by 0.93.
@@ -236,8 +238,8 @@ Each item: **where** → **what to do** → **done when**. Review suggestions ar
 | 3.17 | Stray dark hairline from the V4 roof-terrace corner to the lawn (t 3.9) | houses line layer / balustrade edges | Check the line layer is fully faded after the sweep and the glass-rail edge geometry is bounded. Inspect with `?cam=`. |
 | 3.18 | Section text sits over re-emerging row-D gardens (t 4.82–4.96) | `lib/timeline.ts` section close vs `CarsChapter` text timing | Close the section a little later, or fade the chapter text before 4.82. |
 | 3.19 | The cars legend isn't tied to places in the picture | `components/chapters/CarsChapter.tsx` + `canvas/section/anchors.ts` (`SECTION_ANCHORS` already exported, not used by the DOM) | Draw hairline leaders from each legend marker to its anchor `{x, y, visible}`. Playground is only visible from ~4.9 (row D is cut); fade its leader in then. |
-| 3.20 | Mobile tap targets too small | `components/homes/HomePanel.tsx`, `globals.css` compact block (~l.2210) | V3/V4 switch ≥ 44×44 px hit area; submit 48 px; `.vl-panel__more` ≥ 44 px; header pill hit area via `::after { inset:-4px 0 }`. |
-| 3.21 | "Back to the village" hard to read and tap on phones | `.vl-back` | Soft limestone pill on compact screens: `color-mix(in srgb, var(--scrim) 72%, transparent)`, blur 6px, padding 8×14, radius 999px. |
+| 3.20 | ⏸ *Deferred (mobile).* Mobile tap targets too small | `components/homes/HomePanel.tsx`, `globals.css` compact block (~l.2210) | V3/V4 switch ≥ 44×44 px hit area; submit 48 px; `.vl-panel__more` ≥ 44 px; header pill hit area via `::after { inset:-4px 0 }`. |
+| 3.21 | ⏸ *Deferred (mobile).* "Back to the village" hard to read and tap on phones | `.vl-back` | Soft limestone pill on compact screens: `color-mix(in srgb, var(--scrim) 72%, transparent)`, blur 6px, padding 8×14, radius 999px. |
 | 3.22 | "EN" looks like a control but does nothing | `components/chrome/Header.tsx` | Remove it, or render it as plain soft text. |
 | 3.23 | Night palette and stars | `lib/day.ts`, `canvas/Day.tsx` | Part 1 moved the sky toward ink-blue and added stars. Verified in §2: they **don't** read. The fogged ground plane hides all sky below the horizon, so stars can only appear in the thin true-sky strip at the top of the 6.3/6.8 frames. Pitch the 6.8 key up ~4° (or raise star density/size in the strip). |
 
@@ -249,7 +251,7 @@ Each item: **where** → **what to do** → **done when**. Review suggestions ar
 - **t 3.0 composition:** empty haze across the top 25% and cut-off foam trees. Drop the camera ~10 m, raise the target ~4 m.
 - **Invitation card:** the embossed arch crosses the lettering. Shrink it to frame only the monogram and date, or put it behind a knockout (`components/night/InvitationCard.tsx`).
 - **Shadow box size:** the fitted box changes size every frame and edges can crawl during scroll. Quantise the extents to powers of 1.25 with ~10% hysteresis (`canvas/Day.tsx fitShadow`).
-- **Mid-tier geometry:**
+- ⏸ *Deferred (mobile).* **Mid-tier geometry:**
   - Phones draw ~684–720k triangles. Target under 400k.
   - Draw half the planting instances.
   - No shadows from the smallest trees.
