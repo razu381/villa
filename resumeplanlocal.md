@@ -377,6 +377,7 @@ Also check:
   - Set the power plan to Best performance.
   - Set browser zoom to 100%.
   - Present in full screen (F11), so the svh-based chapter heights match what was tested.
+  - Present from a browser profile with **no extensions** (a fresh Chrome/Edge profile or a Guest window). Extensions that inject into the page break React hydration: on the dev machine a video speed controller (`PlayBackRatePanelYPSC` beside the hero film) and a form-filler (`data-sharkid` on the visit form) did. React then rebuilds the page on the client, which restarts the hero film's load and adds work at the worst moment. Clean Chrome shows no hydration errors (checked 2026-10-16). The only console warning left is `THREE.Clock … deprecated`, from React Three Fiber 9.8.2 itself (the latest stable); it goes away with R3F 10 and is harmless.
 - **Copy check with the client:** specs (V3 +250 m², 3 bed/3 bath…; V4 +400 m², coming 2028), tagline, partners (FCM, BPI, Porta da Frente), and "Artistic interpretation. Not to scale." in the footer.
 - **Assets that would raise quality** (ask the client):
   - the film master (the current loop is cut from the compressed web video)
