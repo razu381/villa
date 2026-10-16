@@ -276,8 +276,8 @@ Each item: **where** → **what to do** → **done when**. Review suggestions ar
 
 ### P2: nice to have
 
-- **Garage elevation (t 4.5):** north and south car rows overlap like a traffic jam. Offset one row by half a bay (`canvas/section/cars.ts`).
-- **Section base:** the strata stop in a hard line, then haze. Fade them into the fog over the last ~1.5 m, or add a crisp plinth base line.
+- ✅ *(already handled, checked 2026-10-16: `PARKED` keeps the rows off the same x; at 4.45–4.7 they read as one car per bay)* **Garage elevation (t 4.5):** north and south car rows overlap like a traffic jam. Offset one row by half a bay (`canvas/section/cars.ts`).
+- ✅ *(checked 2026-10-16: at 4.55 the cut already ends in a crisp edge, the plinth's shadow line on the table; an extra darkening band made no visible difference, so no change)* **Section base:** the strata stop in a hard line, then haze. Fade them into the fog over the last ~1.5 m, or add a crisp plinth base line.
 - **Explore foreground smear:** near-camera planting smears next to the sun control. Cull planting within about 8 m of the camera in explore.
 - **t 3.0 composition:** empty haze across the top 25% and cut-off foam trees. Drop the camera ~10 m, raise the target ~4 m.
 - **Invitation card:** the embossed arch crosses the lettering. Shrink it to frame only the monogram and date, or put it behind a knockout (`components/night/InvitationCard.tsx`).
