@@ -4,7 +4,7 @@
 
 export const UI = {
   skip: "Skip to the homes",
-  nav: { homes: "The homes", visit: "Private visit", lang: "EN" },
+  nav: { homes: "The homes", visit: "Private visit" },
   sound: { on: "Sound on", off: "Sound off" },
   arc: {
     index: "Chapters",

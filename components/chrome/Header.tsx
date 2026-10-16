@@ -22,7 +22,8 @@ export function goToHomes() {
 
 /**
  * Small wordmark tinted to the scene (olive by day, limestone over film / night),
- * minimal nav, the only solid button, the sound waveform, the language.
+ * minimal nav, the only solid button, the sound waveform. (No language label
+ * until there is a second language to switch to: Phase 2.)
  */
 export function Header() {
   return (
@@ -59,9 +60,6 @@ export function Header() {
           {UI.nav.visit}
         </a>
         <SoundToggle />
-        <span className="vl-header__lang" title="English">
-          {UI.nav.lang}
-        </span>
       </nav>
     </header>
   );
