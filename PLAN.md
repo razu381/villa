@@ -156,7 +156,7 @@ Bouncy easing · auto‑playing sound · loaders over 3s · carousel arrows · s
 
 | Moment | Technique |
 |---|---|
-| **Hero → 3D match cut** | Edit a 10–15s loop from the film that ends on an aerial. The 3D camera's first frame is composed to match it, and a 600ms crossfade with a slight blur hides the seam. The film also hides the 3D loading time. |
+| **Hero → 3D match cut** | Edit a seamless loop of at least 30 s from the film's exteriors (34 s: windmill → village aerial → lanes, garden, pool). The 3D camera's first frame is composed to match it, and a 600ms crossfade with a slight blur hides the seam. The film also hides the 3D loading time. |
 | **The village builds itself** | One `uBuild` value per stage drives a custom shader layered on the standard material. (a) **Contours:** lines generated from terrain height in the shader. (b) **Line drawing:** house edges drawn progressively with animated dashed lines. (c) **Rise:** each house's height scales up from the ground with a per‑house delay. (d) **Material sweep:** a soft world‑space front with a noisy edge and a thin glowing seam; white on one side, materials on the other. (e) **Life:** foliage colour and wind fade in, water fills. |
 | **Cars below** | An animated cutting plane slices the model, with a strata‑shaded cap filling the cut face. The garage is a simple void. Instanced cars follow a curved path down the ramp. |
 | **Two ways to live** | Each home is split into floors in Blender. Exploding them is a GSAP timeline (roof lifts, floors part), and the floor plan is an SVG drawn onto each floor. Specs are HTML. |
@@ -195,7 +195,7 @@ app/layout.tsx
 | Reduced motion | No scroll‑scrubbed camera. Chapters crossfade between key frames. |
 
 - **Frame rate:** 60 fps on recent laptops, ≥ 30 fps on an iPhone 13 or mid‑range Android.
-- **Download:** hero loop ≤ 4 MB desktop / ≤ 2 MB mobile; whole demo ≤ 10 MB.
+- **Download:** hero loop < 8 MB desktop / < 3.5 MB mobile (34 s, lengthened on request; it streams, so playback starts at once); the rest of the demo stays light.
 - **iOS Safari memory:** one persistent canvas holds every loaded asset in GPU memory, and Safari can kill the 3D context. Use KTX2 textures, dispose of chapters far behind, and recover gracefully if the context is lost.
 - **Idle cost:** render only when something moves. Pause when HTML covers the canvas or the tab is hidden.
 
@@ -223,7 +223,7 @@ app/layout.tsx
 
 **If time runs short, cut in this order:** the line‑drawing stage (fade the model in instead) → sound → tilt‑shift. Never cut polish on ①, ② or ③.
 
-**In the pitch:** open it on *their* phone, with sound on. Then show the contrast: 132 MB hero → ~4 MB, no sideways scrolling, a real enquiry form.
+**In the pitch:** open it on *their* phone, with sound on. Then show the contrast: 132 MB hero → under 8 MB, no sideways scrolling, a real enquiry form.
 
 ---
 

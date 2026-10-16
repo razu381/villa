@@ -23,6 +23,7 @@ Creative intent: `PLAN.md`. Run/debug basics: `README.md`.
 - Section ("Cars below. Life above.")
 - Featured homes ("Two ways to live")
 - A director pass
+- Hero film lengthened to a **34 s seamless loop** (2026-10-16, on request: at least 30 s). Exteriors only, cut from the client's film `PHIDIAS_Vila-Leku-Filme-Alterado-1.mp4`: the windmill (6.4–12.0 s), dissolve to the village aerial, then the lanes, wall shadows, garden, loungers and pool (17.75–48.2 s); a 1 s crossfade joins the end to the start. Skipped: the shots with the burned-in wordmark and map text. VP9 7.7 MB / H.264 9.5 MB desktop (1600×900), 3.4 / 4.3 MB mobile. The poster is the loop's first frame.
 
 The full story works end to end: hero film → match cut → contours → podium → line drawing → white model → material sweep → section with cars → exploded homes with hold the sun → night invitation.
 
@@ -263,7 +264,7 @@ Each item: **where** → **what to do** → **done when**. Review suggestions ar
   - Mount Section and Homes in `requestIdleCallback` after ready.
   - Optionally move geometry builders into a Worker.
 - **Dead code:** `ScrollTrigger` is imported, registered and refreshed on every resize, but never used (`components/SmoothScroll.tsx`). Remove it. Also skip the re-measure when only `innerHeight` changes on touch devices (iOS toolbar).
-- **First paint weight:** re-encode `hero-poster.jpg` (558 KB), `aerial-village.jpg` and `aerial-village-drawing.jpg` as AVIF/WebP with a `<picture>` JPEG fallback (poster ~150 KB). Add `loading="lazy"` to the HomePanel image and `fetchPriority="low"` to the aerials.
+- **First paint weight:** re-encode `hero-poster.jpg` (484 KB), `aerial-village.jpg` and `aerial-village-drawing.jpg` as AVIF/WebP with a `<picture>` JPEG fallback (poster ~150 KB). Add `loading="lazy"` to the HomePanel image and `fetchPriority="low"` to the aerials.
 - **Hygiene:**
   - `stagesFromT(t, out)` writing into a scratch object (called 3+ times per frame).
   - Dispose `skyMat` in `canvas/Day.tsx`.
@@ -343,7 +344,7 @@ Also check:
   - Normalidad web-font licence (currently Instrument Sans/Serif stand-ins)
   - soundtrack rights (the ambient bed is cut from their film)
 - **Talking points:**
-  - Their current site's hero is 132 MB; ours is about 3 MB.
+  - Their current site's hero is 132 MB; ours is a 34 s loop at under 8 MB that starts playing at once (it streams).
   - No horizontal overflow on phones.
   - A real enquiry flow.
   - Offer the two tiers from the earlier discussion: an Elementor upgrade with the 3D component dropped in, or the full Next.js flagship.
