@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { CONCEPT } from "@/lib/content";
-import { PHOTOS } from "@/lib/classic-content";
+import { CLASSIC, PHOTOS, PILLAR_PHOTOS } from "@/lib/classic-content";
 import { useInViewReveal } from "@/lib/ui-reveal";
 import { ARCH_PATH } from "../ui/Brand";
 import { gsap, stillMode } from "./env";
@@ -75,30 +75,17 @@ function ArchLine({ className }: { className: string }) {
 
 /**
  * Concept: the client's "modern Castro" (replacing "A contemporary stronghold"),
- * then the four pillars: their names in a frosted arch over the village on its
- * hill, their words on the stone band beneath.
+ * then the four pillars on the stone band, each with the photo that shows it
+ * (after Anuc Home's numbered services): children's shadows on a stone wall,
+ * the limestone walls, the solar roofs, cork and limestone up close.
  */
 export function Concept() {
   const intro = useRef<HTMLDivElement>(null);
   const frame = useRef<HTMLDivElement>(null);
-  const band = useRef<HTMLDivElement>(null);
   const pillars = useRef<HTMLDivElement>(null);
   useInViewReveal(intro);
   useInViewReveal(frame, { delay: 0.2 });
-  useInViewReveal(band, { margin: "-25%" });
-  useInViewReveal(pillars);
-
-  // The window drifts slightly slower than the photo: depth without a parallax show.
-  const windowRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const el = windowRef.current;
-    if (!el || stillMode()) return;
-    const tw = gsap.fromTo(el, { yPercent: 8 }, { yPercent: -8, ease: "none", scrollTrigger: { trigger: el.parentElement, start: "top bottom", end: "bottom top", scrub: true } });
-    return () => {
-      tw.scrollTrigger?.kill();
-      tw.kill();
-    };
-  }, []);
+  useInViewReveal(pillars, { margin: "-18%" });
 
   const [lead, ...rest] = CONCEPT.title.split(": ");
   return (
@@ -122,26 +109,19 @@ export function Concept() {
         </div>
       </div>
 
-      <div className="vc-concept__band">
-        <Pic photo={PHOTOS.aerialPhoto} sizes="100vw" className="vc-cover" />
-        <div ref={windowRef} className="vc-concept__window-wrap">
-          <div ref={band} className="vc-concept__window">
-            <ul>
-              {CONCEPT.pillars.map((p) => (
-                <li key={p.title} data-r="lines">
-                  {p.title}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </div>
-
       <div ref={pillars} className="vc-pillars">
+        <p className="vc-eyebrow vc-wrap" data-r="fade">
+          <span>—</span>
+          {CLASSIC.pillars}
+        </p>
         <ol className="vc-pillars__list vc-wrap">
           {CONCEPT.pillars.map((p, i) => (
-            <li key={p.title} className="vc-pillar">
-              <span className="vc-pillar__rule" data-r="rule" />
+            <li key={p.title} className="vc-pillar" style={{ "--pos": PILLAR_PHOTOS[i].pos } as React.CSSProperties}>
+              <div className="vc-pillar__img" data-r="rise">
+                <span className="vc-pillar__zoom">
+                  <Pic photo={PILLAR_PHOTOS[i].photo} sizes="(max-width: 820px) 100vw, 24vw" />
+                </span>
+              </div>
               <span className="vc-pillar__n" data-r="fade">
                 {String(i + 1).padStart(2, "0")}
               </span>

@@ -59,6 +59,7 @@ export const CLASSIC = {
   menu: "Menu",
   top: "Vila Leku — back to the top",
   scroll: "Scroll",
+  pillars: "Four pillars",
   villageHeart: { eyebrow: "Village Heart", title: "A village shaped around life." },
   villas: {
     eyebrow: "Villas",
@@ -117,6 +118,17 @@ export const whatsappLink = (home: string) =>
   `https://wa.me/${ADVISOR.whatsapp}?text=${encodeURIComponent(`Hello, I'd like to arrange a private visit to the ${home} at Vila Leku.`)}`;
 
 export const MAPS_LINK = "https://www.google.com/maps/search/?api=1&query=Leceia%2C%20Oeiras";
+
+/**
+ * The four pillars (lib/content.ts CONCEPT order), each with the photo that
+ * shows it, cropped close (`pos` is the object-position).
+ */
+export const PILLAR_PHOTOS: { photo: Photo; pos: string }[] = [
+  { photo: PHOTOS.shadows, pos: "42% 50%" },
+  { photo: PHOTOS.stoneWall, pos: "36% 50%" },
+  { photo: PHOTOS.aerialRender, pos: "36% 62%" },
+  { photo: PHOTOS.corkFacade, pos: "74% 38%" },
+];
 
 /** Village Heart: one photo per amenity (lib/content.ts AMENITIES order). */
 export const AMENITY_PHOTOS: Photo[] = [PHOTOS.corkFacade, PHOTOS.naturalPool, PHOTOS.fitnessLounge, PHOTOS.cowork];
