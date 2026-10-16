@@ -42,8 +42,9 @@ export function buildAoTexture() {
     }
   };
   for (const t of LANDSCAPE_TREES) {
-    const width = t.kind === "tall" ? t.height * 0.24 : t.kind === "olive" ? t.height * 1.0 : t.height * 0.78;
-    splat(tree, t.x, t.z, width * 0.5 + 0.6, t.kind === "tall" ? 0.42 : 0.34);
+    const width = t.height * (t.kind === "cypress" ? 0.24 : t.kind === "pine" ? 0.8 : 1.0);
+    // the pine's crown is high: a lighter shade under it
+    splat(tree, t.x, t.z, width * 0.5 + 0.6, t.kind === "cypress" ? 0.42 : t.kind === "pine" ? 0.28 : 0.34);
   }
   for (const s of SHRUBS) splat(shrub, s.x, s.z, s.s * 1.1 + 0.3, 0.3);
   for (const s of BEDS) splat(shrub, s.x, s.z, s.s * 0.9 + 0.25, 0.22);

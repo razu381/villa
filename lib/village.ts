@@ -286,7 +286,8 @@ export const PATH_WIDTH = 3.2;
 
 /* ------------------------------------------------------------------ trees */
 
-export type TreeKind = "round" | "tall" | "olive";
+/** Portuguese trees: stone (umbrella) pine, Mediterranean cypress, olive, cork oak. */
+export type TreeKind = "pine" | "cypress" | "olive" | "cork";
 export interface TreeSpec {
   x: number;
   z: number;
@@ -317,8 +318,13 @@ export const TREES: TreeSpec[] = (() => {
     if (Math.abs(x - -59) < 8 && z > PODIUM.maxZ - 2 && z < STREET.z) continue; // driveway
     const density = 0.25 + 0.75 * Math.max(smoothstep(-30, -75, z), smoothstep(50, 100, x), 0.35 * (fbm(x / 30, z / 30, 3) * 0.5 + 0.5));
     if (rand() > density) continue;
-    const kind: TreeKind = rand() < 0.22 ? "tall" : rand() < 0.3 ? "olive" : "round";
-    out.push({ x, z, y: heightAt(x, z), height: kind === "tall" ? 9 + rand() * 6 : 4.5 + rand() * 4, kind, delay: rand(), seed: Math.floor(rand() * 1e6) });
+    const k = rand() < 0.22 ? "cypress" : rand() < 0.3 ? "olive" : "broad";
+    const height = k === "cypress" ? 9 + rand() * 6 : 4.5 + rand() * 4;
+    const delay = rand();
+    const seed = Math.floor(rand() * 1e6);
+    // stone pines, a few cork oaks among them (picked from the seed, so every tree keeps its place)
+    const kind: TreeKind = k !== "broad" ? k : seed % 100 < 12 ? "cork" : "pine";
+    out.push({ x, z, y: heightAt(x, z), height: kind === "pine" ? height * 1.2 : height, kind, delay, seed });
   }
   // Garden trees inside the village.
   tries = 0;
@@ -335,8 +341,12 @@ export const TREES: TreeSpec[] = (() => {
     const pv = VILLAGE_HEART.pavilion;
     if (Math.abs(x - pv.x) < pv.width / 2 + 2 && Math.abs(z - pv.z) < pv.depth / 2 + 2) continue;
     if (VILLA_POOLS.some((p) => Math.abs(x - p.x) < p.width / 2 + 1.5 && Math.abs(z - p.z) < p.depth / 2 + 1.5)) continue;
-    const kind: TreeKind = rand() < 0.45 ? "olive" : "round";
-    out.push({ x, z, y: heightAt(x, z), height: 3.5 + rand() * 3, kind, delay: rand(), seed: Math.floor(rand() * 1e6) });
+    const k = rand() < 0.45 ? "olive" : "broad";
+    const height = 3.5 + rand() * 3;
+    const delay = rand();
+    const seed = Math.floor(rand() * 1e6);
+    const kind: TreeKind = k !== "broad" ? k : seed % 100 < 40 ? "cork" : "pine";
+    out.push({ x, z, y: heightAt(x, z), height, kind, delay, seed });
     inside++;
   }
   return out;

@@ -147,28 +147,33 @@ class TreeBuilder {
   }
 }
 
+/** Per-kind seeds: the crown layout, and the lumps on each blob. */
+const SEED: Record<TreeKind, [number, number]> = { pine: [11, 100], cypress: [23, 200], olive: [37, 300], cork: [53, 400] };
+
 /** Build the unit geometry for a tree kind. */
 export function buildTreeGeometry(kind: TreeKind) {
   const b = new TreeBuilder();
-  const rand = mulberry32(kind === "round" ? 11 : kind === "tall" ? 23 : 37);
+  const rand = mulberry32(SEED[kind][0]);
   const blobs: Blob[] = [];
   let env: Blob;
   let jitter: number;
-  if (kind === "round") {
-    // holm oak / stone pine: a crown of clustered domes
-    env = { c: [0, 0.62, 0], r: [0.38, 0.36, 0.38] };
-    jitter = 0.11;
-    b.trunk([0, -0.05, 0], [0.01, 0.46, 0.0], 0.025, 0.016, 6);
-    b.trunk([0.0, 0.32, 0], [0.13, 0.56, 0.05], 0.013, 0.008, 5);
-    blobs.push({ c: [0.02, 0.76, -0.01], r: [0.24, 0.2, 0.24] });
-    for (let i = 0; i < 4; i++) {
-      const a = (i / 4) * Math.PI * 2 + rand() * 0.7;
-      const rr = 0.19 + rand() * 0.05;
-      const out = 0.18 + rand() * 0.05;
-      blobs.push({ c: [Math.cos(a) * out, 0.52 + rand() * 0.16, Math.sin(a) * out], r: [rr, rr * 0.88, rr] });
+  if (kind === "pine") {
+    // stone (umbrella) pine: a bare, leaning trunk forking under a broad, flat-topped crown
+    env = { c: [0.03, 0.86, 0.02], r: [0.44, 0.12, 0.44] };
+    jitter = 0.09;
+    b.trunk([0, -0.05, 0], [0.05, 0.6, 0.02], 0.034, 0.024, 6);
+    b.trunk([0.05, 0.58, 0.02], [0.22, 0.8, 0.07], 0.018, 0.011, 5);
+    b.trunk([0.05, 0.58, 0.02], [-0.13, 0.8, -0.08], 0.017, 0.011, 5);
+    b.trunk([0.05, 0.6, 0.02], [0.03, 0.82, 0.21], 0.015, 0.01, 5);
+    blobs.push({ c: [0.03, 0.89, 0.02], r: [0.26, 0.085, 0.26] });
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2 + rand() * 0.5;
+      const out = 0.22 + rand() * 0.06;
+      const rr = 0.15 + rand() * 0.04;
+      blobs.push({ c: [0.03 + Math.cos(a) * out, 0.83 + rand() * 0.04, 0.02 + Math.sin(a) * out], r: [rr, rr * 0.48, rr] });
     }
-  } else if (kind === "tall") {
-    // cypress: a slim flame of stacked lobes
+  } else if (kind === "cypress") {
+    // Mediterranean cypress: a slim flame of stacked lobes
     env = { c: [0, 0.55, 0], r: [0.115, 0.48, 0.115] };
     jitter = 0.07;
     b.trunk([0, -0.05, 0], [0, 0.18, 0], 0.022, 0.016, 5);
@@ -179,19 +184,36 @@ export function buildTreeGeometry(kind: TreeKind) {
       const rr = 0.11 * (1 - t * 0.5) * (0.92 + rand() * 0.12);
       blobs.push({ c: [(rand() - 0.5) * 0.025, y, (rand() - 0.5) * 0.025], r: [rr, rr * 2.15, rr] });
     }
-  } else {
-    // olive: wide, airy, silver — two leaning stems
-    env = { c: [0, 0.62, 0], r: [0.47, 0.34, 0.47] };
+  } else if (kind === "olive") {
+    // olive: a short gnarled trunk splitting low into twisting stems, an airy silver crown of separate tufts
+    env = { c: [0, 0.6, 0], r: [0.48, 0.33, 0.48] };
     jitter = 0.13;
-    b.trunk([0, -0.05, 0], [0.11, 0.42, 0.04], 0.036, 0.022, 6);
-    b.trunk([0.02, 0.1, 0], [-0.13, 0.44, -0.06], 0.03, 0.02, 5);
-    for (let i = 0; i < 4; i++) {
-      const a = (i / 4) * Math.PI * 2 + rand() * 0.8;
-      const out = 0.23 + rand() * 0.08;
-      const rr = 0.19 + rand() * 0.05;
-      blobs.push({ c: [Math.cos(a) * out, 0.54 + rand() * 0.12, Math.sin(a) * out], r: [rr, rr * 0.82, rr] });
+    b.trunk([0, -0.05, 0], [0.05, 0.2, 0.02], 0.046, 0.04, 7);
+    b.trunk([0.05, 0.18, 0.02], [0.2, 0.44, 0.08], 0.028, 0.017, 5);
+    b.trunk([0.05, 0.18, 0.02], [-0.15, 0.46, -0.02], 0.026, 0.016, 5);
+    b.trunk([0.04, 0.19, 0.02], [0.02, 0.5, -0.19], 0.023, 0.014, 5);
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2 + rand() * 0.7;
+      const out = 0.26 + rand() * 0.08;
+      const rr = 0.15 + rand() * 0.04;
+      blobs.push({ c: [Math.cos(a) * out, 0.52 + rand() * 0.14, Math.sin(a) * out], r: [rr, rr * 0.8, rr] });
     }
-    blobs.push({ c: [0.0, 0.74, 0.0], r: [0.24, 0.18, 0.24] });
+    blobs.push({ c: [0.02, 0.76, 0.0], r: [0.2, 0.15, 0.2] });
+  } else {
+    // cork oak: a stout trunk (its cork stripped at the foot), crooked spreading limbs, a broad dark crown
+    env = { c: [0, 0.66, 0], r: [0.5, 0.3, 0.5] };
+    jitter = 0.12;
+    b.trunk([0, -0.05, 0], [0.02, 0.3, 0.01], 0.042, 0.034, 7);
+    b.trunk([0.02, 0.28, 0.01], [0.25, 0.52, 0.07], 0.024, 0.014, 5);
+    b.trunk([0.02, 0.28, 0.01], [-0.2, 0.5, -0.12], 0.023, 0.014, 5);
+    b.trunk([0.02, 0.29, 0.01], [0.0, 0.56, 0.22], 0.02, 0.012, 5);
+    blobs.push({ c: [0.0, 0.8, 0.0], r: [0.26, 0.16, 0.26] });
+    for (let i = 0; i < 5; i++) {
+      const a = (i / 5) * Math.PI * 2 + rand() * 0.6;
+      const out = 0.27 + rand() * 0.06;
+      const rr = 0.19 + rand() * 0.04;
+      blobs.push({ c: [Math.cos(a) * out, 0.6 + rand() * 0.1, Math.sin(a) * out], r: [rr, rr * 0.72, rr] });
+    }
   }
   blobs.forEach((bl, i) =>
     b.blob(
@@ -199,7 +221,7 @@ export function buildTreeGeometry(kind: TreeKind) {
       env,
       blobs.filter((_, j) => j !== i),
       jitter,
-      (kind === "round" ? 100 : kind === "tall" ? 200 : 300) + i,
+      SEED[kind][1] + i,
     ),
   );
   return b.build();

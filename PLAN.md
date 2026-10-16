@@ -112,6 +112,7 @@ It starts as a pure white model and **matures into a softly stylised, material�
   - Mostly procedural, so it's sharp up close and tiny to download.
 - **Nature:**
   - Trees start as model‑maker's foam spheres and bloom into soft stylised foliage with wind sway.
+  - Portuguese species: stone (umbrella) pine, cypress, olive and a few cork oaks, their trunks stripped to the cinnamon‑red under the cork: the cork on the houses comes from these trees.
   - Lavender and grasses, like in the film.
   - A few birds at dawn and dusk.
 - **Miniature feel:** a subtle tilt‑shift depth of field in the model chapters, switched off in close‑ups.

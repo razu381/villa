@@ -317,7 +317,7 @@ Each item: **where** → **what to do** → **done when**. Review suggestions ar
 Trees and people stay stylised model pieces (PLAN.md §5.1: photoreal belongs to the film and renders).
 
 - ✅ *(2026-10-16: the model figures are gone (walkers, children, people by the pool); the lane hairlines and the playground ring stay. Checked 4.7–5.6)* **Remove the people.**
-- **Portuguese trees:** stone (umbrella) pine, cypress and olive, plus a few cork oaks with the stripped, cinnamon-red cork trunk (ties in with the cork on the houses). Same positions as before.
+- ✅ *(2026-10-16: four kinds, same 466 positions (checked numerically): 208 stone pines (a bare leaning trunk forking under a flat umbrella crown; hillside pines 1.2× taller), 114 cypresses (unchanged), 103 olives (a low gnarled split into three stems, separate silver tufts) and 41 cork oaks, 10 of them in the village gardens (a stout trunk stripped cinnamon-red to just below the fork, grey bark above, a broad dark crown). Foam and bloom work as before. Checked 2.95–6.7 and close-ups of the playground and the east gardens)* **Portuguese trees:** stone (umbrella) pine, cypress and olive, plus a few cork oaks with the stripped, cinnamon-red cork trunk (ties in with the cork on the houses). Same positions as before.
 
 ---
 

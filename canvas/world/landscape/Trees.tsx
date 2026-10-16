@@ -1,7 +1,9 @@
 "use client";
 
 /**
- * Trees — three instanced kinds (round, tall cypress, silver olive).
+ * Trees — four instanced Portuguese kinds: stone (umbrella) pine, cypress,
+ * silver olive and cork oak (its trunk stripped to the cinnamon-red under the
+ * cork, as in the montado: the cork on the houses comes from these trees).
  *
  * - Foam (U.uFoam): each tree scales in from its base as a model-maker's foam
  *   form (a smooth soft envelope), ease-out by its own delay. No bounce.
@@ -47,8 +49,11 @@ import { extendMaterial, inject, uWind } from "./shaderUtils";
 import { FOLIAGE_NOISE_GLSL } from "./foliageGlsl";
 import { buildTreeGeometry } from "./treeGeometry";
 
-const KINDS: TreeKind[] = ["round", "tall", "olive"];
-const WIDTH: Record<TreeKind, [number, number]> = { round: [0.85, 1.15], tall: [0.85, 1.1], olive: [0.9, 1.2] };
+/** Order = the shader's kind index (aInst.w): 0 pine, 1 cypress, 2 olive, 3 cork oak. */
+const KINDS: TreeKind[] = ["pine", "cypress", "olive", "cork"];
+const WIDTH: Record<TreeKind, [number, number]> = { pine: [0.8, 1.05], cypress: [0.85, 1.1], olive: [0.9, 1.2], cork: [0.95, 1.2] };
+/** Up to this lean (radians): pines grow leaning, the rest stand straight. */
+const LEAN: Record<TreeKind, number> = { pine: 0.09, cypress: 0, olive: 0.04, cork: 0.03 };
 /** World wind direction (normalised in the shader's object space per instance). */
 const WIND = new Vector3(0.92, 0, 0.38);
 
@@ -91,15 +96,20 @@ const VERT_BODY = /* glsl */ `
 `;
 
 const FRAG = /* glsl */ `
-#define C_ROUND_A ${lin("#737C55")}
-#define C_ROUND_B ${lin("#5C6746")}
-#define C_ROUND_C ${lin("#8A9166")}
+#define C_PINE_A ${lin("#6A744D")}
+#define C_PINE_B ${lin("#566141")}
+#define C_PINE_C ${lin("#7D875A")}
 #define C_TALL_A ${lin("#465039")}
 #define C_TALL_B ${lin("#535E42")}
 #define C_OLIVE_A ${lin("#959C86")}
 #define C_OLIVE_B ${lin("#7D8670")}
+#define C_CORK_A ${lin("#5F6A47")}
+#define C_CORK_B ${lin("#525D3F")}
 #define C_TRUNK ${lin("#7A6D5D")}
+#define C_TRUNK_PINE ${lin("#7E6A58")}
 #define C_TRUNK_OLIVE ${lin("#857D70")}
+#define C_CORK_BARK ${lin("#746B5F")}
+#define C_CORK_STRIPPED ${lin("#9E5A3A")}
 #define C_MOON ${lin("#8FA0C8")}
 varying vec4 vTreeA;
 varying vec4 vTreeI;
@@ -131,12 +141,14 @@ const COLOR = /* glsl */ `
     float kind = vTreeI.w;
     float tone = vTreeI.z;
     vec3 tc;
-    if (kind < 0.5) tc = mix(mix(C_ROUND_A, C_ROUND_B, tone), C_ROUND_C, smoothstep(0.75, 1.0, tone));
+    if (kind < 0.5) tc = mix(mix(C_PINE_A, C_PINE_B, tone), C_PINE_C, smoothstep(0.75, 1.0, tone));
     else if (kind < 1.5) tc = mix(C_TALL_A, C_TALL_B, tone);
-    else tc = mix(C_OLIVE_A, C_OLIVE_B, tone);
+    else if (kind < 2.5) tc = mix(C_OLIVE_A, C_OLIVE_B, tone);
+    else tc = mix(C_CORK_A, C_CORK_B, tone);
     // leaf clumps: cells in the tree's own space (so they sway with it), each a
     // small dome bounded by dark crevices, over a slow light/dark drift
-    vec3 q = vTreeL * (kind > 0.5 && kind < 1.5 ? vec3(34.0, 14.0, 34.0) : vec3(19.0));
+    // (cypress: tall flame cells; pine: finer, flat tufts)
+    vec3 q = vTreeL * (kind > 0.5 && kind < 1.5 ? vec3(34.0, 14.0, 34.0) : kind < 0.5 ? vec3(24.0, 36.0, 24.0) : vec3(19.0));
     float fwq = fwidth(q.x) + fwidth(q.y);
     float vis = 1.0 - smoothstep(0.25, 0.8, fwq);
     // a slow warp so the clumps are irregular, never a regular scale pattern
@@ -148,7 +160,13 @@ const COLOR = /* glsl */ `
     tvClump = mix(0.6, dome, vis);
     tvLeaf = mix(0.5, grain, vis);
     tc *= mix(1.0, 0.9 + 0.14 * tvClump + 0.14 * (drift - 0.5) + 0.06 * (grain - 0.5), vTreeB);
-    if (vTreeA.y > 0.5) tc = kind > 1.5 ? C_TRUNK_OLIVE : C_TRUNK;
+    if (vTreeA.y > 0.5) {
+      if (kind < 0.5) tc = C_TRUNK_PINE;
+      else if (kind < 1.5) tc = C_TRUNK;
+      else if (kind < 2.5) tc = C_TRUNK_OLIVE;
+      // cork oak: the cork harvested from the foot of the trunk, a ragged line below the fork
+      else tc = mix(C_CORK_STRIPPED, C_CORK_BARK, smoothstep(0.235, 0.255, vTreeA.z + (tv_n3(vTreeL * 40.0) - 0.5) * 0.03));
+    }
     float g = dot(tc, vec3(0.299, 0.587, 0.114));
     tc = mix(vec3(g) * vec3(1.05, 1.03, 0.95), tc, 0.55 + 0.45 * uLife);
     diffuseColor.rgb = tc;
@@ -302,6 +320,8 @@ const _p = new Vector3();
 const _s = new Vector3();
 const _w = new Vector3();
 const _up = new Vector3(0, 1, 0);
+const _lq = new Quaternion();
+const _la = new Vector3();
 
 export function Trees() {
   const mat = useMemo(() => createTreeMaterial(), []);
@@ -320,8 +340,14 @@ export function Trees() {
         _p.set(t.x, groundHeight(t.x, t.z) - 0.08, t.z);
         _q.setFromAxisAngle(_up, r() * Math.PI * 2);
         _s.set(w, t.height, w * (0.9 + r() * 0.2));
+        const phase = r() * Math.PI * 2;
+        const tone = r();
+        if (LEAN[kind] > 0) {
+          const a = r() * Math.PI * 2;
+          _q.premultiply(_lq.setFromAxisAngle(_la.set(Math.cos(a), 0, Math.sin(a)), LEAN[kind] * (0.3 + 0.7 * r())));
+        }
         mesh.setMatrixAt(i, _m.compose(_p, _q, _s));
-        inst.set([t.delay, r() * Math.PI * 2, r(), ki], i * 4);
+        inst.set([t.delay, phase, tone, ki], i * 4);
         // the wind, in the instance's own (rotated, scaled) space
         _w.copy(WIND).applyMatrix3(_n.setFromMatrix4(_m).invert());
         wind.set([_w.x, _w.y, _w.z], i * 3);
