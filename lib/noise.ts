@@ -11,9 +11,28 @@ export function mulberry32(seed: number) {
   };
 }
 
-function hash2(x: number, y: number) {
+function hash2Raw(x: number, y: number) {
   const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453123;
   return s - Math.floor(s);
+}
+
+/**
+ * The lattice hash, memoised: valueNoise only ever asks for integer corners, and
+ * the village's noise stays within ±128 of the origin, so a small table filled on
+ * demand replaces most of the Math.sin calls (exactly the same values). The
+ * terrain build samples the hill hundreds of thousands of times on mount.
+ */
+const H_OFF = 128;
+const H_W = 2 * H_OFF + 1;
+const hashTable = new Float64Array(H_W * H_W).fill(-1);
+function hash2(x: number, y: number) {
+  const ix = x + H_OFF;
+  const iy = y + H_OFF;
+  if (ix < 0 || iy < 0 || ix >= H_W || iy >= H_W) return hash2Raw(x, y);
+  const i = ix * H_W + iy;
+  let h = hashTable[i];
+  if (h < 0) h = hashTable[i] = hash2Raw(x, y);
+  return h;
 }
 
 /** Smooth value noise in [0, 1]. */

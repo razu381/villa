@@ -289,7 +289,7 @@ Each item: **where** → **what to do** → **done when**. Review suggestions ar
   - Coarser plinth.
   - Skip featured-home interiors until explode > 0.05.
   - Lighter car mesh.
-- **Synchronous build on mount (~0.6–1 s):**
+- ✅ *(partly, 2026-10-16: a CPU profile of the load showed ~600 ms in the noise lattice hash (`hash2`, the hill height sampled hundreds of thousands of times by the builders) and ~820 ms in three's shader-log reads. The hash is now memoised in a lazily filled table (exactly the same values, checked against the raw formula), and `gl.debug.checkShaderErrors` is off in production (the log read blocks until each shader has compiled). On the dev machine: mount frame 1.36–1.42 s → 0.80–0.93 s, time to ready 3.4–3.9 s → 2.6–2.9 s; journey re-checked. Not done: mounting Section/Homes after ready would bring back the first-appearance compiles 3.1 removed; a baked 0.5 m height grid would facet the finite-difference normals; a Worker isn't worth it for what's left)* **Synchronous build on mount (~0.6–1 s):**
   - Bake ground height once into a shared 0.5 m `Float32Array` with bilinear sampling, and reuse it for the plinth, AO, height texture, trees and people.
   - Mount Section and Homes in `requestIdleCallback` after ready.
   - Optionally move geometry builders into a Worker.

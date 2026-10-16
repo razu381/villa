@@ -187,6 +187,9 @@ export default function Experience() {
       camera={{ fov: 30, near: 1, far: 6000, position: [70, 190, 180] }}
       onCreated={({ gl }) => {
         gl.localClippingEnabled = true;
+        // In production, don't read back every shader's log: the read blocks until the
+        // driver has compiled it, which defeats the parallel compile the warm-up relies on.
+        gl.debug.checkShaderErrors = process.env.NODE_ENV !== "production";
         watchContext(gl.domElement, () => setWarm((w) => w + 1));
       }}
       aria-hidden="true"
