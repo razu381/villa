@@ -9,8 +9,10 @@ Creative intent: `PLAN.md`. Run/debug basics: `README.md`.
 
 | | |
 |---|---|
-| Branch | `claude/epic-carson-cm917t` (all work committed and pushed; last commit `e665a9b`) |
-| Live | https://villa-bay-iota.vercel.app (check in the Vercel dashboard which branch is Production; it has been tracking this branch) |
+| Branch | **`main`** (everything merged; created from `claude/epic-carson-cm917t`, which is kept as history). Work on short feature branches and merge into `main`. |
+| Live | https://villa-bay-iota.vercel.app (in Vercel → Project Settings → Git, set **Production Branch = `main`**; on GitHub, set the default branch to `main`) |
+| Pitch device | **Windows laptop**. Every P0 target below is measured there first (Chrome/Edge on ANGLE/Direct3D). |
+| Visit form | **Stays simulated** for the pitch (no backend; it shows the invitation card) |
 | Stack | Next.js 16.4 (Turbopack), React 19.3, three r186, @react-three/fiber 9, drei 10, @react-three/postprocessing 3, gsap, lenis, zustand |
 
 **Built, merged and verified with screenshots:**
@@ -38,7 +40,7 @@ The latest independent review scores, after the director pass and before part 1:
 
 ```bash
 git clone https://github.com/razu381/villa && cd villa
-git checkout claude/epic-carson-cm917t
+git checkout main
 npm install            # Node 20.9+ (22 recommended)
 npm run dev            # http://localhost:3000
 npm run typecheck && npm run build
@@ -73,6 +75,8 @@ Then in `scripts/shot.mjs`:
 - Only pass the SwiftShader flags (`--use-angle=swiftshader --enable-unsafe-swiftshader`) behind a `--swiftshader` option. By default let Chromium use the real GPU. On macOS, `channel: "chrome"` with headless mode usually gets Metal/ANGLE; if frames come back black, try `headless: false`.
 - Raise the hard-coded `page.screenshot` timeout to 60–90 s. Under load it dropped frames at 30 s.
 
+On Windows: run it from PowerShell or Git Bash; `channel: "msedge"` or `"chrome"` uses the real GPU through ANGLE/Direct3D. That is exactly the pitch path, so use it for all verification. `montage` needs ImageMagick (`winget install ImageMagick.ImageMagick`).
+
 Real-GPU screenshots take about 1–2 s instead of 20–45 s, and show the true look. SwiftShader can differ slightly, for example in bloom, precision and shadows.
 
 Use: `node scripts/shot.mjs --t 1.6,2.6,4.5 --out shots/x [--mobile] [--q "home=v4&sun=0.72"] [--info]`. `--info` prints draw calls, triangles and shader programs. View many frames at once with `montage shots/x/*.png -tile 3x -geometry 600x375+2+2 shots/x-sheet.jpg` (ImageMagick).
@@ -103,6 +107,9 @@ Each item: **where** → **what to do** → **done when**. Review suggestions ar
 
 ### P0: must do before the pitch
 
+> The pitch runs on a **Windows laptop**. Chrome and Edge there go through ANGLE → Direct3D 11, where shader compilation is the slowest of any platform, and the GPU is often an Intel or AMD integrated chip. So 3.1 (warm-up) and 3.2/3.3 (tiering and adaptive quality) come first.
+> Step zero: open `chrome://gpu` on the pitch laptop and note the GPU string, and check whether it switches to a discrete GPU on battery vs mains power. Present on mains power.
+
 **3.1 Compile shaders up front, so stages don't stall when they first appear.**
 - *Where:* new `Warmup` component in `canvas/Experience.tsx`; first Explore click in `canvas/homes/FeaturedHome.tsx`.
 - *Problem:* every stage starts hidden, so its shader programs compile and its buffers upload on the first frame it appears. That's 18 programs at once at t≈2.2 as the houses rise, 3–4 at later chapters, and 5 programs plus 31 geometry uploads on the first Explore click. Each blocks about 30 ms or more, and much longer on Windows/ANGLE and phones.
@@ -118,8 +125,9 @@ Each item: **where** → **what to do** → **done when**. Review suggestions ar
 - *Where:* `lib/tier.ts detectTier()`, called from `components/SmoothScroll.tsx`.
 - *Problem:* it creates a throwaway canvas and WebGL2 context on every load and never releases it. That cost 1.9 s on SwiftShader (tens of ms to ~150 ms on Windows) and uses up iOS's context budget.
 - *Do:* use `typeof WebGL2RenderingContext === "undefined"` → `'low'`. If you keep a real probe, call `getExtension('WEBGL_lose_context')?.loseContext()` straight after. Better: decide the tier inside R3F's `onCreated` from `gl.capabilities.isWebGL2` plus the GPU string from `WEBGL_debug_renderer_info`.
-- *Also fix the policy:* `cores <= 4 || mem <= 4 → mid` drops ordinary 4-core laptops to mid, which turns off tilt-shift and lightens post. Only demote when the device is (coarse pointer or small screen) **and** low on cores/memory. Treat these GPU strings as mid: `Intel`, `Mali-G5x`, `Adreno 5xx/60x`.
-- *Done when:* there's no second context in DevTools, and the pitch laptop gets `high` without needing `?tier=high`.
+- *Also fix the policy:* `cores <= 4 || mem <= 4 → mid` drops ordinary 4-core laptops to mid, which turns off tilt-shift and lightens post. Only demote when the device is (coarse pointer or small screen) **and** low on cores/memory. Treat `Mali-G5x` and `Adreno 5xx/60x` as mid.
+- *Careful with Intel:* the pitch laptop may well have Intel Iris Xe / Arc graphics. Don't blanket-demote `Intel` to mid. Make the high tier hold 60 fps there through 3.3 (DPR cap and PerformanceMonitor). Only if it truly can't, demote just the specific weak GPUs.
+- *Done when:* there's no second context in DevTools, and the **pitch laptop** gets `high` and holds about 60 fps without needing `?tier=high`. Keep `?tier=high` as the emergency override.
 
 **3.3 Adaptive quality and pause rendering when the 3D isn't visible.**
 - *Where:* `canvas/Experience.tsx` (dpr), `canvas/Day.tsx` (4096 shadow map), `canvas/Post.tsx`.
@@ -248,8 +256,8 @@ Nothing has been seen on real hardware. Test on:
 
 | Device | Browser | Check |
 |---|---|---|
-| The pitch laptop at its native display (and an external 4K screen if used) | Chrome + Safari | fps (DevTools → Rendering → Frame rendering stats), smoothness of the build sequence and the first Explore, tilt-shift on, no black frames |
-| Windows laptop with Intel iGPU | Chrome / Edge | tier decision, fps, shader stalls (ANGLE compiles slowest) |
+| **The Windows pitch laptop** at its native display, on mains power (and the venue projector or 4K screen if used: mirror vs extend changes resolution) | Chrome **and** Edge | fps (DevTools → Rendering → Frame rendering stats), no stall on the first build sequence or first Explore after a cold start (reboot, then first load), tier = high, tilt-shift on, no black frames, hero video plays |
+| A MacBook | Chrome + Safari | look and fps as a second reference |
 | iPhone 13 or newer | Safari | hero video autoplay (muted, inline), memory/context loss (background the tab mid-scroll), portrait framing, tap targets, the form |
 | Mid-range Android | Chrome | fps ≥ 30, heat over a full 4–5 min journey |
 | Any | `?rm=1` and OS reduced-motion setting | crossfade path works, nothing moves on its own |
@@ -266,7 +274,12 @@ Also check:
 ## 6. Pitch preparation
 
 - **Backup video:** screen-record a full scroll-through on the pitch laptop at 60 fps (with sound on), in case the venue Wi-Fi fails. Also keep a local production build ready: `npm run build && npm start`.
-- **Invitation form:** it is currently simulated (no backend; it shows the card after ~900 ms). Decide whether to keep it simulated for the demo or wire it to email (e.g. Resend or Formspree via a Next route handler).
+- **Invitation form:** decided: it **stays simulated** (no backend; the card appears after ~900 ms). The confirmation reads "Your advisor will confirm your visit within one day." That's fine in a guided demo. If the link is left with the client unattended, change it to something like "Thank you, we'll be in touch" so no one waits for an email that never comes.
+- **Windows specifics:**
+  - Turn off Windows notifications / Focus Assist during the pitch.
+  - Set the power plan to Best performance.
+  - Set browser zoom to 100%.
+  - Present in full screen (F11), so the svh-based chapter heights match what was tested.
 - **Copy check with the client:** specs (V3 +250 m², 3 bed/3 bath…; V4 +400 m², coming 2028), tagline, partners (FCM, BPI, Porta da Frente), and "Artistic interpretation. Not to scale." in the footer.
 - **Assets that would raise quality** (ask the client):
   - the film master (the current loop is cut from the compressed web video)
@@ -328,9 +341,11 @@ Also check:
 
 ---
 
-## Open questions (answer when convenient)
+## Decisions
 
-1. Which machine and browser will you present from, and what's the date? (This sets the P0 performance targets.)
-2. Should the invitation form send a real email, or stay simulated for the pitch?
-3. Do you want `claude/epic-carson-cm917t` merged into `main` (and Vercel Production pointed at `main`)?
-4. Will you work with Claude Code locally? If so, §8 is the briefing to give it, and I'd add a short `CLAUDE.md` with the same notes.
+- **Pitch device:** Windows laptop. P0 targets are measured there (§3 P0, §5).
+- **Visit form:** stays simulated (§6).
+- **Branching:** `main` is the trunk. Point Vercel Production and the GitHub default branch at `main` (§0).
+- **Claude Code locally:** yes. `CLAUDE.md` carries the project rules; this file is the backlog.
+
+Still open: the pitch date, so the backlog can be cut to fit.
