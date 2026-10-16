@@ -37,8 +37,8 @@ export const DAY_KEYS: DayKey[] = [
   { day: 0.5, skyTop: "#CBD6DB", skyHorizon: "#EEEDE6", fog: "#EBEAE3", sunElevation: 60, sunColor: "#FFF6EA", sunIntensity: 2.9, hemiSky: "#E2E8EA", hemiGround: "#C8C1AE", hemiIntensity: 0.8, night: 0, exposure: 1.0 },
   { day: 0.66, skyTop: "#D2C8B6", skyHorizon: "#F2D3A6", fog: "#EDD7B6", sunElevation: 18, sunColor: "#FFCF96", sunIntensity: 2.6, hemiSky: "#D6DCE0", hemiGround: "#BFA98A", hemiIntensity: 0.7, night: 0, exposure: 1.0 },
   { day: 0.76, skyTop: "#B9A79E", skyHorizon: "#F2B27E", fog: "#E3B38F", sunElevation: 5, sunColor: "#FF9A55", sunIntensity: 2.0, hemiSky: "#D9C1AD", hemiGround: "#9C8068", hemiIntensity: 0.55, night: 0.05, exposure: 1.0 },
-  { day: 0.86, skyTop: "#2E3346", skyHorizon: "#9A7F78", fog: "#4A4B58", sunElevation: -4, sunColor: "#FF8248", sunIntensity: 0.35, hemiSky: "#5E6678", hemiGround: "#363840", hemiIntensity: 0.5, night: 0.55, exposure: 1.05 },
-  { day: 1.0, skyTop: "#121620", skyHorizon: "#272B36", fog: "#1D2029", sunElevation: -12, sunColor: "#A9BCFF", sunIntensity: 0.0, hemiSky: "#3A4460", hemiGround: "#14161B", hemiIntensity: 0.45, night: 1, exposure: 1.1 },
+  { day: 0.86, skyTop: "#2E3346", skyHorizon: "#5E6070", fog: "#4A4B58", sunElevation: -4, sunColor: "#FF8248", sunIntensity: 0.35, hemiSky: "#5E6678", hemiGround: "#363840", hemiIntensity: 0.5, night: 0.55, exposure: 1.05 },
+  { day: 1.0, skyTop: "#121620", skyHorizon: "#262D3B", fog: "#1D2029", sunElevation: -12, sunColor: "#A9BCFF", sunIntensity: 0.0, hemiSky: "#3A4460", hemiGround: "#14161B", hemiIntensity: 0.45, night: 1, exposure: 1.1 },
 ];
 
 export interface DayParams {

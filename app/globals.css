@@ -1556,24 +1556,25 @@ html[data-index="1"] .vl-leaders {
 .vl-night__action > div {
   padding: 28px;
   border-radius: 2px;
-  background: rgba(16, 18, 21, 0.58);
+  background: rgba(16, 18, 21, 0.36);
   box-shadow: inset 0 0 0 1px rgba(239, 236, 226, 0.08);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
 }
 html[data-tier="low"] .vl-night__action > div,
 html[data-rm="1"] .vl-night__action > div {
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
-  background: rgba(16, 18, 21, 0.8);
+  background: rgba(16, 18, 21, 0.66);
 }
-/* Night title: a deeper falloff so the body copy sits on dark air, not on lit windows. */
+/* Night title: the copy already sits on dark air, so the falloff stays behind the
+   words and leaves the lit village below it clear. */
 html[data-tone="night"] .vl-night .vl-text[data-place="top"] .vl-text__scrim {
   background: radial-gradient(
-    ellipse 70% 95% at 0% 38%,
-    rgba(14, 16, 18, 0.72) 0%,
-    rgba(14, 16, 18, 0.52) 42%,
-    rgba(14, 16, 18, 0.18) 72%,
+    ellipse 50% 52% at 0% 28%,
+    rgba(14, 16, 18, 0.5) 0%,
+    rgba(14, 16, 18, 0.3) 45%,
+    rgba(14, 16, 18, 0.08) 78%,
     transparent 100%
   );
 }
