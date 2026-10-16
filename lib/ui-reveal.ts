@@ -57,55 +57,9 @@ export function useReveal(ref: RefObject<HTMLElement | null>, opts: RevealOption
       splits.forEach((s) => s.revert());
       splits = [];
 
-      const { delay = 0, interactive = false } = optsRef.current;
-      const reduced = useJourney.getState().reducedMotion;
-      const t = gsap.timeline({ paused: true, defaults: { ease: "expo.out" } });
-      t.fromTo(root, interactive ? { autoAlpha: 0 } : { opacity: 0 }, { ...(interactive ? { autoAlpha: 1 } : { opacity: 1 }), duration: 0.01, ease: "none" }, 0);
-
-      let at = delay;
-      root.querySelectorAll<HTMLElement>("[data-r]").forEach((el) => {
-        // Nested reveal blocks animate themselves.
-        if (el.closest("[data-reveal-root]") !== root) return;
-        const kind = el.dataset.r;
-        const pos = el.dataset.rAt != null ? delay + parseFloat(el.dataset.rAt) : at;
-        if (kind === "scrim") {
-          t.fromTo(el, { opacity: 0 }, { opacity: 1, duration: 1.3, ease: "power2.out" }, delay);
-          return;
-        }
-        if (reduced) {
-          t.fromTo(el, { opacity: 0 }, { opacity: 1, duration: 0.9, ease: "power2.out" }, pos);
-          at = pos + 0.08;
-          return;
-        }
-        switch (kind) {
-          case "lines": {
-            const sp = SplitText.create(el, { type: "lines", mask: "lines", linesClass: "vl-line", aria: "auto" });
-            splits.push(sp);
-            t.fromTo(sp.lines, { yPercent: 112 }, { yPercent: 0, duration: 1.25, stagger: 0.09 }, pos);
-            at = pos + 0.12 + sp.lines.length * 0.09;
-            break;
-          }
-          case "rule":
-            t.fromTo(el, { scaleX: 0 }, { scaleX: 1, duration: 1.4, ease: "expo.inOut", transformOrigin: "0% 50%" }, pos);
-            at = pos + 0.1;
-            break;
-          case "mask":
-            t.fromTo(el, { clipPath: "inset(0% 100% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 1.8, ease: "expo.inOut" }, pos);
-            at = pos + 0.45;
-            break;
-          case "rise":
-            t.fromTo(el, { clipPath: "inset(100% 0% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 1.5, ease: "expo.inOut" }, pos);
-            {
-              const img = el.querySelector("img");
-              if (img) t.fromTo(img, { scale: 1.12 }, { scale: 1, duration: 2.0, ease: "expo.out" }, pos);
-            }
-            at = pos + 0.2;
-            break;
-          default:
-            t.fromTo(el, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 1.1, ease: "quart.out" }, pos);
-            at = pos + 0.08;
-        }
-      });
+      const built = revealTimeline(root, { ...optsRef.current, reduced: useJourney.getState().reducedMotion });
+      const t = built.tl;
+      splits = built.splits;
       tl = t;
       root.dataset.revealReady = "1";
 
@@ -157,4 +111,121 @@ export function useReveal(ref: RefObject<HTMLElement | null>, opts: RevealOption
       splits.forEach((s) => s.revert());
     };
   }, [ref]);
+}
+
+/**
+ * The reveal timeline for a block (paused at 0): its `[data-r]` children in
+ * document order, as described above. Shared by both sites.
+ */
+export function revealTimeline(root: HTMLElement, { delay = 0, interactive = false, reduced = false }: { delay?: number; interactive?: boolean; reduced?: boolean }) {
+  const splits: SplitText[] = [];
+  const t = gsap.timeline({ paused: true, defaults: { ease: "expo.out" } });
+  t.fromTo(root, interactive ? { autoAlpha: 0 } : { opacity: 0 }, { ...(interactive ? { autoAlpha: 1 } : { opacity: 1 }), duration: 0.01, ease: "none" }, 0);
+
+  let at = delay;
+  root.querySelectorAll<HTMLElement>("[data-r]").forEach((el) => {
+    // Nested reveal blocks animate themselves.
+    if (el.closest("[data-reveal-root]") !== root) return;
+    const kind = el.dataset.r;
+    const pos = el.dataset.rAt != null ? delay + parseFloat(el.dataset.rAt) : at;
+    if (kind === "scrim") {
+      t.fromTo(el, { opacity: 0 }, { opacity: 1, duration: 1.3, ease: "power2.out" }, delay);
+      return;
+    }
+    if (reduced) {
+      t.fromTo(el, { opacity: 0 }, { opacity: 1, duration: 0.9, ease: "power2.out" }, pos);
+      at = pos + 0.08;
+      return;
+    }
+    switch (kind) {
+      case "lines": {
+        const sp = SplitText.create(el, { type: "lines", mask: "lines", linesClass: "vl-line", aria: "auto" });
+        splits.push(sp);
+        t.fromTo(sp.lines, { yPercent: 112 }, { yPercent: 0, duration: 1.25, stagger: 0.09 }, pos);
+        at = pos + 0.12 + sp.lines.length * 0.09;
+        break;
+      }
+      case "rule":
+        t.fromTo(el, { scaleX: 0 }, { scaleX: 1, duration: 1.4, ease: "expo.inOut", transformOrigin: "0% 50%" }, pos);
+        at = pos + 0.1;
+        break;
+      case "mask":
+        t.fromTo(el, { clipPath: "inset(0% 100% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 1.8, ease: "expo.inOut" }, pos);
+        at = pos + 0.45;
+        break;
+      case "rise":
+        t.fromTo(el, { clipPath: "inset(100% 0% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 1.5, ease: "expo.inOut" }, pos);
+        {
+          const img = el.querySelector("img");
+          if (img) t.fromTo(img, { scale: 1.12 }, { scale: 1, duration: 2.0, ease: "expo.out" }, pos);
+        }
+        at = pos + 0.2;
+        break;
+      default:
+        t.fromTo(el, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 1.1, ease: "quart.out" }, pos);
+        at = pos + 0.08;
+    }
+  });
+  return { tl: t, splits };
+}
+
+/**
+ * The same reveal, played once as the block scrolls into view (the classic
+ * site, which has no journey `t`). Lines are un-split once played, so later
+ * resizes reflow the text naturally. `?snap=1` shows everything at once.
+ */
+export function useInViewReveal(ref: RefObject<HTMLElement | null>, { delay = 0, margin = "-12%" }: { delay?: number; margin?: string } = {}) {
+  useEffect(() => {
+    const root = ref.current;
+    if (!root) return;
+    root.setAttribute("data-reveal-root", "");
+    let tl: gsap.core.Timeline | null = null;
+    let splits: SplitText[] = [];
+    let played = false;
+    let disposed = false;
+    let lastW = window.innerWidth;
+
+    const build = () => {
+      if (disposed || played) return;
+      tl?.kill();
+      splits.forEach((s) => s.revert());
+      const s = useJourney.getState();
+      ({ tl, splits } = revealTimeline(root, { delay, reduced: s.reducedMotion }));
+      tl.eventCallback("onComplete", () => {
+        splits.forEach((sp) => sp.revert());
+        splits = [];
+      });
+      if (s.snap) play();
+    };
+    const play = () => {
+      if (played || !tl) return;
+      played = true;
+      io.disconnect();
+      if (useJourney.getState().snap) tl.progress(1);
+      else tl.play();
+    };
+
+    const io = new IntersectionObserver((entries) => entries.some((e) => e.isIntersecting) && play(), { rootMargin: `0px 0px ${margin} 0px` });
+    const onResize = () => {
+      if (Math.abs(window.innerWidth - lastW) < 2) return;
+      lastW = window.innerWidth;
+      build();
+    };
+    window.addEventListener("resize", onResize);
+    const fonts = document.fonts?.ready ?? Promise.resolve();
+    fonts
+      .then(() => {
+        build();
+        io.observe(root);
+      })
+      .catch(build);
+
+    return () => {
+      disposed = true;
+      io.disconnect();
+      window.removeEventListener("resize", onResize);
+      tl?.kill();
+      splits.forEach((s) => s.revert());
+    };
+  }, [ref, delay, margin]);
 }

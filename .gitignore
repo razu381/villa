@@ -6,3 +6,6 @@ shots/
 next-env.d.ts
 .DS_Store
 .claude/worktrees/
+
+# Client source files (PDF layouts, PNG renders): converted copies live in public/media/classic
+client provided assets/
