@@ -45,8 +45,9 @@ export type Tone = "film" | "day" | "night";
  * day   — dark olive type over the limestone world
  * night — limestone type over the dark scene (night chapter, or the held sun past dusk)
  */
-export function toneFor(s: Pick<JourneyState, "t" | "journeyDay" | "sunOverride">): Tone {
-  if (stagesFromT(s.t).heroFade < 0.72) return "film";
+export function toneFor(s: Pick<JourneyState, "t" | "journeyDay" | "sunOverride" | "canvas">): Tone {
+  // Over the film, or over the aerial still standing in for a lost canvas.
+  if (stagesFromT(s.t).heroFade < 0.72 || s.canvas !== "live") return "film";
   const day = s.sunOverride ?? s.journeyDay;
   if (day >= 0.8 || s.t >= 6) return "night";
   return "day";

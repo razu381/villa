@@ -123,11 +123,42 @@ function Warmup() {
         frames.current = 1e3; // count on from here
       }
     } else if (phase.current === "done" && frames.current === 1e3 + 4) {
-      useJourney.getState().setReady(true);
+      const s = useJourney.getState();
+      s.setReady(true);
+      if (s.canvas === "lost") s.setCanvas("live"); // warmed up again after a lost context
       window.__VL_READY = true;
     }
   });
   return null;
+}
+
+/**
+ * A dropped WebGL context (GPU reset, driver update, memory pressure, a
+ * backgrounded tab): three keeps the canvas restorable and rebuilds its GL state
+ * on restore; meanwhile the aerial still stands in (HeroMedia, ready = false).
+ * Restored: warm up again (shaders, buffers), then dissolve back in. Not back
+ * within 3 s: the still stays for the rest of the session and the loop stops.
+ */
+function watchContext(canvas: HTMLCanvasElement, rewarm: () => void) {
+  let timer = 0;
+  canvas.addEventListener("webglcontextlost", (e) => {
+    e.preventDefault();
+    const s = useJourney.getState();
+    if (s.canvas === "gone") return;
+    window.__VL_READY = false;
+    s.setReady(false);
+    s.setCanvas("lost");
+    clearTimeout(timer);
+    timer = window.setTimeout(() => {
+      const st = useJourney.getState();
+      if (st.canvas === "lost" && !st.ready) st.setCanvas("gone");
+    }, 3000);
+  });
+  canvas.addEventListener("webglcontextrestored", () => {
+    if (useJourney.getState().canvas === "gone") return;
+    clearTimeout(timer);
+    rewarm();
+  });
 }
 
 /** The single persistent 3D canvas — fixed behind the HTML journey. */
@@ -142,6 +173,7 @@ export default function Experience() {
   }, []);
   const steps = useMemo(() => qualitySteps(tier, base), [tier, base]);
   const [level, setLevel] = useState(() => pinnedQuality() ?? 0);
+  const [warm, setWarm] = useState(0);
   const at = Math.min(level, steps.length - 1);
   const step = steps[at];
   useEffect(() => {
@@ -155,6 +187,7 @@ export default function Experience() {
       camera={{ fov: 30, near: 1, far: 6000, position: [70, 190, 180] }}
       onCreated={({ gl }) => {
         gl.localClippingEnabled = true;
+        watchContext(gl.domElement, () => setWarm((w) => w + 1));
       }}
       aria-hidden="true"
     >
@@ -169,7 +202,7 @@ export default function Experience() {
         <Houses />
         <Section />
         <Homes />
-        <Warmup />
+        <Warmup key={warm} />
       </Suspense>
       <Post tilt={step.tilt} />
     </Canvas>

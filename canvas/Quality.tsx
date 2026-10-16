@@ -77,6 +77,7 @@ export function Quality({ steps, level, setLevel }: { steps: number; level: numb
  * Stops the render loop while the hero film and the still aerial cover the
  * canvas: the GPU is left to the video. Restarts as the dissolve begins, well
  * before the 3D shows through (the aerial covers it to heroFade ≈ 0.7).
+ * Also stopped for good once the canvas is gone (a lost context that never came back).
  */
 export function FrameGate() {
   const setFrameloop = useThree((s) => s.setFrameloop);
@@ -84,7 +85,7 @@ export function FrameGate() {
   useEffect(() => {
     let paused = false;
     const apply = (s: JourneyState) => {
-      const hide = s.ready && stagesFromT(s.t).heroFade < 0.02;
+      const hide = s.canvas === "gone" || (s.ready && stagesFromT(s.t).heroFade < 0.02);
       if (hide === paused) return;
       paused = hide;
       // setFrameloop restarts the clock at 0: keep time continuous (sway, breathing, walkers).

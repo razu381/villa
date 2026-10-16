@@ -117,6 +117,8 @@ export function HeroMedia() {
   };
 
   useJourneyEffect((s, p) => {
+    // A lost canvas: the still stands in, with the film's scrim for the type.
+    rootRef.current?.classList.toggle("is-fallback", s.canvas !== "live");
     const k = stagesFromT(s.t).heroFade;
     // Hold the still until the 3D has rendered.
     const target = s.ready ? smooth(0.4, 1, k) : 0;

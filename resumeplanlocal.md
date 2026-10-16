@@ -217,13 +217,17 @@ Each item: **where** → **what to do** → **done when**. Review suggestions ar
 - *Do:* align the ranges: `<0.06` first light · `<0.18` dawn · `<0.34` morning · `<0.47` late morning · `<0.57` noon · `<0.76` golden hour · `<0.88` dusk · else night.
 - **Done (2026-10-16).** Ranges aligned as above ("afternoon" is gone). Checked under the arc at t 5.5: journey "golden hour"; held sun 0.63 and 0.72 "golden hour", 0.8 "dusk", 0.92 "night". The slider's `aria-valuetext` uses the same function.
 
-**3.6 Recover if the browser drops the WebGL context.**
+✅ **3.6 Recover if the browser drops the WebGL context.**
 - *Where:* `canvas/Experience.tsx onCreated`.
 - *Problem:* if iOS or Android drops the context (backgrounding mid-pitch, memory pressure), the canvas goes blank.
 - *Do:*
   - On `webglcontextlost`: call `preventDefault()` and set a store flag. `HeroMedia` then shows its aerial still as a backdrop (an `is-fallback` class).
   - On `webglcontextrestored`: clear the flag and re-run the warm-up (3.1).
   - If the context isn't back within about 3 s, keep the fallback for the rest of the session.
+- **Done (2026-10-16).** three already calls `preventDefault()` and rebuilds its GL state on restore; what was missing is around it. Store `canvas: "live" | "lost" | "gone"`; `watchContext` in `canvas/Experience.tsx`:
+  - Lost: `ready` false, so HeroMedia holds the aerial still over the canvas (`is-fallback` gives it the film's scrim) and the type takes the light film tone.
+  - Restored: the Warmup remounts (new key), recompiles and uploads, then `ready` returns and the existing late-ready easing dissolves back into the 3D. Tested with `WEBGL_lose_context`: back in 1.9 s, the same frame as before.
+  - Not back within 3 s: "gone" for the session: a late restore is ignored, the aerial stays and FrameGate stops the render loop.
 
 **3.7 Single film grain.**
 - *Where:* `components/chrome/Chrome.tsx` (CSS `.vl-grain`, `globals.css` ~l.2108) and `canvas/Post.tsx GrainEffect`.

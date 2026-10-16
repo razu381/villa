@@ -5,6 +5,8 @@ import { create } from "zustand";
 export type HomeId = "v3" | "v4";
 export type Tier = "high" | "mid" | "low";
 export type Mode = "journey" | "explore";
+/** The 3D canvas: live, its WebGL context lost (waiting / warming up again), or gone for the session. */
+export type CanvasState = "live" | "lost" | "gone";
 
 export interface JourneyState {
   /** Journey position, 0 → T_MAX (see lib/timeline.ts). Written by SmoothScroll. */
@@ -27,6 +29,8 @@ export interface JourneyState {
   reducedMotion: boolean;
   /** 3D scene has rendered its first frames. */
   ready: boolean;
+  /** Not "live": the aerial still stands in for the canvas (canvas/Experience.tsx watchContext). */
+  canvas: CanvasState;
   /**
    * Debug / screenshot mode: jump straight to values instead of damping.
    * Set by `?snap=1` (scripts/shot.mjs) — consumers should skip easing when true.
@@ -43,6 +47,7 @@ export interface JourneyState {
   setTier: (t: Tier) => void;
   setReducedMotion: (v: boolean) => void;
   setReady: (v: boolean) => void;
+  setCanvas: (v: CanvasState) => void;
   setSnap: (v: boolean) => void;
 }
 
@@ -57,6 +62,7 @@ export const useJourney = create<JourneyState>((set) => ({
   tier: "high",
   reducedMotion: false,
   ready: false,
+  canvas: "live",
   snap: false,
 
   setT: (t) => set({ t }),
@@ -69,6 +75,7 @@ export const useJourney = create<JourneyState>((set) => ({
   setTier: (tier) => set({ tier }),
   setReducedMotion: (reducedMotion) => set({ reducedMotion }),
   setReady: (ready) => set({ ready }),
+  setCanvas: (canvas) => set({ canvas }),
   setSnap: (snap) => set({ snap }),
 }));
 

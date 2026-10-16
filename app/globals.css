@@ -502,7 +502,8 @@ html[data-index="1"] .vl-legend > :not(.vl-haze) {
 .vl-heromedia__video.is-playing {
   opacity: 1;
 }
-.vl-heromedia__scrim {
+.vl-heromedia__scrim,
+.vl-heromedia.is-fallback .vl-heromedia__aerialscrim {
   position: absolute;
   inset: 0;
   background:
