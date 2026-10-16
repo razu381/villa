@@ -9,8 +9,10 @@ import { Eyebrow } from "./Concept";
 import { gsap, ScrollTrigger, stillMode } from "./env";
 import { Pic } from "./Pic";
 
-const HOLD = 0.4;
+const HOLD = 0.45;
 const STEP = 1 + HOLD;
+/** Scroll (in screen heights) per photo change: unhurried, so each change reads. */
+const PER = 1.15;
 
 /**
  * Village Heart: the four amenities as a pinned gallery (after Focal Glow's
@@ -18,6 +20,15 @@ const STEP = 1 + HOLD;
  * from the bottom over the last (the client's note) and the list beside it
  * follows. Plain scrolling throughout; the list jumps to an amenity. In
  * reduced motion the four simply stack.
+ *
+ * Smoothness: each photo is its own layer, so its settle (scale) is the
+ * graphics card's work, never a repaint of a large photo; the wipe is a plain
+ * rectangle clip; the texts crossfade in one fixed slot (no layout while
+ * scrolling); the photos are decoded before the section arrives; each change
+ * gets more scroll and a gentler ease. Measured (wheel scroll, integrated GPU,
+ * 1.4x): the fewest slow frames of the variants tried. A feathered edge (moving
+ * gradient mask) and a transform-only wipe (three layers per photo) both
+ * dropped more frames there, so neither is used.
  */
 export function VillageHeart() {
   const ref = useRef<HTMLElement>(null);
@@ -26,6 +37,26 @@ export function VillageHeart() {
   const [still, setStill] = useState(false);
   const st = useRef<ScrollTrigger | null>(null);
   useInViewReveal(head);
+
+  // Decode the photos ahead, so none is decoded mid-change.
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([e]) => {
+        if (!e.isIntersecting) return;
+        io.disconnect();
+        el.querySelectorAll("img").forEach((img) => {
+          const go = () => img.decode().catch(() => {});
+          if (img.complete) go();
+          else img.addEventListener("load", go, { once: true });
+        });
+      },
+      { rootMargin: "200% 0px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
 
   useEffect(() => {
     const s = stillMode();
@@ -38,18 +69,19 @@ export function VillageHeart() {
     slides.forEach((slide, i) => {
       if (i === 0) return;
       const at = HOLD + (i - 1) * STEP;
-      tl.fromTo(slide, { clipPath: "inset(100% 0% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 1, ease: "power2.inOut" }, at);
+      tl.fromTo(slide, { clipPath: "inset(100% 0% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 1, ease: "sine.inOut" }, at);
       const img = slide.querySelector("img");
-      if (img) tl.fromTo(img, { scale: 1.14, yPercent: 4 }, { scale: 1, yPercent: 0, duration: 1.2, ease: "power2.out" }, at);
+      if (img) tl.fromTo(img, { scale: 1.08 }, { scale: 1, duration: 1.3, ease: "power1.out" }, at);
     });
     tl.to({}, { duration: HOLD }, HOLD + (n - 1) * STEP - 0.001);
     const total = tl.duration();
     st.current = ScrollTrigger.create({
       trigger: el,
       start: "top top",
-      end: () => `+=${Math.round((n - 1) * window.innerHeight * 0.95)}`,
+      end: () => `+=${Math.round((n - 1) * window.innerHeight * PER)}`,
       pin: true,
-      scrub: 0.8,
+      anticipatePin: 1,
+      scrub: 0.5,
       animation: tl,
       onUpdate: (self) => {
         const time = self.progress * total;
@@ -85,18 +117,26 @@ export function VillageHeart() {
           <h2 id="vc-heart-title" className="vc-title vc-heart__title" data-r="lines">
             {lead} <em>around {tail}</em>
           </h2>
-          <ol className="vc-heart__list" data-r="fade">
-            {AMENITIES.map((a, i) => (
-              <li key={a.id} data-active={i === active ? "1" : "0"}>
-                <button type="button" onClick={() => show(i)} aria-current={i === active ? "true" : undefined}>
-                  <span className="vc-heart__dot" aria-hidden="true" />
-                  <span className="vc-heart__n">{String(i + 1).padStart(2, "0")}</span>
-                  <span className="vc-heart__name">{a.title}</span>
-                </button>
-                <p className="vc-heart__text">{a.text}</p>
-              </li>
-            ))}
-          </ol>
+          <div data-r="fade">
+            <ol className="vc-heart__list">
+              {AMENITIES.map((a, i) => (
+                <li key={a.id} data-active={i === active ? "1" : "0"}>
+                  <button type="button" onClick={() => show(i)} aria-current={i === active ? "true" : undefined}>
+                    <span className="vc-heart__dot" aria-hidden="true" />
+                    <span className="vc-heart__n">{String(i + 1).padStart(2, "0")}</span>
+                    <span className="vc-heart__name">{a.title}</span>
+                  </button>
+                </li>
+              ))}
+            </ol>
+            <div className="vc-heart__detail" aria-live="polite">
+              {AMENITIES.map((a, i) => (
+                <p key={a.id} data-active={i === active ? "1" : "0"} aria-hidden={i !== active}>
+                  {a.text}
+                </p>
+              ))}
+            </div>
+          </div>
         </div>
         <div className="vc-heart__stage">
           {AMENITY_PHOTOS.map((p, i) => (
