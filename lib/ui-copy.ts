@@ -4,7 +4,12 @@
 
 export const UI = {
   skip: "Skip to the homes",
-  nav: { homes: "The homes", visit: "Private visit" },
+  nav: { homes: "The homes", visit: "Private visit", classic: "Classic site" },
+  offer: {
+    text: "This device may show the classic site more smoothly.",
+    open: "Open the classic site",
+    stay: "Stay here",
+  },
   sound: { on: "Sound on", off: "Sound off" },
   arc: {
     index: "Chapters",

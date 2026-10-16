@@ -797,6 +797,7 @@ html[data-rm="1"] .vc-hero__cue span {
 }
 .vc-heart.is-still .vc-heart__slide {
   position: relative;
+  background: none;
 }
 .vc-heart.is-still .vc-heart__slide img {
   aspect-ratio: 16 / 10;

@@ -8,6 +8,7 @@ import { toneFor } from "@/lib/ui-time";
 import { Header, goToHomes } from "./Header";
 import { SunArc } from "./SunArc";
 import { Cursor } from "./Cursor";
+import { ClassicOffer } from "./ClassicOffer";
 
 const THEME: Record<string, string> = { film: "#2a2b22", day: "#E5E3D7", night: "#14161b" };
 
@@ -106,6 +107,7 @@ export function Chrome() {
     <>
       <SunArc />
       <Cursor />
+      <ClassicOffer />
       <Grain />
     </>
   );

@@ -22,7 +22,7 @@ export function goToHomes() {
 
 /**
  * Small wordmark tinted to the scene (olive by day, limestone over film / night),
- * minimal nav, the only solid button, the sound waveform. (No language label
+ * minimal nav (with the way to the classic site), the only solid button, the sound waveform. (No language label
  * until there is a second language to switch to: Phase 2.)
  */
 export function Header() {
@@ -39,6 +39,10 @@ export function Header() {
         <Wordmark className="vl-header__wordmark" label="Vila Leku — back to the beginning" />
       </a>
       <nav className="vl-header__nav" aria-label="Main">
+        {/* A plain page load: leaving releases the 3D entirely. */}
+        <a href="/classic" className="vl-link vl-header__homes vl-header__classic">
+          {UI.nav.classic}
+        </a>
         <a
           href="#homes"
           className="vl-link vl-header__homes"

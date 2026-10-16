@@ -149,7 +149,8 @@ export function Location() {
               aria-label={CLASSIC.location.marker}
               tabIndex={-1}
               data-open={open ? "1" : "0"}
-              style={{ left: `${MAP_MARKER.box.r + 1.5}%`, top: `${MAP_MARKER.box.t}%` }}
+              // Beside the marker, high enough that the whole card stays on the map.
+              style={{ left: `${MAP_MARKER.box.r + 1.5}%`, top: "5%" }}
             >
               <Wordmark className="vc-map__card-mark" label={BRAND.name} />
               <p className="vc-map__card-place">{BRAND.place}</p>
