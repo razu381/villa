@@ -8,9 +8,10 @@
  * foliage.
  *
  * Attributes: position, normal, aFoam (vec3), aFoamN (vec3),
- *   aTree = (ao, part, height01) — part: 0 foliage, 1 trunk. The AO is baked
+ *   aTree = (ao, part, height01, hidden) — part: 0 foliage, 1 trunk. The AO is baked
  *   per vertex: facing into the crown, tucked against a neighbouring blob,
- *   and low in the crown are darker.
+ *   and low in the crown are darker. `hidden` marks crown faces that only a
+ *   section cut can reveal (inside a neighbouring blob, or facing into the crown).
  */
 import { BufferAttribute, BufferGeometry, IcosahedronGeometry, Vector3 } from "three";
 import { mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
@@ -82,10 +83,13 @@ class TreeBuilder {
       const out = new Vector3(px - env.c[0], (py - env.c[1]) * 0.6, pz - env.c[2]).normalize();
       const facing = n.dot(out); // -1 into the crown … 1 out of it
       let ao = 0.45 + 0.4 * Math.max(0, Math.min(1, facing * 0.6 + 0.45));
+      let qMin = Infinity;
       for (const o of others) {
         const q = Math.hypot((px - o.c[0]) / o.r[0], (py - o.c[1]) / o.r[1], (pz - o.c[2]) / o.r[2]);
         if (q < 1.55) ao *= 1 - 0.42 * (1 - Math.max(0, (q - 0.95) / 0.6));
+        qMin = Math.min(qMin, q);
       }
+      const hidden = Math.max(1 - Math.max(0, Math.min(1, (qMin - 0.85) / 0.2)), Math.max(0, Math.min(1, (0.1 - facing) / 0.45)));
       const low = (py - (env.c[1] - env.r[1])) / (2 * env.r[1]);
       ao *= 0.72 + 0.28 * Math.max(0, Math.min(1, low * 1.3));
       ao += 0.12 * Math.max(0, n.y); // tops catch the sky
@@ -93,7 +97,7 @@ class TreeBuilder {
       this.nor.push(n.x, n.y, n.z);
       this.foam.push(fx, fy, fz);
       this.foamN.push(fn.x, fn.y, fn.z);
-      this.tree.push(Math.max(0.2, Math.min(1, ao)), 0, py);
+      this.tree.push(Math.max(0.2, Math.min(1, ao)), 0, py, hidden);
     }
     for (const i of SPHERE.index) this.index.push(base + i);
   }
@@ -120,7 +124,7 @@ class TreeBuilder {
         this.nor.push(n.x, n.y, n.z);
         this.foam.push(p.x, p.y, p.z);
         this.foamN.push(n.x, n.y, n.z);
-        this.tree.push(0.85, 1, p.y);
+        this.tree.push(0.85, 1, p.y, 0);
       }
     }
     for (let i = 0; i < seg; i++) {
@@ -135,7 +139,7 @@ class TreeBuilder {
     g.setAttribute("normal", new BufferAttribute(new Float32Array(this.nor), 3));
     g.setAttribute("aFoam", new BufferAttribute(new Float32Array(this.foam), 3));
     g.setAttribute("aFoamN", new BufferAttribute(new Float32Array(this.foamN), 3));
-    g.setAttribute("aTree", new BufferAttribute(new Float32Array(this.tree), 3));
+    g.setAttribute("aTree", new BufferAttribute(new Float32Array(this.tree), 4));
     g.setIndex(this.index);
     g.computeBoundingSphere();
     g.computeBoundingBox();

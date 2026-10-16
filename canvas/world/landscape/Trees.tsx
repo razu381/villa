@@ -18,6 +18,8 @@
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import {
+  DoubleSide,
+  FrontSide,
   type Group,
   InstancedBufferAttribute,
   InstancedMesh,
@@ -53,13 +55,13 @@ const WIND = new Vector3(0.92, 0, 0.38);
 const VERT_PARS = /* glsl */ `
 attribute vec3 aFoam;
 attribute vec3 aFoamN;
-attribute vec3 aTree;
+attribute vec4 aTree;
 attribute vec4 aInst;
 attribute vec3 aWindO;
 uniform float uFoam;
 uniform float uWind;
 ${VL_GLSL}
-varying vec3 vTreeA;
+varying vec4 vTreeA;
 varying vec4 vTreeI;
 varying float vTreeB;
 varying vec3 vTreeL;
@@ -99,12 +101,13 @@ const FRAG = /* glsl */ `
 #define C_TRUNK ${lin("#7A6D5D")}
 #define C_TRUNK_OLIVE ${lin("#857D70")}
 #define C_MOON ${lin("#8FA0C8")}
-varying vec3 vTreeA;
+varying vec4 vTreeA;
 varying vec4 vTreeI;
 varying float vTreeB;
 varying vec3 vTreeL;
-uniform float uCutZ;
+varying float vTreeCut;
 float tvClump = 0.5;
+float tvCapK = 0.0;
 float tvLeaf = 1.0;
 
 ${FOLIAGE_NOISE_GLSL}
@@ -154,18 +157,20 @@ const COLOR = /* glsl */ `
 
 /** After the sweep mix: foam back faces, the broken leafy silhouette, cavity AO. */
 const POST = /* glsl */ `
-  // inside faces: only where the section has cut the crown (the foam forms never show them)
-  if (!gl_FrontFacing && (vTreeB < 0.995 || abs(vVlWorld.z - uCutZ) > 4.0)) discard;
+  // inside faces: only on crowns the section has cut (the foam forms never show them)
+  if (!gl_FrontFacing && vTreeCut < 0.5) discard;
+  // the cut face: inside faces, and the inner faces of the crown seen through the cut
+  tvCapK = gl_FrontFacing ? vTreeCut * vTreeA.w : 1.0;
   float vlMaskT = vlMask;
   {
     float bl = vTreeB * vlMask * (1.0 - vTreeA.y);
-    if (bl > 0.5) {
+    if (bl > 0.5 && tvCapK < 0.5) {
       // leafy silhouette: clump-sized lobes eat into the rim (not pixel speckle)
       float rim = 1.0 - abs(dot(normalize(vNormal), normalize(vViewPosition)));
       if (tvClump * 0.8 + tvLeaf * 0.2 < smoothstep(0.5, 1.0, rim) * 0.9) discard;
     }
     float ao = mix(1.0, vTreeA.x, 0.85) * mix(1.0, 0.72 + 0.34 * tvClump, bl);
-    diffuseColor.rgb *= mix(1.0, ao, vTreeB);
+    diffuseColor.rgb *= mix(1.0, ao, vTreeB * (1.0 - tvCapK));
   }
 `;
 
@@ -195,20 +200,27 @@ const HUE = /* glsl */ `
   // section cap: the inside of a crown the cut has opened is lit as one flat,
   // slightly darker foliage face (it sits in its own shell's shadow otherwise)
   #if NUM_DIR_LIGHTS > 0
-  if (!gl_FrontFacing) {
+  if (tvCapK > 0.0) {
     vec3 capL = vec3(0.0);
     for (int i = 0; i < NUM_DIR_LIGHTS; i++) capL += directionalLights[i].color;
-    reflectedLight.directDiffuse = max(reflectedLight.directDiffuse, capL * BRDF_Lambert(diffuseColor.rgb) * 0.5);
+    vec3 capD = max(reflectedLight.directDiffuse, capL * BRDF_Lambert(diffuseColor.rgb) * 0.5);
+    reflectedLight.directDiffuse = mix(reflectedLight.directDiffuse, capD, tvCapK);
   }
   #endif
 `;
 
 /** Section cap normal: view-facing, so the cut reads as an evenly lit flat face (no hollow). */
 const CAP = /* glsl */ `
-  if (!gl_FrontFacing) {
-    normal = vec3(0.0, 0.0, 1.0);
-    diffuseColor.rgb *= 0.86;
+  if (tvCapK > 0.0) {
+    normal = normalize(mix(normal, vec3(0.0, 0.0, 1.0), tvCapK) + vec3(0.0, 0.0, 1e-4)); // never a zero vector (NaN)
+    diffuseColor.rgb *= mix(1.0, 0.86, tvCapK);
   }
+`;
+
+/** 1 on a grown tree whose crown the section plane runs through (its insides may show). */
+const CUT_VERT = /* glsl */ `
+  float tvR = 0.55 * max(length(instanceMatrix[0].xyz), length(instanceMatrix[2].xyz));
+  vTreeCut = step(abs(instanceMatrix[3].z - uCutZ), tvR) * step(0.995, tvB);
 `;
 
 const MOON = /* glsl */ `
@@ -225,6 +237,10 @@ function treeVertex(shader: WebGLProgramParametersWithUniforms, withNormal: bool
   vs = inject(vs, "void main() {", "void main() {\n  float tvB = tv_bloom();", "replace");
   if (withNormal) vs = inject(vs, "#include <beginnormal_vertex>", "objectNormal = normalize(mix(aFoamN, objectNormal, tvB * mix(0.32, 1.0, aTree.y)));");
   vs = inject(vs, "#include <begin_vertex>", VERT_BODY);
+  if (withNormal) {
+    vs = inject(vs, "#include <common>", "uniform float uCutZ;\nvarying float vTreeCut;");
+    vs = inject(vs, "#include <begin_vertex>", CUT_VERT, "before");
+  }
   shader.vertexShader = vs;
 }
 
@@ -249,10 +265,14 @@ function createTreeMaterial() {
   const mat = patchVillageMaterial(new MeshStandardMaterial({ color: "#ffffff", roughness: 0.97, metalness: 0 }), {
     modelColor: "#D9DCCB",
     modelRoughness: 1,
-    poche: "#3E4530",
+    // No flat poché: it would paint over the lit cap face (CAP/HUE) with a dark hollow.
+    // Back faces still render, but only where the section has opened a crown (POST).
+    poche: null,
     seam: false,
   });
-  return extendMaterial(mat, "tree-v3", (shader) => {
+  mat.side = DoubleSide;
+  mat.shadowSide = FrontSide;
+  return extendMaterial(mat, "tree-v4", (shader) => {
     treeVertex(shader, true);
     shader.uniforms.uCutZ = uCutZ;
     let fs = shader.fragmentShader;

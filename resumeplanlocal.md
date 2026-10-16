@@ -87,7 +87,18 @@ Use: `node scripts/shot.mjs --t 1.6,2.6,4.5 --out shots/x [--mobile] [--q "home=
 
 ---
 
-## 2. First: visually verify QA part 1 (`e665a9b`)
+## ✅ 2. First: visually verify QA part 1 (`e665a9b`)
+
+> **Done** (real GPU, Intel UHD / ANGLE-GL, prod build). Per row:
+> - **Sun path** ✓ morning azimuth ~20° (light from the right, raking the south faces), golden hour ~175° (from the left, shadows east), monotonic. The whole 116° swing happens inside the section chapter (t 4.0–4.95) at 47–60° elevation; gentle in scroll (~4° per 100 px). The code comment says "east-north-east"; it is actually east-south-east.
+> - **Cut tree crowns** ✗→✓ the fix had no effect: the tree poché painted every back face flat dark olive after lighting, and the real "eye" was an *inner* lobe's front face seen through the cut. Fixed: trees drop the flat poché (still double-sided); the builder bakes a `hidden` weight per vertex (inside a neighbouring blob or facing into the crown); on crowns the plane runs through, back faces and hidden faces take the flat lit cap shading, no cavity AO. Trees away from the cut, and every frame with the section closed, are unchanged.
+> - **Header backdrop** ✓ wordmark, "The homes", EN legible at 4.8–5.9 and in explore.
+> - **Night** ✓ copy on dark air, form on its glass surface, no trees through the date grid. ✗ **stars**: only 2 faint dots, visible at ×3 gain. The sky below the horizon is covered by the fogged ground plane (R ≈ 4,200), so the "stars in the dark air" change can never show; see 3.23.
+> - **Golden hour / dusk** ✓ 5.5 neutral-warm, not orange; 6.3 is a dusty rose-brown, not purple.
+> - **Homes keys** ✓ both featured homes inside the 25–60% band at 5.1 / 5.5 / 5.9, clear of the header.
+> - **Index overlay** ✗→✓ ghosts remained at 0.1 ("…fe above." legible beside the panel) and the legend eyebrow did not dim at all (GSAP reveals set inline opacity). Now `opacity: 0 !important` while the index is open; everything returns on close.
+> - **Mobile 6.6** ✓ no half-cut eyebrow at the bottom.
+> - **New, outside the table:** t ≈ 4.3 (section dive) flashes black (see 3.0 below).
 
 Shoot desktop frames at t 3.0, 3.9, 4.5, 4.8, 5.1, 5.5, 5.9, 6.3, 6.7, plus `?home=v4&sun=0.72`, `?home=v3`, `?invite=demo` at 6.7, and mobile at 5.5 and 6.6. Check each fix:
 
@@ -113,6 +124,11 @@ Each item: **where** → **what to do** → **done when**. Review suggestions ar
 
 > The pitch runs on a **Windows laptop**. Chrome and Edge there go through ANGLE → Direct3D 11, where shader compilation is the slowest of any platform, and the GPU is often an Intel or AMD integrated chip. So 3.1 (warm-up) and 3.2/3.3 (tiering and adaptive quality) come first.
 > Step zero: open `chrome://gpu` on the pitch laptop and note the GPU string, and check whether it switches to a discrete GPU on battery vs mains power. Present on mains power.
+
+**3.0 Black flash in the section dive (t ≈ 4.28–4.32).** *(found in §2)*
+- *Where:* some scene shader emits NaN/Inf in the descending camera pose while the section plane sweeps in; the bloom mip pyramid (`canvas/Post.tsx`, always on) smears it into a near-black frame.
+- *Seen:* prod build, real GPU: intermittent black frames on arrival by scroll and on a cold `?t=4.3`. Tier low (no composer) renders fine; t 4.25 and 4.35 are fine.
+- *Done when:* no black frame anywhere in a slow scroll through 4.1–4.5 (sampled every frame) at tier high and mid.
 
 **3.1 Compile shaders up front, so stages don't stall when they first appear.**
 - *Where:* new `Warmup` component in `canvas/Experience.tsx`; first Explore click in `canvas/homes/FeaturedHome.tsx`.
@@ -190,7 +206,7 @@ Each item: **where** → **what to do** → **done when**. Review suggestions ar
 | 3.20 | Mobile tap targets too small | `components/homes/HomePanel.tsx`, `globals.css` compact block (~l.2210) | V3/V4 switch ≥ 44×44 px hit area; submit 48 px; `.vl-panel__more` ≥ 44 px; header pill hit area via `::after { inset:-4px 0 }`. |
 | 3.21 | "Back to the village" hard to read and tap on phones | `.vl-back` | Soft limestone pill on compact screens: `color-mix(in srgb, var(--scrim) 72%, transparent)`, blur 6px, padding 8×14, radius 999px. |
 | 3.22 | "EN" looks like a control but does nothing | `components/chrome/Header.tsx` | Remove it, or render it as plain soft text. |
-| 3.23 | Night palette and stars | `lib/day.ts`, `canvas/Day.tsx` | Part 1 moved the sky toward ink-blue and added stars. Verify stars actually read; if not, pitch the 6.8 key up ~4°. |
+| 3.23 | Night palette and stars | `lib/day.ts`, `canvas/Day.tsx` | Part 1 moved the sky toward ink-blue and added stars. Verified in §2: they **don't** read. The fogged ground plane hides all sky below the horizon, so stars can only appear in the thin true-sky strip at the top of the 6.3/6.8 frames. Pitch the 6.8 key up ~4° (or raise star density/size in the strip). |
 
 ### P2: nice to have
 
