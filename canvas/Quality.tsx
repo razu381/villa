@@ -90,7 +90,7 @@ export function FrameGate() {
       const hide = s.canvas === "gone" || (s.ready && stagesFromT(s.t).heroFade < 0.02);
       if (hide === paused) return;
       paused = hide;
-      // setFrameloop restarts the clock at 0: keep time continuous (sway, breathing).
+      // setFrameloop restarts the clock at 0: keep time continuous (stars, shimmer).
       const e = clock.elapsedTime;
       setFrameloop(hide ? "never" : "always");
       clock.elapsedTime = e;

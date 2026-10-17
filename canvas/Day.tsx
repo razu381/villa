@@ -49,7 +49,7 @@ const ctr = new Vector3();
  * the model), seen from the sun. Close-ups get a tight box — crisp shadows
  * without stair-steps — wide views the whole model. The box centre is snapped
  * to the shadow map's texel grid in the sun's frame and it is fitted to the
- * rig's view without the breathing drift, so a still frame's shadows are still.
+ * rig's view, so a still frame's shadows are still.
  */
 function fitShadow(light: DirectionalLight, sunDir: Vector3, mapSize: number) {
   const v = rigView;

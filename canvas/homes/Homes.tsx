@@ -158,7 +158,6 @@ export function Homes() {
 
   // While the camera eases (after a scroll, towards a home) the homes move under a
   // still pointer: re-pick every ~100 ms until it settles, so hover never lags.
-  // (The idle breathing drift moves it < 1 cm per check and is ignored.)
   useFrame((state) => {
     const p = seen.current;
     if (camera.position.distanceToSquared(p.pos) < 1e-4) return;

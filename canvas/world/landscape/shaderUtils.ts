@@ -29,8 +29,11 @@ export function inject(src: string, anchor: string, code: string, where: "before
   return src.replace(anchor, where === "after" ? `${anchor}\n${code}` : `${code}\n${anchor}`);
 }
 
-/** Wind amount for sway/flutter: 1, or 0 with reduced motion (written by Trees). */
-export const uWind = { value: 1 };
+/**
+ * Wind amount for the trees' and planting's sway / flutter. 0: they stand still
+ * (2026-10-17, user's call: the moving crowns read as flicker). 1 brings the wind back.
+ */
+export const uWind = { value: 0 };
 
 /** GLSL float literal. */
 export const f = (n: number) => {

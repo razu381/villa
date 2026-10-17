@@ -9,7 +9,7 @@
  *   beds      mixed shrubs on top of the terrace walls and inside the bastion,
  *             the greenery that spills over the limestone
  *   hedges    clipped hedges framing the villa gardens
- * Each clump grows in with U.uLife (own delay), soft parts move in the wind.
+ * Each clump grows in with U.uLife (own delay). (Wind sway off: uWind = 0, shaderUtils.ts.)
  * White model → colour via the sweep; clipped by the section plane.
  */
 import { useFrame } from "@react-three/fiber";

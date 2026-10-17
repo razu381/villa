@@ -11,7 +11,8 @@ import { damp } from "./Driver";
 /**
  * Journey camera: samples the authored path at `t`, damps towards it.
  * Explore mode blends to the selected home's close-up shot.
- * A barely-there breathing drift keeps still frames alive.
+ * A still frame holds perfectly still (no breathing drift: without multisampling,
+ * any sub-pixel drift makes slender edges crawl, 2026-10-17).
  */
 export function CameraRig() {
   const camera = useThree((s) => s.camera) as PerspectiveCamera;
@@ -34,7 +35,7 @@ export function CameraRig() {
       : null,
   );
 
-  useFrame((state, dt) => {
+  useFrame((_, dt) => {
     const s = useJourney.getState();
     const d = Math.min(dt, 1 / 20);
     const snap = s.snap || first.current;
@@ -106,7 +107,7 @@ export function CameraRig() {
     const liftEff = lift.current * w;
     const slideEff = slide.current * w;
     camera.position.copy(target.current).add(tmp.copy(pos.current).sub(target.current).multiplyScalar(distScale));
-    // The settled view (no breathing) — what the shadow frustum is fitted to (Day.tsx).
+    // The view this frame — what the shadow frustum is fitted to (Day.tsx).
     rigView.pos.copy(camera.position);
     rigView.target.copy(target.current);
     rigView.fov = fovEff;
@@ -115,12 +116,6 @@ export function CameraRig() {
     rigView.lift = liftEff;
     rigView.slide = slideEff;
     rigView.distScale = distScale;
-    // Breathing: a tiny slow orbit so a still frame never feels frozen.
-    if (!s.reducedMotion && !s.snap && !pinned.current) {
-      const e = state.clock.elapsedTime;
-      camera.position.x += Math.sin(e * 0.11) * 0.8;
-      camera.position.y += Math.sin(e * 0.07 + 1.3) * 0.4;
-    }
     camera.lookAt(target.current);
     camera.fov = fovEff;
     camera.updateProjectionMatrix();
@@ -137,9 +132,8 @@ export function CameraRig() {
 const tmp = new Vector3();
 
 /**
- * The rig's settled view this frame (portrait-adjusted, without the breathing
- * drift): stable while the journey is still, so consumers fitted to it (the
- * sun's shadow frustum) stay still too.
+ * The rig's view this frame (portrait-adjusted): stable while the journey is
+ * still, so consumers fitted to it (the sun's shadow frustum) stay still too.
  */
 export const rigView = { pos: new Vector3(70, 190, 180), target: new Vector3(-6, 0, -2), fov: 30, aspect: 1.6, explore: 0, lift: 0, slide: 0, distScale: 1 };
 /** Compositions are authored for ~16:10. */

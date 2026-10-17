@@ -13,7 +13,7 @@
  *   tree's own space, wrapped light and back-light translucency (per light,
  *   inside three's light loop), warm sunlit / cool shade split, a leafy
  *   broken silhouette, and a cool moonlit rim at night.
- * - Life (U.uLife): richer colour and a slow wind sway (+ a faint leaf flutter).
+ * - Life (U.uLife): richer colour. (The wind sway and leaf flutter are off: uWind = 0, shaderUtils.ts.)
  * - Clipped by the section plane; a custom depth material keeps the shadows in
  *   step with the morph and growth.
  */
@@ -38,7 +38,6 @@ import {
 } from "three";
 import { VL_GLSL, patchVillageMaterial, sharedUniformsFor } from "@/lib/materials";
 import { mulberry32 } from "@/lib/noise";
-import { useJourney } from "@/lib/store";
 import { U } from "@/lib/uniforms";
 import type { TreeKind } from "@/lib/village";
 import { groundHeight } from "../terrain/ground";
@@ -381,7 +380,6 @@ export function Trees() {
   useFrame(() => {
     const on = U.uFoam.value > 0.001;
     if (group.current && group.current.visible !== on) group.current.visible = on;
-    uWind.value = useJourney.getState().reducedMotion ? 0 : 1;
   });
 
   return (
