@@ -360,6 +360,7 @@ export function Trees() {
       mesh.receiveShadow = true;
       mesh.frustumCulled = false;
       mesh.customDepthMaterial = depth;
+      mesh.name = `landscape-trees-${kind}`;
       return mesh;
     });
   }, [mat, depth]);

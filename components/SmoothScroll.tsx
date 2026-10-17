@@ -23,6 +23,7 @@ declare global {
  *   ?home=v3|v4   explore mode on a home     ?sun=0.0–1.0  hold the sun
  *   ?rm=1         force reduced motion       ?tier=high|mid|low
  *   ?invite=demo  the invitation card, pre-filled (components/night/Invitation)
+ *   ?grain=0 / ?probe=1  for scripts/flicker.mjs (no film grain / probe hooks, canvas/Probe.tsx)
  */
 export function SmoothScroll() {
   useEffect(() => {

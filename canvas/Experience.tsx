@@ -14,6 +14,7 @@ import { Houses } from "./world/Houses";
 import { Section } from "./section/Section";
 import { Homes } from "./homes/Homes";
 import { FrameGate, Quality, baseDpr, pinnedQuality, qualitySteps } from "./Quality";
+import { Probe } from "./Probe";
 
 declare global {
   interface Window {
@@ -174,6 +175,7 @@ export default function Experience() {
   const steps = useMemo(() => qualitySteps(tier, base), [tier, base]);
   const [level, setLevel] = useState(() => pinnedQuality() ?? 0);
   const [warm, setWarm] = useState(0);
+  const [probe] = useState(() => new URLSearchParams(window.location.search).get("probe") === "1");
   const at = Math.min(level, steps.length - 1);
   const step = steps[at];
   useEffect(() => {
@@ -208,6 +210,7 @@ export default function Experience() {
         <Warmup key={warm} />
       </Suspense>
       <Post tilt={step.tilt} />
+      {probe && <Probe />}
     </Canvas>
   );
 }

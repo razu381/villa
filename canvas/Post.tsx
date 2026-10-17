@@ -39,7 +39,12 @@ export function Post({ tilt: tiltOn }: { tilt: boolean }) {
       }),
     [],
   );
-  const grain = useMemo(() => new GrainEffect(), []);
+  const grain = useMemo(() => {
+    const g = new GrainEffect();
+    // Debug: ?grain=0 (scripts/flicker.mjs — the grain changes every pixel every frame).
+    if (new URLSearchParams(window.location.search).get("grain") === "0") g.uniforms.get("uAmount")!.value = 0;
+    return g;
+  }, []);
   useEffect(
     () => () => {
       tilt.dispose();

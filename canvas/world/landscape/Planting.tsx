@@ -354,6 +354,7 @@ function makeMesh(kind: number, geo: BufferGeometry, list: Tuft[], mat: MeshStan
   mesh.receiveShadow = true;
   mesh.castShadow = castShadow;
   mesh.frustumCulled = false;
+  mesh.name = `landscape-planting-${kind}`;
   return mesh;
 }
 
