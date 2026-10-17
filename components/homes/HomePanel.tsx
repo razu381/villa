@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { COPY, HOMES } from "@/lib/content";
+import { turnHome } from "@/lib/orbit";
 import { useJourney, type HomeId } from "@/lib/store";
 import { UI } from "@/lib/ui-copy";
 import { useReveal } from "@/lib/ui-reveal";
@@ -73,6 +74,7 @@ function PanelBody({ id }: { id: HomeId }) {
           </button>
         ))}
       </div>
+      <ViewControls />
       <div className="vl-panel__head">
         <p className="vl-eyebrow" data-r="fade">
           <span className="vl-eyebrow__rule" aria-hidden="true" />
@@ -104,5 +106,41 @@ function PanelBody({ id }: { id: HomeId }) {
         ))}
       </ul>
     </section>
+  );
+}
+
+/**
+ * The open home's view: the whole house or its open floors (store.explode), and
+ * the 360° look (lib/orbit.ts): the scene itself is dragged, these buttons and
+ * ← / → turn it a step for keyboards.
+ */
+function ViewControls() {
+  const explode = useJourney((s) => s.explode);
+  const setExplode = useJourney((s) => s.setExplode);
+  const open = explode >= 0.5;
+  return (
+    <div className="vl-panel__view" data-r="fade">
+      <div className="vl-panel__opts" role="group" aria-label={UI.homes.view}>
+        <button type="button" aria-pressed={!open} onClick={() => setExplode(0)}>
+          {UI.homes.whole}
+        </button>
+        <button type="button" aria-pressed={open} onClick={() => setExplode(1)}>
+          {UI.homes.floors}
+        </button>
+      </div>
+      <div className="vl-turn" role="group" aria-label={UI.homes.turn}>
+        <button type="button" aria-label={UI.homes.turnLeft} onClick={() => turnHome(-1)}>
+          <svg viewBox="0 0 10 10" aria-hidden="true">
+            <path d="M6.5 1.5 L3 5 L6.5 8.5" />
+          </svg>
+        </button>
+        <span className="vl-turn__hint">{UI.homes.drag}</span>
+        <button type="button" aria-label={UI.homes.turnRight} onClick={() => turnHome(1)}>
+          <svg viewBox="0 0 10 10" aria-hidden="true">
+            <path d="M3.5 1.5 L7 5 L3.5 8.5" />
+          </svg>
+        </button>
+      </div>
+    </div>
   );
 }

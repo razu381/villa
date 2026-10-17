@@ -2,15 +2,19 @@
 
 import { useFrame, useThree } from "@react-three/fiber";
 import { useRef } from "react";
-import { PerspectiveCamera, Vector3 } from "three";
+import { PerspectiveCamera, Quaternion, Vector3 } from "three";
 import { sampleCamera, type CameraSample } from "@/lib/camera";
+import { orbit } from "@/lib/orbit";
 import { useJourney } from "@/lib/store";
-import { HOME_SHOTS } from "./homes/shots";
+import { FEATURED } from "@/lib/village";
+import { HOME_SHOTS, STACK_MID } from "./homes/shots";
 import { damp } from "./Driver";
 
 /**
  * Journey camera: samples the authored path at `t`, damps towards it.
- * Explore mode blends to the selected home's close-up shot.
+ * Explore mode blends to the selected home's close-up shot, which the visitor
+ * can turn all round the home (lib/orbit.ts): the whole shot rotates rigidly
+ * about the home's centre, so the home keeps its place beside the panel.
  * A still frame holds perfectly still (no breathing drift: without multisampling,
  * any sub-pixel drift makes slender edges crawl, 2026-10-17).
  */
@@ -26,7 +30,11 @@ export function CameraRig() {
   const explore = useRef(0);
   const goalPos = useRef(new Vector3());
   const goalTarget = useRef(new Vector3());
-  const pointer = useThree((s) => s.pointer);
+  const yaw = useRef(orbit.yaw);
+  const pitch = useRef(orbit.pitch);
+  const pivot = useRef(new Vector3());
+  const viewPos = useRef(new Vector3());
+  const viewTarget = useRef(new Vector3());
   const first = useRef(true);
   // Debug: ?cam=x,y,z,tx,ty,tz[,fov] pins the camera (close-up inspection).
   const pinned = useRef<number[] | null>(
@@ -61,11 +69,6 @@ export function CameraRig() {
       goalZoom += (1 - goalZoom) * k;
       goalLift -= goalLift * k;
       goalSlide -= goalSlide * k;
-      // Gentle pointer parallax while exploring.
-      if (!s.reducedMotion) {
-        goalPos.current.x += pointer.x * 4 * k;
-        goalPos.current.y += pointer.y * 2 * k;
-      }
     }
 
     if (snap) {
@@ -95,6 +98,43 @@ export function CameraRig() {
       target.current.set(c[3], c[4], c[5]);
       if (c[6]) fov.current = c[6];
     }
+
+    // The 360° look: turn the (damped) explore shot about the home's centre.
+    if (s.home) {
+      const h = FEATURED[s.home];
+      tmp.set(h.x, h.y + STACK_MID[s.home], h.z);
+      if (snap) pivot.current.copy(tmp);
+      else pivot.current.lerp(tmp, 1 - Math.exp(-3.2 * d));
+    }
+    // Whole turns look the same: keep the yaw within ±π, so it unwinds the short way.
+    if (Math.abs(orbit.yaw) > Math.PI) {
+      const w = 2 * Math.PI * Math.round(orbit.yaw / (2 * Math.PI));
+      orbit.yaw -= w;
+      yaw.current -= w;
+    }
+    if (s.home) {
+      // Elevation limits, measured on the home's own close-up shot.
+      off.fromArray(HOME_SHOTS[s.home].pos).sub(tmp);
+      const el = Math.atan2(off.y, Math.hypot(off.x, off.z));
+      orbit.pitch = Math.min(ORBIT_MAX_EL - el, Math.max(ORBIT_MIN_EL - el, orbit.pitch));
+    }
+    const lo = s.reducedMotion ? 14 : 8;
+    yaw.current = snap ? orbit.yaw : damp(yaw.current, orbit.yaw, lo, d);
+    pitch.current = snap ? orbit.pitch : damp(pitch.current, orbit.pitch, lo, d);
+    const ya = yaw.current * explore.current;
+    const pa = pitch.current * explore.current;
+    viewPos.current.copy(pos.current);
+    viewTarget.current.copy(target.current);
+    if (!pinned.current && (Math.abs(ya) > 1e-5 || Math.abs(pa) > 1e-5)) {
+      // Pitch about the horizontal axis across the view, then yaw about the vertical.
+      axis.set(-off.z, 0, off.x).normalize();
+      rot.setFromAxisAngle(axis, pa);
+      rot.premultiply(qYaw.setFromAxisAngle(UP, ya));
+      viewPos.current.sub(pivot.current).applyQuaternion(rot).add(pivot.current);
+      viewTarget.current.sub(pivot.current).applyQuaternion(rot).add(pivot.current);
+    }
+    const vp = viewPos.current;
+    const vt = viewTarget.current;
     // Portrait / narrow screens: keep the composition by widening the lens a little
     // and dollying back the rest (preserves the long-lens look, no fish-eye).
     // Phones in portrait (w → 1) also take the key's portrait fit: a little
@@ -106,17 +146,17 @@ export function CameraRig() {
     const distScale = Math.pow(k, 0.5) * (1 + (zoom.current - 1) * w);
     const liftEff = lift.current * w;
     const slideEff = slide.current * w;
-    camera.position.copy(target.current).add(tmp.copy(pos.current).sub(target.current).multiplyScalar(distScale));
+    camera.position.copy(vt).add(tmp.copy(vp).sub(vt).multiplyScalar(distScale));
     // The view this frame — what the shadow frustum is fitted to (Day.tsx).
     rigView.pos.copy(camera.position);
-    rigView.target.copy(target.current);
+    rigView.target.copy(vt);
     rigView.fov = fovEff;
     rigView.aspect = camera.aspect;
     rigView.explore = explore.current;
     rigView.lift = liftEff;
     rigView.slide = slideEff;
     rigView.distScale = distScale;
-    camera.lookAt(target.current);
+    camera.lookAt(vt);
     camera.fov = fovEff;
     camera.updateProjectionMatrix();
     if (liftEff !== 0 || slideEff !== 0) {
@@ -130,10 +170,19 @@ export function CameraRig() {
 }
 
 const tmp = new Vector3();
+const off = new Vector3();
+const axis = new Vector3();
+const UP = new Vector3(0, 1, 0);
+const rot = new Quaternion();
+const qYaw = new Quaternion();
+/** The turned explore shot stays between these elevations above the home's centre (rad). */
+const ORBIT_MIN_EL = (12 * Math.PI) / 180;
+const ORBIT_MAX_EL = (68 * Math.PI) / 180;
 
 /**
- * The rig's view this frame (portrait-adjusted): stable while the journey is
- * still, so consumers fitted to it (the sun's shadow frustum) stay still too.
+ * The rig's view this frame (portrait-adjusted, the 360° turn applied): stable
+ * while the journey is still, so consumers fitted to it (the sun's shadow
+ * frustum) stay still too.
  */
 export const rigView = { pos: new Vector3(70, 190, 180), target: new Vector3(-6, 0, -2), fov: 30, aspect: 1.6, explore: 0, lift: 0, slide: 0, distScale: 1 };
 /** Compositions are authored for ~16:10. */

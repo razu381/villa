@@ -17,6 +17,7 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 import { Raycaster, Vector2, Vector3 } from "three";
+import { markTurned, orbit, resetOrbit, turnHome } from "@/lib/orbit";
 import { useJourney, type HomeId } from "@/lib/store";
 import { stagesFromT } from "@/lib/timeline";
 import { FeaturedHome } from "./FeaturedHome";
@@ -155,6 +156,85 @@ export function Homes() {
       setHover(null);
     };
   }, [camera, gl]);
+
+  // The 360° look (lib/orbit.ts): while a home is open, dragging the scene turns it
+  // (a screen width ≈ a full turn, up and down within limits), ← / → turn it by a step.
+  // Mouse and pen only; touch keeps native scrolling (which lets the home go).
+  useEffect(() => {
+    const root = document.documentElement;
+    const body = document.body;
+    let drag: { x: number; y: number; id: number } | null = null;
+    const open = () => {
+      const s = useJourney.getState();
+      return s.mode === "explore" && s.home != null;
+    };
+    const overScene = (t: EventTarget | null) => !(t as Element | null)?.closest?.(CONTROLS);
+    const label = (on: boolean) => {
+      if (on) body.dataset.cursor = "drag"; // components/chrome/Cursor labels it
+      else if (body.dataset.cursor === "drag") delete body.dataset.cursor;
+    };
+    const mark = () => {
+      if (drag) root.dataset.orbit = "drag";
+      else if (open()) root.dataset.orbit = "1";
+      else delete root.dataset.orbit;
+    };
+    const onDown = (e: PointerEvent) => {
+      if (e.button !== 0 || e.pointerType === "touch" || !open() || !overScene(e.target)) return;
+      e.preventDefault(); // no text selection while turning
+      drag = { x: e.clientX, y: e.clientY, id: e.pointerId };
+      orbit.dragging = true;
+      mark();
+    };
+    const onMove = (e: PointerEvent) => {
+      if (e.pointerType === "touch") return;
+      if (drag && e.pointerId === drag.id) {
+        const k = (2 * Math.PI) / Math.max(640, window.innerWidth);
+        orbit.yaw -= (e.clientX - drag.x) * k;
+        orbit.pitch += (e.clientY - drag.y) * k * 0.6;
+        drag.x = e.clientX;
+        drag.y = e.clientY;
+        markTurned();
+        return;
+      }
+      label(open() && overScene(e.target));
+    };
+    const onUp = (e: PointerEvent) => {
+      if (!drag || e.pointerId !== drag.id) return;
+      drag = null;
+      orbit.dragging = false;
+      mark();
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (!open() || e.altKey || e.ctrlKey || e.metaKey || (e.key !== "ArrowLeft" && e.key !== "ArrowRight")) return;
+      if ((e.target as Element | null)?.closest?.("input, select, textarea, [role='slider'], [contenteditable='true']")) return;
+      e.preventDefault(); // (the page would scroll, and a scroll lets the home go)
+      turnHome(e.key === "ArrowRight" ? 1 : -1);
+    };
+    const unsub = useJourney.subscribe((s, p) => {
+      if (s.mode === p.mode && s.home === p.home) return;
+      // A home opens, changes or closes: the view starts from its authored shot.
+      resetOrbit();
+      drag = null;
+      mark();
+      if (!open()) label(false);
+    });
+    mark();
+    document.addEventListener("pointerdown", onDown);
+    document.addEventListener("pointermove", onMove, { passive: true });
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      unsub();
+      document.removeEventListener("pointerdown", onDown);
+      document.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+      window.removeEventListener("keydown", onKey);
+      label(false);
+      delete root.dataset.orbit;
+    };
+  }, []);
 
   // While the camera eases (after a scroll, towards a home) the homes move under a
   // still pointer: re-pick every ~100 ms until it settles, so hover never lags.

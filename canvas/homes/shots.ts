@@ -33,6 +33,9 @@ const PORTRAIT: Record<HomeId, CameraShot> = {
   v4: { pos: [-5.47, 25.86, 56.65], target: [3.2, 3.6, 33.0], fov: 30 },
 };
 
+/** Vertical centre of each exploded stack above its pad (m): the veil's focus and the orbit's pivot. */
+export const STACK_MID: Record<HomeId, number> = { v3: 9.5, v4: 9.0 };
+
 const portrait = () => typeof window !== "undefined" && window.innerWidth / Math.max(1, window.innerHeight) < 0.9;
 
 /** Explore-mode close-ups per home (exploded view framing), aspect-aware. */

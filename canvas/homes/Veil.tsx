@@ -25,13 +25,12 @@ import { U } from "@/lib/uniforms";
 import { FEATURED } from "@/lib/village";
 import { damp } from "../Driver";
 import { rigView } from "../CameraRig";
+import { STACK_MID } from "./shots";
 
 /** Opaque-pass order of the veil; the selected home draws after it. */
 export const VEIL_ORDER = 50;
 export const HOME_ORDER = 51;
 
-/** Vertical centre of each exploded stack above its pad (m). */
-const STACK_MID = { v3: 9.5, v4: 9.0 } as const;
 /** Distance of the quad in front of the camera (m) — in front of everything. */
 const NEAR = 2;
 

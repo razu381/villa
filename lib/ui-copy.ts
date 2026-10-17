@@ -40,6 +40,13 @@ export const UI = {
     choose: "Choose a home",
     open: "Explore",
     specs: "Specifications",
+    view: "View",
+    whole: "Whole house",
+    floors: "Open floors",
+    turn: "Turn the home",
+    turnLeft: "Turn left",
+    turnRight: "Turn right",
+    drag: "drag to look around",
   },
   form: {
     legend: "Your private visit",

@@ -1422,6 +1422,7 @@ html[data-index="1"] .vl-leaders {
   grid-template-columns: 1fr;
   grid-template-areas:
     "switch"
+    "view"
     "head"
     "img"
     "specs";
@@ -1465,6 +1466,96 @@ html[data-index="1"] .vl-leaders {
 .vl-panel__switch button[aria-pressed="true"] {
   color: var(--fg);
   border-bottom-color: currentColor;
+}
+/* The open home's view: whole house / open floors, and the 360° turn. */
+.vl-panel__view {
+  grid-area: view;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin: -12px 0 26px;
+}
+.vl-panel__opts {
+  display: flex;
+  gap: 16px;
+}
+.vl-panel__opts button {
+  padding: 4px 0;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--fg-soft);
+  cursor: pointer;
+  transition:
+    color 0.6s var(--ease-out),
+    border-color 0.6s var(--ease-out);
+}
+.vl-panel__opts button[aria-pressed="true"] {
+  color: var(--fg);
+  border-bottom-color: currentColor;
+}
+.vl-turn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.vl-turn button {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--hair);
+  border-radius: 50%;
+  background: none;
+  color: var(--fg);
+  cursor: pointer;
+  transition: border-color 0.6s var(--ease-out);
+}
+.vl-turn button:hover,
+.vl-turn button:focus-visible {
+  border-color: var(--fg);
+}
+.vl-turn svg {
+  width: 10px;
+  height: 10px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.1;
+}
+.vl-turn__hint {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--fg-soft);
+  white-space: nowrap;
+  transition: opacity 1.2s var(--ease-out);
+}
+/* The hint goes once the visitor has turned a home. */
+html[data-turned] .vl-turn__hint {
+  opacity: 0;
+}
+/* Turning an open home: the scene is the handle. */
+html[data-orbit] main.vl-journey {
+  cursor: grab;
+  user-select: none;
+}
+html[data-orbit] .vl-panel {
+  cursor: auto;
+}
+html[data-orbit="drag"],
+html[data-orbit="drag"] * {
+  cursor: grabbing !important;
+}
+/* Touch turns with the buttons only (a finger on the scene scrolls). */
+@media (pointer: coarse) {
+  .vl-turn__hint {
+    display: none;
+  }
 }
 .vl-panel__head {
   grid-area: head;
@@ -2533,6 +2624,7 @@ html[data-rm="1"] .vl-sound__wave {
     grid-template-columns: 1fr 64px;
     grid-template-areas:
       "switch switch"
+      "view view"
       "head img"
       "more more"
       "specs specs";

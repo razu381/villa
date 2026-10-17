@@ -23,6 +23,7 @@ declare global {
  *   ?home=v3|v4   explore mode on a home     ?sun=0.0–1.0  hold the sun
  *   ?rm=1         force reduced motion       ?tier=high|mid|low
  *   ?invite=demo  the invitation card, pre-filled (components/night/Invitation)
+ *   ?yaw=90&pitch=10  an open home turned (degrees, lib/orbit.ts)   ?explode=0  …as the whole house
  *   ?grain=0 / ?probe=1  for scripts/flicker.mjs (no film grain / probe hooks, canvas/Probe.tsx)
  */
 export function SmoothScroll() {
@@ -37,7 +38,7 @@ export function SmoothScroll() {
     if (home === "v3" || home === "v4") {
       store.setHome(home as HomeId);
       store.setMode("explore");
-      store.setExplode(1);
+      store.setExplode(params.get("explode") === "0" ? 0 : 1);
     }
     const sun = params.get("sun");
     if (sun != null) store.setSunOverride(clamp01(parseFloat(sun)));
