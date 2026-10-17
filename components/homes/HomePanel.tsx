@@ -129,12 +129,13 @@ function ViewControls() {
         </button>
       </div>
       <div className="vl-turn" role="group" aria-label={UI.homes.turn}>
+        {/* Left of the pair: once it fades, the buttons stay where the hand is. */}
+        <span className="vl-turn__hint">{UI.homes.drag}</span>
         <button type="button" aria-label={UI.homes.turnLeft} onClick={() => turnHome(-1)}>
           <svg viewBox="0 0 10 10" aria-hidden="true">
             <path d="M6.5 1.5 L3 5 L6.5 8.5" />
           </svg>
         </button>
-        <span className="vl-turn__hint">{UI.homes.drag}</span>
         <button type="button" aria-label={UI.homes.turnRight} onClick={() => turnHome(1)}>
           <svg viewBox="0 0 10 10" aria-hidden="true">
             <path d="M3.5 1.5 L7 5 L3.5 8.5" />
