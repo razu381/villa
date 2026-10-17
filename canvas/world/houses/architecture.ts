@@ -56,6 +56,7 @@
 import { type BufferGeometry, Matrix4 } from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { mulberry32 } from "@/lib/noise";
+import { plotClearHouse } from "@/lib/plot";
 import { clamp01, easeOutQuart } from "@/lib/timeline";
 import { HOUSES, VILLAGE_HEART, heightAt, type HouseSpec } from "@/lib/village";
 import {
@@ -1173,11 +1174,14 @@ export function buildVillageHouses(include: (spec: HouseSpec) => boolean = (h) =
   for (const spec of specs) {
     const k = construct(spec);
     houseMatrix(spec, m);
+    const [isoV3, isoV4] = plotClearHouse(spec);
     for (const part of k.parts()) {
       const g = part.geometry;
       g.applyMatrix4(m);
       const ah = g.getAttribute("aHouse");
       for (let i = 0; i < ah.count; i++) ah.setX(i, spec.y);
+      const ai = g.getAttribute("aIso");
+      for (let i = 0; i < ai.count; i++) ai.setXY(i, isoV3, isoV4);
       if (!perMat.has(part.material)) perMat.set(part.material, []);
       perMat.get(part.material)!.push(g);
     }
@@ -1192,6 +1196,8 @@ export function buildVillageHouses(include: (spec: HouseSpec) => boolean = (h) =
       sg.applyMatrix4(m);
       const sa = sg.getAttribute("aHouse");
       for (let i = 0; i < sa.count; i++) sa.setX(i, spec.y);
+      const si = sg.getAttribute("aIso");
+      for (let i = 0; i < si.count; i++) si.setXY(i, isoV3, isoV4);
       spillGeos.push(sg);
     }
   }

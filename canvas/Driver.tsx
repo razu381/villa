@@ -66,6 +66,12 @@ export function Driver() {
     const windowsTarget = Math.max(stages.windows, smooth(0.8, 0.92, dayRef.current) * (s.t > 2.6 ? 1 : 0));
     U.uWindows.value = snap ? windowsTarget : damp(U.uWindows.value, windowsTarget, 4, d);
 
+    // Clearing the plot around an open home (lib/plot.ts).
+    const isoV3 = s.mode === "explore" && s.home === "v3" ? 1 : 0;
+    const isoV4 = s.mode === "explore" && s.home === "v4" ? 1 : 0;
+    U.uIsoV3.value = snap ? isoV3 : damp(U.uIsoV3.value, isoV3, 2.2, d);
+    U.uIsoV4.value = snap ? isoV4 : damp(U.uIsoV4.value, isoV4, 2.2, d);
+
     // Section plane: closed = far away, open = at SECTION_Z.
     const open = U.uSection.value;
     sectionPlane.constant = open > 0.001 ? SECTION_Z + (1 - open) * 160 : 1e4;

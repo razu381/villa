@@ -37,6 +37,7 @@ import {
   type WebGLProgramParametersWithUniforms,
 } from "three";
 import { VL_GLSL, patchVillageMaterial, sharedUniformsFor } from "@/lib/materials";
+import { PLOT_GLSL, plotClear } from "@/lib/plot";
 import { mulberry32 } from "@/lib/noise";
 import { U } from "@/lib/uniforms";
 import type { TreeKind } from "@/lib/village";
@@ -62,9 +63,11 @@ attribute vec3 aFoamN;
 attribute vec4 aTree;
 attribute vec4 aInst;
 attribute vec3 aWindO;
+attribute vec2 aIso;
 uniform float uFoam;
 uniform float uWind;
 ${VL_GLSL}
+${PLOT_GLSL}
 varying vec4 vTreeA;
 varying vec4 vTreeI;
 varying float vTreeB;
@@ -74,7 +77,8 @@ float tv_bloom() {
 }
 float tv_grow() {
   float k = clamp((uFoam - aInst.x * 0.55) / 0.45, 0.0, 1.0);
-  return 1.0 - pow(1.0 - k, 3.0);
+  // (× the plot clearing: near an open home the tree shrinks back to its base)
+  return (1.0 - pow(1.0 - k, 3.0)) * vl_plotKeep(aIso);
 }
 `;
 
@@ -248,7 +252,7 @@ const MOON = /* glsl */ `
 `;
 
 function treeVertex(shader: WebGLProgramParametersWithUniforms, withNormal: boolean) {
-  Object.assign(shader.uniforms, sharedUniformsFor(["uTime", "uMaterial", "uLife", "uNight", "uWindows", "uSweepFrom", "uSweepTo", "uFoam"]), { uWind });
+  Object.assign(shader.uniforms, sharedUniformsFor(["uTime", "uMaterial", "uLife", "uNight", "uWindows", "uSweepFrom", "uSweepTo", "uFoam", "uIsoV3", "uIsoV4"]), { uWind });
   let vs = shader.vertexShader;
   vs = inject(vs, "#include <common>", VERT_PARS);
   vs = inject(vs, "void main() {", "void main() {\n  float tvB = tv_bloom();", "replace");
@@ -331,6 +335,7 @@ export function Trees() {
       const geo = buildTreeGeometry(kind);
       const inst = new Float32Array(specs.length * 4);
       const wind = new Float32Array(specs.length * 3);
+      const iso = new Float32Array(specs.length * 2);
       const mesh = new InstancedMesh(geo, mat, specs.length);
       specs.forEach((t, i) => {
         const r = mulberry32(t.seed);
@@ -347,12 +352,14 @@ export function Trees() {
         }
         mesh.setMatrixAt(i, _m.compose(_p, _q, _s));
         inst.set([t.delay, phase, tone, ki], i * 4);
+        iso.set(plotClear(t.x, t.z, w / 2), i * 2);
         // the wind, in the instance's own (rotated, scaled) space
         _w.copy(WIND).applyMatrix3(_n.setFromMatrix4(_m).invert());
         wind.set([_w.x, _w.y, _w.z], i * 3);
       });
       geo.setAttribute("aInst", new InstancedBufferAttribute(inst, 4));
       geo.setAttribute("aWindO", new InstancedBufferAttribute(wind, 3));
+      geo.setAttribute("aIso", new InstancedBufferAttribute(iso, 2));
       mesh.instanceMatrix.setUsage(StaticDrawUsage);
       mesh.instanceMatrix.needsUpdate = true;
       mesh.castShadow = true;

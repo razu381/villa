@@ -6,7 +6,7 @@
  * a line-segment collector for the architect's line drawing.
  *
  * Every vertex carries the same attribute set so parts merge freely:
- *   position (3) · normal (3) · uv (2) · aHouse (4) · aWin (2)
+ *   position (3) · normal (3) · uv (2) · aHouse (4) · aWin (2) · aIso (2)
  *   aHouse = (base y, rise delay, light delay, house random)
  *   aWin   = (window random 0..1 or -1, role)  — see ROLE
  *            (roof gravel tops instead carry their size: (size x, 10 + size z),
@@ -182,6 +182,8 @@ export class MeshBuilder {
     g.setAttribute("uv", new Float32BufferAttribute(this.uv, 2));
     g.setAttribute("aHouse", new Float32BufferAttribute(this.house, 4));
     g.setAttribute("aWin", new Float32BufferAttribute(this.win, 2));
+    // Standing by default; the village merge marks the houses that clear around an open home (lib/plot.ts).
+    g.setAttribute("aIso", new Float32BufferAttribute(new Float32Array((this.pos.length / 3) * 2), 2));
     g.setIndex(new Uint32BufferAttribute(this.idx, 1));
     g.computeBoundingBox();
     g.computeBoundingSphere();

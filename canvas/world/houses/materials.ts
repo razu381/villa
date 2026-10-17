@@ -26,6 +26,7 @@ import {
 } from "three";
 import { VL_GLSL, patchVillageMaterial, sharedUniformsFor } from "@/lib/materials";
 import { PALETTE } from "@/lib/palette";
+import { PLOT_GLSL } from "@/lib/plot";
 import { U, clipPlanes } from "@/lib/uniforms";
 
 export type HouseMaterialKey = "limestone" | "cork" | "glass" | "frame" | "roof" | "solar" | "timber" | "window";
@@ -54,11 +55,14 @@ float vlWinOn(float r, float role, float lightDelay, float windows) {
 const RISE_PARS_VERTEX = /* glsl */ `
 attribute vec4 aHouse;
 attribute vec2 aWin;
+attribute vec2 aIso;
 uniform float uRise;
 varying float vHRise;
+${PLOT_GLSL}
 float vlHouseRise(float delay) {
   float k = clamp((uRise - delay * 0.6) / 0.4, 0.0, 1.0);
-  return 1.0 - pow(1.0 - k, 4.0);
+  // (× the plot clearing: a neighbour of an open home sinks back into its plan)
+  return (1.0 - pow(1.0 - k, 4.0)) * vl_plotKeep(aIso);
 }
 `;
 const RISE_VERTEX = /* glsl */ `
@@ -564,6 +568,8 @@ function houseMaterial(
     vlCompile.call(mat, shader, renderer);
     Object.assign(shader.uniforms, {
       uRise: U.uRise,
+      uIsoV3: U.uIsoV3,
+      uIsoV4: U.uIsoV4,
       uSkyTop: U.uSkyTop,
       uSkyHorizon: U.uSkyHorizon,
       uGlow,
@@ -652,6 +658,8 @@ export function getHouseDepthMaterial(): MeshDepthMaterial {
   const m = new MeshDepthMaterial();
   m.onBeforeCompile = (shader) => {
     shader.uniforms.uRise = U.uRise;
+    shader.uniforms.uIsoV3 = U.uIsoV3;
+    shader.uniforms.uIsoV4 = U.uIsoV4;
     shader.vertexShader = shader.vertexShader
       .replace("#include <common>", `#include <common>\n${RISE_PARS_VERTEX}`)
       .replace("#include <begin_vertex>", `#include <begin_vertex>\n${RISE_VERTEX}`);
@@ -684,7 +692,7 @@ export function getHouseSpillMaterial(): ShaderMaterial {
     polygonOffsetUnits: -4,
     clipping: true,
     clippingPlanes: clipPlanes,
-    uniforms: { uRise: U.uRise, uWindows: U.uWindows, uGlow: { value: new Color(PALETTE.windowGlow) } },
+    uniforms: { uRise: U.uRise, uIsoV3: U.uIsoV3, uIsoV4: U.uIsoV4, uWindows: U.uWindows, uGlow: { value: new Color(PALETTE.windowGlow) } },
     vertexShader: /* glsl */ `
       #include <common>
       #include <clipping_planes_pars_vertex>

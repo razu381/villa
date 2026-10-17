@@ -24,6 +24,9 @@ export const U = {
   uWindows: { value: 0 },
   uPathLights: { value: 0 },
   uStars: { value: 0 },
+  /** Clearing the plot around an open home, 0 → 1 (lib/plot.ts): V3, V4. */
+  uIsoV3: { value: 0 },
+  uIsoV4: { value: 0 },
   /** Effective day progress (journey or held sun) and derived night amount. */
   uDay: { value: 0 },
   uNight: { value: 0 },

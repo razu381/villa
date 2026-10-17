@@ -23,6 +23,7 @@ import {
   InstancedMesh,
   Matrix3,
   Matrix4,
+  MeshDepthMaterial,
   MeshStandardMaterial,
   Quaternion,
   SphereGeometry,
@@ -32,6 +33,7 @@ import {
 } from "three";
 import { mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { patchVillageMaterial } from "@/lib/materials";
+import { PLOT_GLSL, plotClear } from "@/lib/plot";
 import { mulberry32 } from "@/lib/noise";
 import { U } from "@/lib/uniforms";
 import { lin } from "../terrain/siteGlsl";
@@ -188,11 +190,13 @@ const VERT_PARS = /* glsl */ `
 attribute float aH;
 attribute vec3 aInst;
 attribute vec3 aWindO;
+attribute vec2 aIso;
 uniform float uLife;
 uniform float uTime;
 uniform float uWind;
 varying float vPlH;
 varying vec3 vPlI;
+${PLOT_GLSL}
 `;
 const VERT_BODY = /* glsl */ `
   float plK = clamp((uLife - aInst.x * 0.55) / 0.45, 0.0, 1.0);
@@ -200,7 +204,8 @@ const VERT_BODY = /* glsl */ `
   float plSway = sin(uTime * 1.3 + instanceMatrix[3].x * 0.37 + instanceMatrix[3].z * 0.21);
   float plAmp = aInst.z < 0.5 ? 0.06 * smoothstep(0.6, 1.0, aH) : (aInst.z < 1.5 ? 0.09 : (aInst.z > 3.5 ? 0.0 : 0.015));
   transformed += aWindO * plSway * plAmp * aH * aH * uLife * uWind;
-  transformed *= plGrow;
+  // (× the plot clearing: near an open home the clump shrinks back to the ground)
+  transformed *= plGrow * vl_plotKeep(aIso);
   vPlH = aH;
   vPlI = aInst;
 `;
@@ -284,8 +289,8 @@ function createPlantMaterial() {
     modelColor: "#DADCCD",
     seam: false,
   });
-  return extendMaterial(mat, "plant-v3", (shader) => {
-    shader.uniforms.uWind = uWind;
+  return extendMaterial(mat, "plant-v4", (shader) => {
+    Object.assign(shader.uniforms, { uWind, uIsoV3: U.uIsoV3, uIsoV4: U.uIsoV4 });
     let vs = shader.vertexShader;
     vs = inject(vs, "#include <common>", VERT_PARS);
     vs = inject(vs, "#include <begin_vertex>", VERT_BODY);
@@ -335,24 +340,54 @@ const _n = new Matrix3();
 const _w = new Vector3();
 const WIND = new Vector3(0.92, 0, 0.38);
 
-function makeMesh(kind: number, geo: BufferGeometry, list: Tuft[], mat: MeshStandardMaterial, place: (t: Tuft) => void, castShadow: boolean) {
+/**
+ * Shadow pass for the clumps that cast (shrubs, hedges): the same growth, sway
+ * and plot clearing as the colour pass, so a shadow never outlives its clump.
+ */
+function createPlantDepthMaterial() {
+  const mat = new MeshDepthMaterial();
+  mat.onBeforeCompile = (shader) => {
+    Object.assign(shader.uniforms, { uLife: U.uLife, uTime: U.uTime, uWind, uIsoV3: U.uIsoV3, uIsoV4: U.uIsoV4 });
+    let vs = shader.vertexShader;
+    vs = inject(vs, "#include <common>", VERT_PARS);
+    vs = inject(vs, "#include <begin_vertex>", VERT_BODY);
+    shader.vertexShader = vs;
+  };
+  mat.customProgramCacheKey = () => "plant-depth-v1";
+  return mat;
+}
+
+function makeMesh(
+  kind: number,
+  geo: BufferGeometry,
+  list: Tuft[],
+  mat: MeshStandardMaterial,
+  place: (t: Tuft) => void,
+  castShadow: boolean,
+  depth: MeshDepthMaterial,
+  radius: (t: Tuft) => number = () => 1,
+) {
   const mesh = new InstancedMesh(geo, mat, list.length);
   const inst = new Float32Array(list.length * 3);
   const wind = new Float32Array(list.length * 3);
+  const iso = new Float32Array(list.length * 2);
   list.forEach((t, i) => {
     place(t);
     mesh.setMatrixAt(i, _m.compose(_p, _q, _s));
     inst.set([t.delay, t.tone, kind], i * 3);
+    iso.set(plotClear(t.x, t.z, radius(t)), i * 2);
     // the wind, in the instance's own (rotated, scaled) space
     _w.copy(WIND).applyMatrix3(_n.setFromMatrix4(_m).invert());
     wind.set([_w.x, _w.y, _w.z], i * 3);
   });
   geo.setAttribute("aInst", new InstancedBufferAttribute(inst, 3));
   geo.setAttribute("aWindO", new InstancedBufferAttribute(wind, 3));
+  geo.setAttribute("aIso", new InstancedBufferAttribute(iso, 2));
   mesh.instanceMatrix.setUsage(StaticDrawUsage);
   mesh.instanceMatrix.needsUpdate = true;
   mesh.receiveShadow = true;
   mesh.castShadow = castShadow;
+  if (castShadow) mesh.customDepthMaterial = depth;
   mesh.frustumCulled = false;
   mesh.name = `landscape-planting-${kind}`;
   return mesh;
@@ -360,6 +395,7 @@ function makeMesh(kind: number, geo: BufferGeometry, list: Tuft[], mat: MeshStan
 
 export function Planting() {
   const mat = useMemo(() => createPlantMaterial(), []);
+  const depth = useMemo(() => createPlantDepthMaterial(), []);
   const meshes = useMemo(() => {
     const out: InstancedMesh[] = [];
     out.push(
@@ -374,6 +410,7 @@ export function Planting() {
           _s.set(t.s * 0.5 * (t.len ?? 1.2), t.s * 0.95, t.s * 0.5);
         },
         false,
+        depth,
       ),
     );
     out.push(
@@ -388,6 +425,7 @@ export function Planting() {
           _s.set(t.s * 0.4, t.s * 0.85, t.s * 0.4);
         },
         false,
+        depth,
       ),
     );
     out.push(
@@ -402,6 +440,7 @@ export function Planting() {
           _s.set(t.s, t.s * 1.25, t.s * 0.95);
         },
         true,
+        depth,
       ),
     );
     out.push(
@@ -416,6 +455,7 @@ export function Planting() {
           _s.set(t.s, t.s * (0.95 + 0.3 * t.tone), t.s * 0.9);
         },
         false,
+        depth,
       ),
     );
     const hedges: Tuft[] = HEDGES.map((h) => ({ x: h.x, z: h.z, y: h.y, s: 1, rot: 0, delay: h.delay, tone: 0.5 }));
@@ -432,10 +472,12 @@ export function Planting() {
           _s.set(h.w, h.h, h.len);
         },
         true,
+        depth,
+        (t) => HEDGES.find((hh) => hh.x === t.x && hh.z === t.z)!.len / 2,
       ),
     );
     return out;
-  }, [mat]);
+  }, [mat, depth]);
   useEffect(
     () => () => {
       meshes.forEach((m) => {
@@ -443,8 +485,9 @@ export function Planting() {
         m.dispose();
       });
       mat.dispose();
+      depth.dispose();
     },
-    [meshes, mat],
+    [meshes, mat, depth],
   );
   const group = useRef<Group>(null);
   useFrame(() => {
