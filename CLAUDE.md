@@ -15,7 +15,7 @@ node scripts/shot.mjs --t 1.6,4.5 --out shots/x [--mobile] [--q "home=v4&sun=0.7
 node scripts/flicker.mjs --t 0.8:6.9:0.1 --micro 0.0005 [--q "quality=3"]   # unstable pixels per t (heat-maps in shots/flicker/)
 node scripts/flicker.mjs --t 5.5 --q "home=v4&sun=0.72" --through v4      # trees/planting inside an open home
 ```
-Debug URL params: `?t=` (journey 0–7) `?snap=1` `?home=v3|v4` `?sun=0..1` `?tier=high|mid|low` `?rm=1` `?invite=demo` `?cam=x,y,z,tx,ty,tz,fov` `?yaw=&pitch=` (degrees, an open home turned) `?explode=0` (the whole house) `?quality=N` (pin a quality rung) `?grain=0` `?probe=1` (hooks for flicker.mjs) `?secdbg=hide:name|prefix*` (hide meshes by name, e.g. `landscape-trees*`).
+Debug URL params: `?t=` (journey 0–7) `?snap=1` `?home=v3|v4|heart` `?photo=<spot>` (a spot's photos, `lib/places.ts` keys, e.g. `v4-pool`) `?sun=0..1` `?tier=high|mid|low` `?rm=1` `?invite=demo` `?cam=x,y,z,tx,ty,tz,fov` `?yaw=&pitch=` (degrees, an open home turned) `?explode=0` (the whole house) `?quality=N` (pin a quality rung) `?grain=0` `?probe=1` (hooks for flicker.mjs) `?secdbg=hide:name|prefix*` (hide meshes by name, e.g. `landscape-trees*`).
 Before relying on `scripts/shot.mjs` locally, make it portable (resumeplanlocal.md §1.1).
 
 ## Rules
@@ -46,6 +46,6 @@ Before relying on `scripts/shot.mjs` locally, make it portable (resumeplanlocal.
   - `Post.tsx`: SMAA, night bloom, tilt-shift, grade and grain
   - `world/`: terrain, landscape, houses (`houses/architecture.ts` header documents the builder API)
   - `section/`: garage, cars, life, anchors
-  - `homes/`: featured V3/V4, interiors, veil, jewels
-- `components/`: the HTML layer. Chapters, `HeroMedia` (film + match cut), chrome (sun arc / hold the sun, header, index, sound), homes panel, invitation.
+  - `homes/`: featured V3/V4, interiors, veil, jewels; the village heart as a third place; photo spots (`Spots.tsx`)
+- `components/`: the HTML layer. Chapters, `HeroMedia` (film + match cut), chrome (sun arc / hold the sun, header, index, sound), homes panel, photo pins and viewer (`homes/Spots.tsx`, `homes/PlaceViewer.tsx`, `ui/Lightbox.tsx`, shared with `/classic`), invitation.
 - `public/media/`: hero loops, posters, renders, brand masks, audio. All cut from the client's film and site, pitch use only.
