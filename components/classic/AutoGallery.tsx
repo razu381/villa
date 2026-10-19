@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Photo } from "@/lib/classic-content";
 import { stillMode } from "./env";
-import { Pic } from "./Pic";
+import { Pic } from "../ui/Pic";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 

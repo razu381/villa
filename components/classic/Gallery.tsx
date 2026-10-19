@@ -5,7 +5,7 @@ import { CLASSIC, GALLERY, type GalleryCategory } from "@/lib/classic-content";
 import { useInViewReveal } from "@/lib/ui-reveal";
 import { AutoGallery } from "./AutoGallery";
 import { Eyebrow } from "./Concept";
-import { Lightbox } from "./Lightbox";
+import { Lightbox } from "../ui/Lightbox";
 
 /**
  * Gallery by categories (the client's note): pick one and its photo wipes up
@@ -69,7 +69,14 @@ export function Gallery() {
           </div>
         </div>
       </div>
-      {viewer != null && <Lightbox items={group.items} start={viewer} onClose={() => setViewer(null)} />}
+      {viewer != null && (
+        <Lightbox
+          items={group.items}
+          start={viewer}
+          labels={{ title: CLASSIC.gallery.title, prev: CLASSIC.villas.prev, next: CLASSIC.villas.next, close: CLASSIC.gallery.close }}
+          onClose={() => setViewer(null)}
+        />
+      )}
     </section>
   );
 }

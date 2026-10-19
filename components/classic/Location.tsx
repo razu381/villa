@@ -7,7 +7,7 @@ import { useInViewReveal } from "@/lib/ui-reveal";
 import { Wordmark } from "../ui/Brand";
 import { Eyebrow } from "./Concept";
 import { gsap, stillMode } from "./env";
-import { Pic } from "./Pic";
+import { Pic } from "../ui/Pic";
 
 /** The few places the card names, by the client's own drive times. */
 const CARD_PLACES = ["Lisbon city centre", "Cascais", "Taguspark", "Beaches"];

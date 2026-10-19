@@ -1517,8 +1517,7 @@ html[data-rm="1"] .vc-map__halo {
   color: var(--vc-soft);
   cursor: pointer;
 }
-.vc-map__close svg,
-.vc-lightbox__close svg {
+.vc-map__close svg {
   width: 13px;
   height: 13px;
   fill: none;
@@ -1678,129 +1677,6 @@ html[data-rm="1"] .vc-map__halo {
 }
 .vc-ag__view:focus-visible {
   outline-offset: -8px;
-}
-
-/* ------------------------------------------------------------- viewer */
-
-html.vc-locked {
-  overflow: hidden;
-}
-.vc-lightbox {
-  position: fixed;
-  z-index: 100;
-  inset: 0;
-  display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
-  background: #141511;
-  color: #f1eee4;
-  animation: vc-fade 0.5s ease both;
-}
-.vc-lightbox[data-closing="1"] {
-  animation: vc-fade-out 0.45s ease both;
-}
-@keyframes vc-fade-out {
-  to {
-    opacity: 0;
-  }
-}
-.vc-lightbox__stage {
-  position: relative;
-  margin: 76px var(--vc-gutter) 0;
-  touch-action: pan-y;
-  user-select: none;
-}
-.vc-lightbox__slide {
-  position: absolute;
-  inset: 0;
-  margin: 0;
-  background: #141511;
-  visibility: hidden;
-}
-.vc-lightbox__slide img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-.vc-lightbox__slide[data-state="prev"] {
-  z-index: 1;
-  visibility: visible;
-}
-.vc-lightbox__slide[data-state="active"] {
-  z-index: 2;
-  visibility: visible;
-  animation: vc-wipe-up 1.3s var(--ease-in-out) both;
-}
-html[data-rm="1"] .vc-lightbox__slide[data-state="active"] {
-  animation: vc-fade 0.6s ease both;
-}
-.vc-lightbox__bar {
-  display: flex;
-  align-items: center;
-  gap: 28px;
-  padding: 22px var(--vc-gutter) 26px;
-}
-.vc-lightbox__cap {
-  display: flex;
-  flex: 1;
-  align-items: baseline;
-  gap: 18px;
-  min-width: 0;
-}
-.vc-lightbox__cap b {
-  font-family: var(--font-display);
-  font-weight: 400;
-  font-size: clamp(20px, 1.7vw, 27px);
-}
-.vc-lightbox__cap span {
-  font-size: 14px;
-  color: rgba(241, 238, 228, 0.7);
-}
-.vc-lightbox__count {
-  font-size: 12px;
-  letter-spacing: 0.12em;
-}
-.vc-lightbox__count i {
-  font-style: normal;
-  opacity: 0.5;
-}
-.vc-lightbox__nav {
-  display: flex;
-  gap: 8px;
-}
-.vc-lightbox .vc-ag__btn {
-  border-color: rgba(241, 238, 228, 0.3);
-  color: #f1eee4;
-}
-.vc-lightbox .vc-ag__btn:hover {
-  background: #f1eee4;
-  border-color: #f1eee4;
-  color: var(--vc-ink);
-}
-.vc-lightbox__close {
-  position: absolute;
-  top: 18px;
-  right: var(--vc-gutter);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  height: 40px;
-  padding: 0 16px;
-  border: 1px solid rgba(241, 238, 228, 0.3);
-  border-radius: 999px;
-  background: none;
-  color: inherit;
-  font-size: 13px;
-  letter-spacing: 0.04em;
-  cursor: pointer;
-  transition:
-    background-color 0.5s var(--ease-out),
-    color 0.5s var(--ease-out);
-}
-.vc-lightbox__close:hover {
-  background: #f1eee4;
-  color: var(--vc-ink);
 }
 
 /* ------------------------------------------------------ private visit */
@@ -2579,28 +2455,6 @@ html[data-rm="1"] .vc-lightbox__slide[data-state="active"] {
   }
   .vc-gallery__stage .vc-ag__controls {
     padding-inline: var(--vc-gutter);
-  }
-
-  /* Viewer: the photo edge to edge, the caption over the controls. */
-  .vc-lightbox__stage {
-    margin: 64px 0 0;
-  }
-  .vc-lightbox__bar {
-    flex-wrap: wrap;
-    gap: 12px 18px;
-    padding: 18px var(--vc-gutter) calc(22px + env(safe-area-inset-bottom));
-  }
-  .vc-lightbox__cap {
-    flex-basis: 100%;
-    flex-direction: column;
-    gap: 4px;
-  }
-  .vc-lightbox__count {
-    margin-right: auto;
-  }
-  .vc-lightbox__close {
-    top: 12px;
-    height: 38px;
   }
 
   /* Private visit: the words, the advisor (arches across the width), the form to the edges. */

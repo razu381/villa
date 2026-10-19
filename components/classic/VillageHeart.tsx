@@ -7,7 +7,7 @@ import { useInViewReveal } from "@/lib/ui-reveal";
 import { scrollToY } from "@/lib/ui-scroll";
 import { Eyebrow } from "./Concept";
 import { gsap, ScrollTrigger, stillMode } from "./env";
-import { Pic } from "./Pic";
+import { Pic } from "../ui/Pic";
 
 const HOLD = 0.45;
 const STEP = 1 + HOLD;

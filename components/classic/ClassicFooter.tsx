@@ -7,7 +7,7 @@ import { UI } from "@/lib/ui-copy";
 import { PhidiasMark, Wordmark } from "../ui/Brand";
 import { goTo } from "./ClassicHeader";
 import { gsap, stillMode } from "./env";
-import { ARCH_BOX } from "./Pic";
+import { ARCH_BOX } from "../ui/Pic";
 
 /**
  * The footer (the client: a fixed footer, with no logos but Vila Leku and

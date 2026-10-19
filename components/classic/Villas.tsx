@@ -7,7 +7,7 @@ import { useInViewReveal } from "@/lib/ui-reveal";
 import { AutoGallery } from "./AutoGallery";
 import { goTo } from "./ClassicHeader";
 import { Eyebrow } from "./Concept";
-import { Pic } from "./Pic";
+import { Pic } from "../ui/Pic";
 
 type HomeId = "v3" | "v4";
 

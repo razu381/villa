@@ -3,23 +3,48 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { Photo } from "@/lib/classic-content";
-import { CLASSIC } from "@/lib/classic-content";
 import { Pic } from "./Pic";
 
 const pad = (n: number) => String(n).padStart(2, "0");
+
+export interface ViewerItem {
+  photo: Photo;
+  title: string;
+  line?: string;
+}
+
+export interface ViewerLabels {
+  /** The dialog's name. */
+  title: string;
+  prev: string;
+  next: string;
+  close: string;
+}
 
 /**
  * The full-screen viewer: the whole photo on ink, its caption and count,
  * arrows, ← → and Esc, drag / swipe. Focus stays inside while it is open and
  * goes back to where it came from; the page doesn't scroll behind it.
+ * Shared by the classic site and the 3D journey (`arch`: the first photo rises
+ * through the brand arch; `note`: a quiet line beside the caption).
  */
 export function Lightbox({
   items,
   start,
+  labels,
+  note,
+  arch = false,
+  onClosing,
   onClose,
 }: {
-  items: { photo: Photo; title: string; line?: string }[];
+  items: ViewerItem[];
   start: number;
+  labels: ViewerLabels;
+  note?: string;
+  arch?: boolean;
+  /** The fade out begins. */
+  onClosing?: () => void;
+  /** The fade out has ended: unmount the viewer. */
   onClose: () => void;
 }) {
   const [index, setIndex] = useState(start);
@@ -39,6 +64,7 @@ export function Lightbox({
   const close = () => {
     if (closing) return;
     setClosing(true);
+    onClosing?.();
     window.setTimeout(onClose, 450);
   };
 
@@ -46,11 +72,11 @@ export function Lightbox({
     const opener = document.activeElement as HTMLElement | null;
     const lenis = window.__lenis;
     lenis?.stop();
-    document.documentElement.classList.add("vc-locked");
+    document.documentElement.classList.add("vl-viewer-lock");
     closeBtn.current?.focus({ preventScroll: true });
     return () => {
       lenis?.start();
-      document.documentElement.classList.remove("vc-locked");
+      document.documentElement.classList.remove("vl-viewer-lock");
       opener?.focus({ preventScroll: true });
     };
   }, []);
@@ -81,9 +107,9 @@ export function Lightbox({
 
   const item = items[index];
   return createPortal(
-    <div ref={ref} className="vc-lightbox" role="dialog" aria-modal="true" aria-label={CLASSIC.gallery.title} data-closing={closing ? "1" : "0"}>
+    <div ref={ref} className="vl-viewer" role="dialog" aria-modal="true" aria-label={labels.title} data-closing={closing ? "1" : "0"}>
       <div
-        className="vc-lightbox__stage"
+        className="vl-viewer__stage"
         onPointerDown={(e) => (drag.current = { x: e.clientX, id: e.pointerId })}
         onPointerUp={(e) => {
           const d = drag.current;
@@ -94,40 +120,47 @@ export function Lightbox({
         }}
       >
         {items.map((it, i) => (
-          <figure key={it.photo.src + i} className="vc-lightbox__slide" data-state={i === index ? "active" : i === prev ? "prev" : "idle"} aria-hidden={i !== index}>
+          <figure
+            key={it.photo.src + i}
+            className="vl-viewer__slide"
+            data-state={i === index ? "active" : i === prev ? "prev" : "idle"}
+            data-enter={arch && prev == null && i === start ? "arch" : undefined}
+            aria-hidden={i !== index}
+          >
             {(i === index || i === prev) && <Pic photo={it.photo} sizes="92vw" eager />}
           </figure>
         ))}
       </div>
-      <div className="vc-lightbox__bar">
-        <p className="vc-lightbox__cap" aria-live="polite">
+      <div className="vl-viewer__bar">
+        <p className="vl-viewer__cap" aria-live="polite">
           <b>{item.title}</b>
           {item.line && <span>{item.line}</span>}
         </p>
-        <span className="vc-lightbox__count">
+        {note && <span className="vl-viewer__note">{note}</span>}
+        <span className="vl-viewer__count">
           {pad(index + 1)} <i>/</i> {pad(n)}
         </span>
-        <div className="vc-lightbox__nav">
-          <button type="button" className="vc-ag__btn" onClick={() => go(index - 1)} aria-label={CLASSIC.villas.prev}>
+        <div className="vl-viewer__nav">
+          <button type="button" className="vl-viewer__btn" onClick={() => go(index - 1)} aria-label={labels.prev}>
             <svg viewBox="0 0 16 16" aria-hidden="true">
               <path d="M10 3 5 8l5 5" />
             </svg>
           </button>
-          <button type="button" className="vc-ag__btn" onClick={() => go(index + 1)} aria-label={CLASSIC.villas.next}>
+          <button type="button" className="vl-viewer__btn" onClick={() => go(index + 1)} aria-label={labels.next}>
             <svg viewBox="0 0 16 16" aria-hidden="true">
               <path d="m6 3 5 5-5 5" />
             </svg>
           </button>
         </div>
       </div>
-      <button ref={closeBtn} type="button" className="vc-lightbox__close" onClick={close}>
-        {CLASSIC.gallery.close}
+      <button ref={closeBtn} type="button" className="vl-viewer__close" onClick={close}>
+        {labels.close}
         <svg viewBox="0 0 16 16" aria-hidden="true">
           <path d="m4 4 8 8M12 4l-8 8" />
         </svg>
       </button>
     </div>,
-    // Inside the page root, so it shares the classic site's tokens.
+    // Inside the classic page root when there is one, so it shares its type.
     document.querySelector(".vc") ?? document.body,
   );
 }

@@ -6,7 +6,7 @@ import { CLASSIC, PHOTOS, PILLAR_PHOTOS } from "@/lib/classic-content";
 import { useInViewReveal } from "@/lib/ui-reveal";
 import { ARCH_PATH } from "../ui/Brand";
 import { gsap, stillMode } from "./env";
-import { ArchClip, Pic } from "./Pic";
+import { ArchClip, Pic } from "../ui/Pic";
 
 /** Section label: a number and a name, as in the client's layout. */
 export function Eyebrow({ n, children }: { n: string; children: React.ReactNode }) {

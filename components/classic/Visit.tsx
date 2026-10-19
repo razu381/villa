@@ -7,7 +7,7 @@ import { useInViewReveal } from "@/lib/ui-reveal";
 import { Invitation } from "../night/Invitation";
 import { ARCH_PATH } from "../ui/Brand";
 import { Eyebrow } from "./Concept";
-import { Pic } from "./Pic";
+import { Pic } from "../ui/Pic";
 
 function Arch({ className = "", at }: { className?: string; at: number }) {
   return (
