@@ -21,6 +21,7 @@ import { markTurned, orbit, resetOrbit, turnHome } from "@/lib/orbit";
 import { useJourney, type HomeId } from "@/lib/store";
 import { stagesFromT } from "@/lib/timeline";
 import { FeaturedHome } from "./FeaturedHome";
+import { Spots } from "./Spots";
 import { homesState } from "./state";
 import { Veil } from "./Veil";
 
@@ -255,6 +256,7 @@ export function Homes() {
       <FeaturedHome id="v3" />
       <FeaturedHome id="v4" />
       <Veil />
+      <Spots />
     </group>
   );
 }

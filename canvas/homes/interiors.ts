@@ -65,6 +65,8 @@ export interface InteriorLevel {
   cutY: number;
   /** Finished floor height (house-local). */
   floorY: number;
+  /** Named points in the rooms, ~1 m above the floor (house-local, before the lift): where a photo's pin stands (lib/places.ts). */
+  anchors: Record<string, Vec3>;
 }
 
 interface Rect {
@@ -83,6 +85,7 @@ class Level {
   l = new BlockBuilder();
   p = new PoolBuilder();
   lines = new LineCollector();
+  anchors: Record<string, Vec3> = {};
   /** Running phase for the plan drawing (pen order). */
   private phase = 0;
 
@@ -95,6 +98,11 @@ class Level {
     const p = this.phase;
     this.phase = Math.min(0.92, this.phase + step);
     return p;
+  }
+
+  /** Name a point in a room, h above the floor (a photo's pin, lib/places.ts). */
+  mark(name: string, x: number, z: number, h = 1.0) {
+    this.anchors[name] = [x, this.F + h, z];
   }
 
   /* ---- plan lines ---- */
@@ -516,6 +524,7 @@ class Level {
     }
     for (let i = 0; i < this.p.pos.length; i += 3) this.p.pos[i] = -this.p.pos[i];
     for (let i = 0; i < this.lines.pos.length; i += 3) this.lines.pos[i] = -this.lines.pos[i];
+    for (const a of Object.values(this.anchors)) a[0] = -a[0];
   }
 
   build(cutY: number): InteriorLevel {
@@ -526,6 +535,7 @@ class Level {
       plan: this.lines.build(),
       cutY,
       floorY: this.F,
+      anchors: this.anchors,
     };
   }
 }
@@ -658,6 +668,9 @@ function townhouseGround(L: Level, r: Rect, px: number, pz1: number) {
   }
   L.pendant(dcx, dcz - 0.4, 1.5, 0.15, 0.75, 0.9);
   L.pendant(dcx, dcz + 0.4, 1.5, 0.15, 0.75, 0.9);
+  L.mark("dining", dcx, dcz);
+  // The terrace: outside the garden glazing, under the cantilevered upper floor.
+  L.mark("terrace", (r.x0 + r.x1) / 2, r.z1 + 1.3, 0.9);
 
   // Living (west of the dining): sofa facing the garden, round table, chair, rug, lamp.
   const lx1 = tb.x0 - 0.75;
@@ -705,6 +718,7 @@ function townhouseUpper(L: Level, r: Rect, px: number, pz1: number) {
   L.rug({ x0: b2.x0 - 0.5, x1: r.x1 - 0.12, z0: b2.z0 - 0.45, z1: b2.z0 + 1.4 }, C.rugDeep);
   L.desk({ x0: ex0 + 0.12, x1: ex0 + 1.62, z0: r.z0 + 0.005, z1: r.z0 + 0.6 }, [ex0 + 0.85, r.z0 + 0.95], "n", [ex0 + 0.35, r.z0 + 0.25]);
   L.tall({ x0: r.x1 - 0.6, x1: r.x1 - 0.005, z0: r.z0 + 1.0, z1: r.z0 + 2.6 }, C.oakPale);
+  L.mark("bedroom", (ex0 + r.x1) / 2, (r.z0 + wz) / 2);
 
   // Master (south, the full width): king bed against the wall, bench, chair, rug.
   const xm = (ex0 + r.x1) / 2 - 0.35;
@@ -718,6 +732,7 @@ function townhouseUpper(L: Level, r: Rect, px: number, pz1: number) {
   L.roundTable(r.x0 + 0.85, r.z1 - 0.2 - 1.5, 0.22, 0.5, C.oakDark);
   L.floorLamp(r.x0 + 0.35, r.z1 - 0.35, 0.9);
   L.plant(r.x1 - 0.35, r.z1 - 0.35, 0.85);
+  L.mark("master", (r.x0 + r.x1) / 2, (wz + r.z1) / 2);
 }
 
 /* ---------------------------------------------------------------- V4 villa */
@@ -784,6 +799,7 @@ function villaGround(L: Level, bar: Rect, wing: Rect, core: Rect) {
   L.floorLamp(bar.x0 + 0.32, bar.z0 + 1.95, 1);
   L.low({ x0: bar.x0 + 2.0, x1: bar.x0 + 4.95, z0: bar.z0 + 0.005, z1: bar.z0 + 0.45 }, 0.6, C.oak);
   L.plant(bar.x0 + 0.35, bar.z1 - 0.35, 0.95);
+  L.mark("living", bar.x0 + 2.2, bar.z0 + 2.9);
 
   // Dining (middle, by the glazing): eight chairs, two globes.
   const dc = { x: -0.5, z: (bar.z0 + bar.z1) / 2 + 0.55 };
@@ -862,6 +878,7 @@ function villaUpper(L: Level, up: Rect, core: Rect, deckY: number, hw: number, h
   L.bath({ x0: p1 + 0.55, x1: p1 + 2.25, z0: up.z0 + 0.02, z1: up.z0 + 0.78 });
   L.vanity({ x0: p1 + 0.055, x1: p1 + 0.6, z0: up.z0 + 1.0, z1: p4 - 0.12 }, [up.z0 + 1.35, p4 - 0.48]);
   L.block(p3 - 0.5, 0, up.z0 + 1.1, p3 - 0.055, 0.45, p4 - 0.25, C.oak);
+  L.mark("bath", (p1 + p3) / 2, (up.z0 + p4) / 2);
 
   // Landing: reading corner by the tall south window.
   L.rug({ x0: p1 + 0.45, x1: p3 - 0.45, z0: up.z1 - 2.2, z1: up.z1 - 0.3 });
@@ -894,6 +911,7 @@ function villaUpper(L: Level, up: Rect, core: Rect, deckY: number, hw: number, h
     lounger(hw - 1.55, deckZ0 + 0.25);
     const y = deckY - L.F;
     L.f.cyl(hw - 2.07, L.F + y, deckZ0 + 0.55, 0.2, 0.42, C.oakDark, 20, false);
+    L.mark("deck", hw - 2.07, deckZ0 + 1.1, y + 0.9);
   }
 }
 

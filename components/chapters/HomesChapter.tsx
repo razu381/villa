@@ -9,6 +9,7 @@ import { Pin } from "../ui/Pin";
 import { ChapterText } from "./ChapterText";
 import { HomePanel } from "../homes/HomePanel";
 import { PlaceViewer } from "../homes/PlaceViewer";
+import { Spots } from "../homes/Spots";
 import { EXPLORE_RELEASE, backToVillage, enterExplore, exitExplore, inHomes } from "../homes/explore";
 
 /**
@@ -23,6 +24,7 @@ export function HomesChapter() {
       <ChapterText eyebrow={c.eyebrow} title={c.title} from={5.06} to={5.97} also={(s) => s.mode === "journey"} id="homes-title" />
       <HomeCards />
       <HomePanel />
+      <Spots />
       <PlaceViewer />
     </Pin>
   );

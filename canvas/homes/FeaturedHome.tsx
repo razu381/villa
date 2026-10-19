@@ -195,6 +195,11 @@ export function FeaturedHome({ id }: { id: HomeId }) {
     const wantHover = interactive && (homesState.hover === id || cardHover) ? 1 : 0;
     st.hover = snap ? wantHover : damp(st.hover, wantHover, 7, dt);
     if (lift.current) lift.current.position.y = st.hover * 0.32;
+    const live = homesState.live[id];
+    live.open = e;
+    live.levelY[0] = st.hover * 0.32;
+    live.levelY[1] = y1 + st.hover * 0.32;
+    live.levelY[2] = y2 + st.hover * 0.32;
     // (The jewel's own lift: a breath brighter than its neighbours, more under the pointer.)
     mats.hu.uHomeGlow.value = st.hover * 0.07 + st.jewel * 0.035;
 
