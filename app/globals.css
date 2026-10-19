@@ -731,8 +731,7 @@ html[data-phase="hero"] .vl-header__brand {
 html[data-tone="day"] .vl-header__homes,
 html[data-tone="day"] .vl-arc__word,
 html[data-tone="day"] .vl-arc__label,
-html[data-tone="day"] .vl-arc__hint,
-html[data-tone="day"] .vl-back {
+html[data-tone="day"] .vl-arc__hint {
   text-shadow:
     0 0 10px rgba(238, 235, 226, 0.8),
     0 0 2px rgba(238, 235, 226, 0.6);
@@ -1427,18 +1426,30 @@ html[data-index="1"] .vl-leaders {
   left: var(--gutter);
   top: calc(var(--header-h) + 8px);
 }
+/* A glass pill, so the way back reads over any scene. */
 .vl-back {
   display: inline-flex;
   align-items: center;
   gap: 12px;
-  padding: 8px 0;
-  background: none;
-  border: 0;
-  font-size: 13.5px;
+  height: 42px;
+  padding: 0 20px 0 16px;
+  border: 1px solid var(--hair-soft);
+  border-radius: 999px;
+  background: var(--glass);
+  box-shadow: 0 14px 30px -22px rgba(0, 0, 0, 0.45);
+  font-size: 14px;
+  font-weight: 500;
   letter-spacing: 0.02em;
   color: var(--fg);
   cursor: pointer;
-  text-shadow: var(--tshadow);
+  transition:
+    background-color 0.6s var(--ease-out),
+    border-color 0.6s var(--ease-out);
+}
+.vl-back:hover,
+.vl-back:focus-visible {
+  background: var(--glass-hover);
+  border-color: var(--hair);
 }
 .vl-back svg {
   width: 22px;
@@ -1458,13 +1469,13 @@ html[data-index="1"] .vl-leaders {
   top: calc(var(--header-h) + 3vh);
   width: min(420px, 34vw);
   display: grid;
-  grid-template-columns: 1fr;
+  /* The place switch and the turn share the first line. */
+  grid-template-columns: auto 1fr;
   grid-template-areas:
-    "switch"
-    "view"
-    "head"
-    "img"
-    "specs";
+    "switch view"
+    "head head"
+    "img img"
+    "specs specs";
   isolation: isolate;
 }
 /* The panel's light (no box): a veil falling off from the right edge of the frame,
@@ -1507,37 +1518,15 @@ html[data-index="1"] .vl-leaders {
   color: var(--fg);
   border-bottom-color: currentColor;
 }
-/* The open home's view: whole house / open floors, and the 360° turn. */
+/* The open place's 360° turn. */
 .vl-panel__view {
   grid-area: view;
+  align-self: start;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 18px;
-  margin: -12px 0 26px;
-}
-.vl-panel__opts {
-  display: flex;
-  gap: 16px;
-}
-.vl-panel__opts button {
-  padding: 4px 0;
-  background: none;
-  border: 0;
-  border-bottom: 1px solid transparent;
-  font-size: 10.5px;
-  font-weight: 500;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--fg-soft);
-  cursor: pointer;
-  transition:
-    color 0.6s var(--ease-out),
-    border-color 0.6s var(--ease-out);
-}
-.vl-panel__opts button[aria-pressed="true"] {
-  color: var(--fg);
-  border-bottom-color: currentColor;
+  margin: -4px 0 26px 18px;
 }
 .vl-turn {
   display: flex;
@@ -1673,31 +1662,40 @@ html[data-orbit="drag"] * {
 .vl-spot[data-on="1"] {
   pointer-events: auto;
 }
+/* A target on the room: a pale disc in a gold ring, a gold centre. */
 .vl-spot__ring {
   position: absolute;
-  left: -6px;
-  top: -6px;
-  width: 12px;
-  height: 12px;
-  border: 1.25px solid var(--sun);
+  left: -9px;
+  top: -9px;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--sun);
   border-radius: 50%;
-  background: var(--glass);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--sun) 16%, transparent);
-  transition: background-color 0.6s var(--ease-out);
+  background: #f4ebd9;
+  box-shadow:
+    0 0 0 5px color-mix(in srgb, var(--sun) 22%, transparent),
+    0 2px 10px rgba(0, 0, 0, 0.3);
+  transition: transform 0.6s var(--ease-out);
+}
+.vl-spot__ring::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: var(--sun);
 }
 .vl-spot__stem {
   position: absolute;
-  left: -0.5px;
-  bottom: 6px;
-  width: 1px;
-  height: 30px;
+  left: -0.75px;
+  bottom: 9px;
+  width: 1.5px;
+  height: 28px;
   background: var(--sun);
-  opacity: 0.85;
 }
 .vl-spot__name {
   position: absolute;
-  left: -6px;
-  bottom: 36px;
+  left: -9px;
+  bottom: 37px;
   display: flex;
   align-items: baseline;
   gap: 9px;
@@ -1722,7 +1720,7 @@ html[data-orbit="drag"] * {
 }
 .vl-spot:hover .vl-spot__ring,
 .vl-spot:focus-visible .vl-spot__ring {
-  background: var(--sun);
+  transform: scale(1.15);
 }
 .vl-spot:focus-visible {
   outline: none;
@@ -2807,6 +2805,9 @@ html[data-rm="1"] .vl-sound__wave {
     border-radius: 3px;
     box-shadow: 0 30px 60px -40px rgba(0, 0, 0, 0.45);
   }
+  .vl-panel__view {
+    margin: -12px 0 26px;
+  }
   .vl-haze--panel {
     display: none;
   }
@@ -2961,6 +2962,17 @@ html[data-rm="1"] .vl-sound__wave {
   }
   .vl-panel {
     width: min(360px, 38vw);
+    /* Too narrow for the switch and the turn on one line. */
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "switch"
+      "view"
+      "head"
+      "img"
+      "specs";
+  }
+  .vl-panel__view {
+    margin: -12px 0 26px;
   }
   .vl-haze--panel {
     --veil-w: calc(min(360px, 38vw) + var(--gutter) + 24px);

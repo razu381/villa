@@ -374,8 +374,8 @@ export function homeLineMaterial(o: LineMaterialOptions) {
 /* ------------------------------------------------------------------ marker */
 
 /**
- * The jewel marker: a hollow ring with a fine centre dot, constant screen size
- * (a single point sprite), gold.
+ * The jewel marker (a home, the village heart): a gold-ringed target at a
+ * constant screen size (a single point sprite).
  */
 export function markerMaterial() {
   return new ShaderMaterial({
@@ -386,7 +386,9 @@ export function markerMaterial() {
     uniforms: {
       uAlpha: { value: 0 },
       uHover: { value: 0 },
-      uSize: { value: 26 },
+      /** Point size (device px) and the device pixel ratio it was sized for. */
+      uSize: { value: 30 },
+      uScale: { value: 1 },
       uColor: { value: new Color(PALETTE.sun) },
       uDot: { value: new Color("#F4EBD9") },
     },
@@ -400,24 +402,30 @@ export function markerMaterial() {
         gl_PointSize = uSize * (1.0 + 0.18 * uHover);
         vPx = gl_PointSize;
       }`,
+    // A target: a pale disc in a gold ring, a gold centre (growing under the
+    // pointer), a soft shadow round it, so it reads on pale stone and dark ground.
     fragmentShader: /* glsl */ `
       uniform float uAlpha;
       uniform float uHover;
+      uniform float uScale;
       uniform vec3 uColor;
       uniform vec3 uDot;
       varying float vPx;
       void main() {
         vec2 p = (gl_PointCoord - 0.5) * vPx;
         float r = length(p);
-        float R = vPx * 0.5 - 2.0;
-        float ring = clamp(1.0 - abs(r - (R - 0.6)) / 1.0, 0.0, 1.0) * (0.85 + 0.15 * uHover);
-        float core = clamp(3.2 + 0.8 * uHover - r, 0.0, 1.0);
-        float halo = exp(-r * r / (R * R * 0.35)) * 0.18;
-        float w = ring + core + halo;
-        vec3 c = (uColor * (ring + halo) + uDot * core) / max(w, 1e-3);
-        float a = clamp(w, 0.0, 1.0) * uAlpha;
-        if (a < 0.004) discard;
-        gl_FragColor = vec4(c, a);
+        float aa = uScale;
+        float R = vPx * 0.5 - 3.0 * uScale;
+        float disc = 1.0 - smoothstep(R - aa, R, r);
+        float ringIn = R - 3.0 * uScale;
+        float ring = smoothstep(ringIn - aa, ringIn, r);
+        float coreR = R * (0.36 + 0.08 * uHover);
+        float core = 1.0 - smoothstep(coreR - aa, coreR, r);
+        float shadow = (1.0 - disc) * exp(-pow(r - R, 2.0) / (6.0 * uScale * uScale)) * 0.32;
+        vec3 face = mix(uDot, uColor, max(ring, core));
+        float a = disc + shadow;
+        if (a * uAlpha < 0.004) discard;
+        gl_FragColor = vec4(face * disc / max(a, 1e-4), a * uAlpha);
         #include <colorspace_fragment>
       }`,
   });

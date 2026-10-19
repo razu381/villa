@@ -101,3 +101,12 @@ export const effectiveDay = (s: Pick<JourneyState, "journeyDay" | "sunOverride">
 
 /** What explore has open: a featured home, the village heart, or nothing (the journey). */
 export const openPlace = (s: Pick<JourneyState, "mode" | "home" | "place">): Place | null => (s.mode === "explore" ? (s.home ?? s.place) : null);
+
+/** Open a place in the store (components/homes/explore.ts enterExplore adds the scroll and focus around it): a home shows its open floors. */
+export function selectPlace(id: Place) {
+  const s = useJourney.getState();
+  s.setHome(id === "heart" ? null : id);
+  s.setPlace(id === "heart" ? "heart" : null);
+  s.setExplode(id === "heart" ? 0 : 1);
+  s.setMode("explore");
+}

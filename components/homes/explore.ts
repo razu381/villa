@@ -2,7 +2,7 @@
 
 import { spotFocus } from "@/lib/orbit";
 import { spotIndex, type Spot } from "@/lib/places";
-import { openPlace, useJourney, type Place } from "@/lib/store";
+import { openPlace, selectPlace, useJourney, type Place } from "@/lib/store";
 
 /**
  * Focus intent for the Action layer: set by a visitor's own choice, consumed once
@@ -16,11 +16,7 @@ export function enterExplore(id: Place, opts: { focusPanel?: boolean } = {}) {
   endGlide();
   // Settle any scroll still gliding: from here on, scrolling means "let the home go".
   window.__lenis?.scrollTo(window.scrollY, { immediate: true, force: true });
-  const s = useJourney.getState();
-  s.setHome(id === "heart" ? null : id);
-  s.setPlace(id === "heart" ? "heart" : null);
-  s.setExplode(id === "heart" ? 0 : 1);
-  s.setMode("explore");
+  selectPlace(id);
 }
 
 /** Back to the village: the day resumes from the journey. */

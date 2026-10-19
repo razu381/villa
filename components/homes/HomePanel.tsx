@@ -81,7 +81,7 @@ function PanelBody({ id }: { id: Place }) {
           </button>
         ))}
       </div>
-      <ViewControls floors={id !== "heart"} />
+      <ViewControls />
       <div className="vl-panel__head">
         <p className="vl-eyebrow" data-r="fade">
           <span className="vl-eyebrow__rule" aria-hidden="true" />
@@ -124,26 +124,12 @@ function PanelBody({ id }: { id: Place }) {
 }
 
 /**
- * The open place's view: for a home, the whole house or its open floors
- * (store.explode); and the 360° look (lib/orbit.ts): the scene itself is
- * dragged, these buttons and ← / → turn it a step for keyboards.
+ * The 360° look (lib/orbit.ts): the scene itself is dragged, these buttons and
+ * ← / → turn it a step for keyboards. (A home always shows its open floors.)
  */
-function ViewControls({ floors }: { floors: boolean }) {
-  const explode = useJourney((s) => s.explode);
-  const setExplode = useJourney((s) => s.setExplode);
-  const open = explode >= 0.5;
+function ViewControls() {
   return (
     <div className="vl-panel__view" data-r="fade">
-      {floors ? (
-        <div className="vl-panel__opts" role="group" aria-label={UI.homes.view}>
-          <button type="button" aria-pressed={!open} onClick={() => setExplode(0)}>
-            {UI.homes.whole}
-          </button>
-          <button type="button" aria-pressed={open} onClick={() => setExplode(1)}>
-            {UI.homes.floors}
-          </button>
-        </div>
-      ) : null}
       <div className="vl-turn" role="group" aria-label={UI.homes.turn}>
         {/* Left of the pair: once it fades, the buttons stay where the hand is. */}
         <span className="vl-turn__hint">{UI.homes.drag}</span>

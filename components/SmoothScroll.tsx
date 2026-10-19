@@ -23,7 +23,7 @@ declare global {
  *   ?home=v3|v4|heart  explore mode on a place   ?sun=0.0–1.0  hold the sun
  *   ?rm=1         force reduced motion       ?tier=high|mid|low
  *   ?invite=demo  the invitation card, pre-filled (components/night/Invitation)
- *   ?yaw=90&pitch=10  an open home turned (degrees, lib/orbit.ts)   ?explode=0  …as the whole house
+ *   ?yaw=90&pitch=10  an open place turned (degrees, lib/orbit.ts)
  *   ?grain=0 / ?probe=1  for scripts/flicker.mjs (no film grain / probe hooks, canvas/Probe.tsx)
  *   ?photo=v4-pool  a spot's photos open once ready (lib/places.ts, components/homes/PlaceViewer)
  */
@@ -39,7 +39,7 @@ export function SmoothScroll() {
     if (home === "v3" || home === "v4") {
       store.setHome(home as HomeId);
       store.setMode("explore");
-      store.setExplode(params.get("explode") === "0" ? 0 : 1);
+      store.setExplode(1);
     } else if (home === "heart") {
       store.setPlace("heart");
       store.setMode("explore");

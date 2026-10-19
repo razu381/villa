@@ -50,6 +50,9 @@ const ease = (k: number) => k * k * (3 - 2 * k);
 /** Scratch for the per-frame build stages (both homes use it in turn, synchronously). */
 const stagesScratch = stagesFromT(0);
 
+/** The jewel's marker: CSS px across (its disc, ring and shadow). */
+export const MARKER_PX = 32;
+
 /** Length of the explode / close tween (quart-out; the staggered levels make it read ~1.4 s). */
 const EXPLODE_SECONDS = 2.2;
 
@@ -78,7 +81,7 @@ export function FeaturedHome({ id }: { id: HomeId }) {
       guides: homeLineMaterial({ color: PALETTE.taupe, alpha: 0.55, width: 1.0, dashed: true }),
       gold: homeLineMaterial({ color: "#E9CF98", alpha: 0.85, width: 1.25 }),
       plot: homeLineMaterial({ color: "#EFD8A6", alpha: 0.9, width: 1.25 }),
-      leader: homeLineMaterial({ color: PALETTE.sun, alpha: 0.9, width: 1.0 }),
+      leader: homeLineMaterial({ color: PALETTE.sun, alpha: 0.95, width: 1.5 }),
       halo: haloMaterial(),
       marker: markerMaterial(),
       lineMat: getHouseLineMaterial(),
@@ -288,7 +291,8 @@ export function FeaturedHome({ id }: { id: HomeId }) {
       const mk = mats.marker.uniforms;
       mk.uAlpha.value = smooth(0.55, 1.0, j);
       mk.uHover.value = st.hover;
-      mk.uSize.value = 34 * gl.getPixelRatio();
+      mk.uSize.value = MARKER_PX * gl.getPixelRatio();
+      mk.uScale.value = gl.getPixelRatio();
       const ha = mats.halo.uniforms;
       ha.uAlpha.value = (0.15 + 0.1 * st.hover) * smooth(0.1, 0.8, j) * (1 - 0.5 * U.uNight.value);
     }

@@ -2,9 +2,10 @@
 
 /**
  * "Two ways to live" — the two featured homes (FEATURED.v3 townhouse in row C,
- * FEATURED.v4 villa in row D). See FeaturedHome for the journey / jewel /
- * exploded-view behaviour. Hovering or focusing a home's HTML card
- * (`.vl-card[data-home]`) lights the matching home in 3D.
+ * FEATURED.v4 villa in row D), and the village heart's marker (HeartMarker).
+ * See FeaturedHome for the journey / jewel / exploded-view behaviour.
+ * Hovering or focusing a home's HTML card (`.vl-card[data-place]`), or the
+ * heart's line under them, lights the matching place in 3D.
  *
  * Pointer: the HTML journey sits above the canvas (its <main> takes the
  * pointer wherever no chapter control does), so the canvas never sees pointer
@@ -18,9 +19,10 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 import { Raycaster, Vector2, Vector3 } from "three";
 import { markTurned, orbit, resetOrbit, turnHome } from "@/lib/orbit";
-import { openPlace, useJourney, type HomeId } from "@/lib/store";
+import { openPlace, selectPlace, useJourney, type Place } from "@/lib/store";
 import { stagesFromT } from "@/lib/timeline";
 import { FeaturedHome } from "./FeaturedHome";
+import { HeartMarker } from "./HeartMarker";
 import { Spots } from "./Spots";
 import { homesState } from "./state";
 import { Veil } from "./Veil";
@@ -28,10 +30,11 @@ import { Veil } from "./Veil";
 /** Debug: `?homes=off` leaves the featured homes out (isolating issues). */
 const disabled = () => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("homes") === "off";
 
-const cardHome = (t: EventTarget | null): HomeId | null => {
-  const el = (t as Element | null)?.closest?.(".vl-card[data-home]") as HTMLElement | null;
-  const h = el?.dataset.home;
-  return h === "v3" || h === "v4" ? h : null;
+/** The place an HTML door names: a home's card, or the heart's line under them. */
+const cardPlace = (t: EventTarget | null): Place | null => {
+  const el = (t as Element | null)?.closest?.(".vl-card[data-place], .vl-heart-link[data-place]") as HTMLElement | null;
+  const p = el?.dataset.place;
+  return p === "v3" || p === "v4" || p === "heart" ? p : null;
 };
 
 /** HTML the pointer may be over that owns it (never pick a home through these). */
@@ -52,10 +55,10 @@ export function Homes() {
   // The HTML cards answer the 3D homes.
   useEffect(() => {
     const over = (e: Event) => {
-      homesState.cardHover = cardHome(e.target);
+      homesState.cardHover = cardPlace(e.target);
     };
     const out = (e: Event) => {
-      const next = cardHome((e as PointerEvent | FocusEvent).relatedTarget);
+      const next = cardPlace((e as PointerEvent | FocusEvent).relatedTarget);
       homesState.cardHover = next;
     };
     document.addEventListener("pointerover", over, { passive: true });
@@ -76,7 +79,7 @@ export function Homes() {
     const ray = new Raycaster();
     const ndc = new Vector2();
     const last = { x: 0, y: 0, mouse: false };
-    const pick = (x: number, y: number, target: Element | null): HomeId | null => {
+    const pick = (x: number, y: number, target: Element | null): Place | null => {
       const s = useJourney.getState();
       if (s.mode !== "journey" || stagesFromT(s.t).homes <= 0.5) return null;
       if (!target || target.closest?.(CONTROLS)) return null;
@@ -84,7 +87,7 @@ export function Homes() {
       if (r.width < 1 || r.height < 1) return null;
       ndc.set(((x - r.left) / r.width) * 2 - 1, -((y - r.top) / r.height) * 2 + 1);
       ray.setFromCamera(ndc, camera);
-      let best: HomeId | null = null;
+      let best: Place | null = null;
       let bestD = Infinity;
       for (const [id, m] of homesState.proxies) {
         const hit = ray.intersectObject(m, false)[0];
@@ -96,7 +99,7 @@ export function Homes() {
       return best;
     };
     const body = document.body;
-    const setHover = (id: HomeId | null) => {
+    const setHover = (id: Place | null) => {
       if (homesState.hover === id) return;
       homesState.hover = id;
       if (id) {
@@ -125,10 +128,7 @@ export function Homes() {
       const id = pick(e.clientX, e.clientY, e.target as Element | null);
       if (!id) return;
       setHover(null);
-      const s = useJourney.getState();
-      s.setHome(id);
-      s.setExplode(1);
-      s.setMode("explore");
+      selectPlace(id);
     };
     const onLeave = () => {
       last.mouse = false;
@@ -255,6 +255,7 @@ export function Homes() {
     <group name="homes">
       <FeaturedHome id="v3" />
       <FeaturedHome id="v4" />
+      <HeartMarker />
       <Veil />
       <Spots />
     </group>
