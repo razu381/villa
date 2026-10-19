@@ -3,11 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { SPOT_ANCHORS, SPOT_VIEW } from "@/lib/anchors";
-import { SPOTS, spotIndex } from "@/lib/places";
+import { SPOTS } from "@/lib/places";
 import { useJourney } from "@/lib/store";
 import { UI } from "@/lib/ui-copy";
 import { damp } from "@/lib/ui-time";
-import { openPhotos } from "./explore";
+import { showSpot } from "./explore";
 
 /** The spots that stand somewhere in the model (the rest are in the gallery only). */
 const PINNED = SPOTS.filter((s) => s.at);
@@ -20,9 +20,10 @@ const KEEP_OUT = ".vl-header, .vl-back-wrap, .vl-arc, .vl-panel";
  * the model, a small ring on the room, a hairline up to its name and, when it
  * holds more than one, how many photos. They fade in only while the camera is
  * still (lib/anchors.ts SPOT_VIEW: arrived, not turning, not gliding) and never
- * under the interface; a click opens the spot's photos. Fixed over the canvas,
- * above the journey's pointer layer, placed by a rAF loop that runs only while
- * a place is open or a pin is still fading.
+ * under the interface; a click glides the camera to the spot and opens its
+ * photos (explore.ts showSpot). Fixed over the canvas, above the journey's
+ * pointer layer, placed by a rAF loop that runs only while a place is open or
+ * a pin is still fading.
  */
 export function Spots() {
   const [host, setHost] = useState<HTMLElement | null>(null);
@@ -95,7 +96,7 @@ export function Spots() {
           tabIndex={-1}
           style={{ opacity: 0 }}
           aria-label={`${spot.label}: ${UI.homes.openPhotos}`}
-          onClick={() => openPhotos(spot.place, spotIndex(spot))}
+          onClick={() => showSpot(spot)}
         >
           <span className="vl-spot__ring" aria-hidden="true" />
           <span className="vl-spot__stem" aria-hidden="true" />

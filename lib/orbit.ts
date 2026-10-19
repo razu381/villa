@@ -15,6 +15,14 @@ const deg = (k: string) => (Number.isFinite(param(k)) ? (param(k) * Math.PI) / 1
 
 export const orbit = { yaw: deg("yaw"), pitch: deg("pitch"), dragging: false };
 
+/**
+ * A pin's glide: while `key` names a spot (lib/places.ts), canvas/CameraRig.tsx
+ * eases the explore view toward its world point (lib/anchors.ts SPOT_ANCHORS)
+ * and, once there, its photos open (components/homes/explore.ts showSpot).
+ * Cleared as they close, or when the place closes or changes: the view eases back.
+ */
+export const spotFocus: { key: string | null } = { key: null };
+
 /** A press of a turn button or an arrow key. */
 export const ORBIT_STEP = Math.PI / 4;
 

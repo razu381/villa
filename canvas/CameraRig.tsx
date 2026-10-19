@@ -4,7 +4,8 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useRef } from "react";
 import { PerspectiveCamera, Quaternion, Vector3 } from "three";
 import { sampleCamera, type CameraSample } from "@/lib/camera";
-import { orbit } from "@/lib/orbit";
+import { SPOT_ANCHORS } from "@/lib/anchors";
+import { orbit, spotFocus } from "@/lib/orbit";
 import { useJourney } from "@/lib/store";
 import { FEATURED } from "@/lib/village";
 import { HOME_SHOTS, STACK_MID } from "./homes/shots";
@@ -15,6 +16,8 @@ import { damp } from "./Driver";
  * Explore mode blends to the selected home's close-up shot, which the visitor
  * can turn all round the home (lib/orbit.ts): the whole shot rotates rigidly
  * about the home's centre, so the home keeps its place beside the panel.
+ * A photo pin glides the view toward its spot (lib/orbit.ts spotFocus) before
+ * its photos open, and back as they close.
  * A still frame holds perfectly still (no breathing drift: without multisampling,
  * any sub-pixel drift makes slender edges crawl, 2026-10-17).
  */
@@ -35,6 +38,8 @@ export function CameraRig() {
   const pivot = useRef(new Vector3());
   const viewPos = useRef(new Vector3());
   const viewTarget = useRef(new Vector3());
+  const glide = useRef(0);
+  const glideAt = useRef(new Vector3());
   const first = useRef(true);
   // Debug: ?cam=x,y,z,tx,ty,tz[,fov] pins the camera (close-up inspection).
   const pinned = useRef<number[] | null>(
@@ -135,6 +140,15 @@ export function CameraRig() {
     }
     const vp = viewPos.current;
     const vt = viewTarget.current;
+    // A pin's glide: the view turns to its spot and closes in on it (the way back
+    // eases from the last spot).
+    const spot = spotFocus.key && s.mode === "explore" ? SPOT_ANCHORS[spotFocus.key] : null;
+    if (spot) glideAt.current.set(spot.wx, spot.wy, spot.wz);
+    glide.current = snap ? (spot ? 1 : 0) : damp(glide.current, spot ? 1 : 0, GLIDE_RATE, d);
+    if (glide.current > 1e-4 && !pinned.current) {
+      vt.lerp(glideAt.current, glide.current);
+      vp.lerp(glideAt.current, GLIDE_IN * glide.current);
+    }
     // Portrait / narrow screens: keep the composition by widening the lens a little
     // and dollying back the rest (preserves the long-lens look, no fish-eye).
     // Phones in portrait (w → 1) also take the key's portrait fit: a little
@@ -175,6 +189,9 @@ const axis = new Vector3();
 const UP = new Vector3(0, 1, 0);
 const rot = new Quaternion();
 const qYaw = new Quaternion();
+/** A pin's glide: ~90 % there in 0.9 s (components/homes/explore.ts GLIDE_MS), and how far in it closes (of the way to the spot). */
+const GLIDE_RATE = 2.6;
+const GLIDE_IN = 0.45;
 /** The turned explore shot stays between these elevations above the home's centre (rad). */
 const ORBIT_MIN_EL = (12 * Math.PI) / 180;
 const ORBIT_MAX_EL = (68 * Math.PI) / 180;
