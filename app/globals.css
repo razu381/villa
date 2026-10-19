@@ -1605,6 +1605,43 @@ html[data-orbit="drag"] * {
   height: 100%;
   object-fit: cover;
 }
+/* The render opens the home's photos (components/homes/PlaceViewer.tsx). */
+.vl-arch-img__open {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+.vl-arch-img__open img {
+  transition: transform 1.4s var(--ease-out);
+}
+.vl-arch-img__open:hover img,
+.vl-arch-img__open:focus-visible img {
+  transform: scale(1.04);
+}
+.vl-arch-img__open:focus-visible {
+  outline: 1px solid var(--fg);
+  outline-offset: -6px;
+}
+/* The count sits in the arch's square foot, on a soft shade of its own. */
+.vl-arch-img__count {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 34px 14px 12px;
+  background: linear-gradient(to top, rgba(18, 19, 15, 0.55), rgba(18, 19, 15, 0));
+  color: #f1eee4;
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-align: left;
+}
 .vl-panel__more {
   display: none;
 }
@@ -2706,6 +2743,10 @@ html[data-rm="1"] .vl-sound__wave {
     align-self: end;
     margin-bottom: 12px;
     box-shadow: none;
+  }
+  /* Too small for the count; the thumbnail still opens the photos. */
+  .vl-arch-img__count {
+    display: none;
   }
   .vl-specs {
     margin-top: 0;

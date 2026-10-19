@@ -3,6 +3,8 @@
 import { create } from "zustand";
 
 export type HomeId = "v3" | "v4";
+/** What explore can open: a featured home, or the village heart (pavilion and pool). */
+export type Place = HomeId | "heart";
 export type Tier = "high" | "mid" | "low";
 export type Mode = "journey" | "explore";
 /** The 3D canvas: live, its WebGL context lost (waiting / warming up again), or gone for the session. */
@@ -24,6 +26,12 @@ export interface JourneyState {
   home: HomeId | null;
   /** Exploded-view amount target for the selected home, 0 → 1. */
   explode: number;
+  /**
+   * The photo viewer over the 3D (components/homes/PlaceViewer.tsx): the place
+   * whose photos are open and the one shown first. null = closed. While it is
+   * open the 3D rests (canvas/Quality.tsx FrameGate).
+   */
+  viewer: { place: Place; index: number } | null;
   soundOn: boolean;
   tier: Tier;
   reducedMotion: boolean;
@@ -43,6 +51,7 @@ export interface JourneyState {
   setMode: (m: Mode) => void;
   setHome: (h: HomeId | null) => void;
   setExplode: (v: number) => void;
+  setViewer: (v: { place: Place; index: number } | null) => void;
   setSoundOn: (v: boolean) => void;
   setTier: (t: Tier) => void;
   setReducedMotion: (v: boolean) => void;
@@ -58,6 +67,7 @@ export const useJourney = create<JourneyState>((set) => ({
   mode: "journey",
   home: null,
   explode: 0,
+  viewer: null,
   soundOn: false,
   tier: "high",
   reducedMotion: false,
@@ -71,6 +81,7 @@ export const useJourney = create<JourneyState>((set) => ({
   setMode: (mode) => set({ mode }),
   setHome: (home) => set({ home }),
   setExplode: (explode) => set({ explode }),
+  setViewer: (viewer) => set({ viewer }),
   setSoundOn: (soundOn) => set({ soundOn }),
   setTier: (tier) => set({ tier }),
   setReducedMotion: (reducedMotion) => set({ reducedMotion }),

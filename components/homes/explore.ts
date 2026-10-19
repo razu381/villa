@@ -1,6 +1,6 @@
 "use client";
 
-import { useJourney, type HomeId } from "@/lib/store";
+import { useJourney, type HomeId, type Place } from "@/lib/store";
 
 /**
  * Focus intent for the Action layer: set by a visitor's own choice, consumed once
@@ -24,10 +24,21 @@ export function exitExplore() {
   const s = useJourney.getState();
   if (s.mode === "journey" && s.home == null && s.sunOverride == null && s.explode === 0) return;
   focusIntent.panel = false;
+  s.setViewer(null);
   s.setMode("journey");
   s.setHome(null);
   s.setExplode(0);
   s.setSunOverride(null);
+}
+
+/** Open a place's photos at one of them (the panel's render, a pin, `?photo=`). */
+export function openPhotos(place: Place, index: number) {
+  useJourney.getState().setViewer({ place, index });
+}
+
+/** The viewer starts to close: the 3D comes back at once, under its fade. */
+export function closePhotos() {
+  useJourney.getState().setViewer(null);
 }
 
 /** Run after the reveal timelines have rendered their first frame (two animation frames). */

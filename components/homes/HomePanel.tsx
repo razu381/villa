@@ -3,10 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { COPY, HOMES } from "@/lib/content";
 import { turnHome } from "@/lib/orbit";
+import { PLACE_PHOTOS, photoIndex } from "@/lib/places";
 import { useJourney, type HomeId } from "@/lib/store";
 import { UI } from "@/lib/ui-copy";
 import { useReveal } from "@/lib/ui-reveal";
-import { afterReveal, backToVillage, enterExplore, focusIntent } from "./explore";
+import { afterReveal, backToVillage, enterExplore, focusIntent, openPhotos } from "./explore";
 
 /**
  * The spec panel while exploring a home. No box: the words sit in a soft corner
@@ -90,8 +91,15 @@ function PanelBody({ id }: { id: HomeId }) {
         </p>
       </div>
       <figure className="vl-arch-img" data-r="rise" data-r-at="0.3">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={h.image} alt={`${h.name} — architectural render`} loading="lazy" decoding="async" />
+        {/* The render opens the home's photos, on itself. */}
+        <button type="button" className="vl-arch-img__open" data-cursor="view" onClick={() => openPhotos(id, photoIndex(id, h.image))}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={h.image} alt={`${h.name} — architectural render`} loading="lazy" decoding="async" />
+          <span className="vl-arch-img__count">
+            <span className="sr-only">{UI.homes.openPhotos}: </span>
+            {UI.homes.photos} · {String(PLACE_PHOTOS[id].length).padStart(2, "0")}
+          </span>
+        </button>
       </figure>
       <button type="button" className="vl-panel__more" aria-expanded={open} aria-controls={`vl-specs-${id}`} onClick={() => setOpen((o) => !o)} data-r="fade">
         {UI.homes.specs}

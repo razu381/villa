@@ -79,15 +79,30 @@ export function Quality({ steps, level, setLevel }: { steps: number; level: numb
  * Stops the render loop while the hero film and the still aerial cover the
  * canvas: the GPU is left to the video. Restarts as the dissolve begins, well
  * before the 3D shows through (the aerial covers it to heroFade ≈ 0.7).
- * Also stopped for good once the canvas is gone (a lost context that never came back).
+ * Also stopped for good once the canvas is gone (a lost context that never came back),
+ * and while the photo viewer covers it (store.viewer): from the end of its fade in
+ * (the camera's glide to a pin has settled by then) until it starts to close.
  */
 export function FrameGate() {
   const setFrameloop = useThree((s) => s.setFrameloop);
   const clock = useThree((s) => s.clock);
   useEffect(() => {
     let paused = false;
+    let covered = false;
+    let timer = 0;
     const apply = (s: JourneyState) => {
-      const hide = s.canvas === "gone" || (s.ready && stagesFromT(s.t).heroFade < 0.02);
+      if (!s.viewer) {
+        window.clearTimeout(timer);
+        timer = 0;
+        covered = false;
+      } else if (!covered && !timer) {
+        timer = window.setTimeout(() => {
+          timer = 0;
+          covered = true;
+          apply(useJourney.getState());
+        }, VIEWER_FADE_MS);
+      }
+      const hide = s.canvas === "gone" || (s.ready && stagesFromT(s.t).heroFade < 0.02) || (covered && s.viewer != null);
       if (hide === paused) return;
       paused = hide;
       // setFrameloop restarts the clock at 0: keep time continuous (stars, shimmer).
@@ -99,8 +114,12 @@ export function FrameGate() {
     const unsub = useJourney.subscribe(apply);
     return () => {
       unsub();
+      window.clearTimeout(timer);
       if (paused) setFrameloop("always");
     };
   }, [setFrameloop, clock]);
   return null;
 }
+
+/** The viewer's fade in (.vl-viewer, globals.css), plus a frame or two. */
+const VIEWER_FADE_MS = 560;

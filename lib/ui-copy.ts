@@ -47,6 +47,18 @@ export const UI = {
     turnLeft: "Turn left",
     turnRight: "Turn right",
     drag: "drag to look around",
+    /** Under the panel's render: "photos · 05". */
+    photos: "photos",
+    /** The panel's render as a button. */
+    openPhotos: "See the photos",
+  },
+  /** The photo viewer over the 3D (components/homes/PlaceViewer.tsx). */
+  viewer: {
+    title: "Photos",
+    prev: "Previous photo",
+    next: "Next photo",
+    close: "Close",
+    note: "Artistic interpretation",
   },
   form: {
     legend: "Your private visit",

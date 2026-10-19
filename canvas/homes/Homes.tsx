@@ -164,9 +164,10 @@ export function Homes() {
     const root = document.documentElement;
     const body = document.body;
     let drag: { x: number; y: number; id: number } | null = null;
+    // (Not while its photos are open: the viewer owns the pointer and the arrows.)
     const open = () => {
       const s = useJourney.getState();
-      return s.mode === "explore" && s.home != null;
+      return s.mode === "explore" && s.home != null && !s.viewer;
     };
     const overScene = (t: EventTarget | null) => !(t as Element | null)?.closest?.(CONTROLS);
     const label = (on: boolean) => {

@@ -17,6 +17,7 @@ const R = "/media/renders/";
 
 export const PHOTOS = {
   terraceTall: p(`${C}terrace-hammock-tall.jpg`, 1080, 1440, "A hammock on a stone terrace looking over the hills to the sea"),
+  terrace: p(`${C}terrace-hammock.jpg`, 2560, 1440, "A hammock on a stone terrace looking over the hills to the sea"),
   aerialPhoto: p("/media/aerial-village.jpg", 1920, 1080, "Aerial view of the village on its hill in Leceia, Oeiras"),
   aerialRender: p(`${C}aerial-render.jpg`, 2560, 1440, "Aerial view of Vila Leku's homes, gardens and solar roofs among the trees"),
   corkFacade: p(`${C}cork-facade.jpg`, 2560, 1440, "Cork and limestone volumes of the homes, framed by garden trees"),

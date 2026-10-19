@@ -25,6 +25,7 @@ declare global {
  *   ?invite=demo  the invitation card, pre-filled (components/night/Invitation)
  *   ?yaw=90&pitch=10  an open home turned (degrees, lib/orbit.ts)   ?explode=0  …as the whole house
  *   ?grain=0 / ?probe=1  for scripts/flicker.mjs (no film grain / probe hooks, canvas/Probe.tsx)
+ *   ?photo=v4-pool  a spot's photos open once ready (lib/places.ts, components/homes/PlaceViewer)
  */
 export function SmoothScroll() {
   useEffect(() => {

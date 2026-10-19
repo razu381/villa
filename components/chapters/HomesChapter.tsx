@@ -8,6 +8,7 @@ import { useReveal } from "@/lib/ui-reveal";
 import { Pin } from "../ui/Pin";
 import { ChapterText } from "./ChapterText";
 import { HomePanel } from "../homes/HomePanel";
+import { PlaceViewer } from "../homes/PlaceViewer";
 import { EXPLORE_RELEASE, backToVillage, enterExplore, exitExplore, inHomes } from "../homes/explore";
 
 /**
@@ -22,6 +23,7 @@ export function HomesChapter() {
       <ChapterText eyebrow={c.eyebrow} title={c.title} from={5.06} to={5.97} also={(s) => s.mode === "journey"} id="homes-title" />
       <HomeCards />
       <HomePanel />
+      <PlaceViewer />
     </Pin>
   );
 }
@@ -44,7 +46,9 @@ function useExploreGuard() {
       else if (tEnter != null && Math.abs(s.t - tEnter) > EXPLORE_RELEASE) backToVillage();
     });
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && useJourney.getState().mode === "explore") {
+      // (While the photos are open, Escape is theirs.)
+      const s = useJourney.getState();
+      if (e.key === "Escape" && s.mode === "explore" && !s.viewer) {
         backToVillage();
       }
     };
