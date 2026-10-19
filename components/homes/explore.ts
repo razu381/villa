@@ -2,7 +2,7 @@
 
 import { spotFocus } from "@/lib/orbit";
 import { spotIndex, type Spot } from "@/lib/places";
-import { useJourney, type HomeId, type Place } from "@/lib/store";
+import { openPlace, useJourney, type Place } from "@/lib/store";
 
 /**
  * Focus intent for the Action layer: set by a visitor's own choice, consumed once
@@ -10,27 +10,29 @@ import { useJourney, type HomeId, type Place } from "@/lib/store";
  */
 export const focusIntent = { panel: false };
 
-/** Enter the interactive moment: the camera cranes in, the home opens, the day pauses. */
-export function enterExplore(id: HomeId, opts: { focusPanel?: boolean } = {}) {
+/** Enter the interactive moment: the camera cranes in, the home (or the village heart) opens, the day pauses. */
+export function enterExplore(id: Place, opts: { focusPanel?: boolean } = {}) {
   if (opts.focusPanel) focusIntent.panel = true;
   endGlide();
   // Settle any scroll still gliding: from here on, scrolling means "let the home go".
   window.__lenis?.scrollTo(window.scrollY, { immediate: true, force: true });
   const s = useJourney.getState();
-  s.setHome(id);
-  s.setExplode(1);
+  s.setHome(id === "heart" ? null : id);
+  s.setPlace(id === "heart" ? "heart" : null);
+  s.setExplode(id === "heart" ? 0 : 1);
   s.setMode("explore");
 }
 
 /** Back to the village: the day resumes from the journey. */
 export function exitExplore() {
   const s = useJourney.getState();
-  if (s.mode === "journey" && s.home == null && s.sunOverride == null && s.explode === 0) return;
+  if (s.mode === "journey" && s.home == null && s.place == null && s.sunOverride == null && s.explode === 0) return;
   focusIntent.panel = false;
   endGlide();
   s.setViewer(null);
   s.setMode("journey");
   s.setHome(null);
+  s.setPlace(null);
   s.setExplode(0);
   s.setSunOverride(null);
 }
@@ -74,12 +76,12 @@ export function afterReveal(fn: () => void) {
   requestAnimationFrame(() => requestAnimationFrame(fn));
 }
 
-/** Leave explore from the Back control or Escape, returning focus to the home's card. */
+/** Leave explore from the Back control or Escape, returning focus to what opened it (a home's card, the heart's link). */
 export function backToVillage() {
-  const id = useJourney.getState().home;
+  const id = openPlace(useJourney.getState());
   exitExplore();
   if (!id) return;
-  afterReveal(() => document.querySelector<HTMLButtonElement>(`.vl-card[data-home="${id}"]`)?.focus({ preventScroll: true }));
+  afterReveal(() => document.querySelector<HTMLButtonElement>(`[data-place="${id}"]`)?.focus({ preventScroll: true }));
 }
 
 export const inHomes = (t: number) => t >= 5 && t < 6;

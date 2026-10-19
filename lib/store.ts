@@ -24,6 +24,8 @@ export interface JourneyState {
   mode: Mode;
   /** Selected home in "Two ways to live". */
   home: HomeId | null;
+  /** The village heart is open instead of a home (explore). See openPlace(). */
+  place: "heart" | null;
   /** Exploded-view amount target for the selected home, 0 → 1. */
   explode: number;
   /**
@@ -50,6 +52,7 @@ export interface JourneyState {
   setSunOverride: (v: number | null) => void;
   setMode: (m: Mode) => void;
   setHome: (h: HomeId | null) => void;
+  setPlace: (p: "heart" | null) => void;
   setExplode: (v: number) => void;
   setViewer: (v: { place: Place; index: number } | null) => void;
   setSoundOn: (v: boolean) => void;
@@ -66,6 +69,7 @@ export const useJourney = create<JourneyState>((set) => ({
   sunOverride: null,
   mode: "journey",
   home: null,
+  place: null,
   explode: 0,
   viewer: null,
   soundOn: false,
@@ -80,6 +84,7 @@ export const useJourney = create<JourneyState>((set) => ({
   setSunOverride: (sunOverride) => set({ sunOverride }),
   setMode: (mode) => set({ mode }),
   setHome: (home) => set({ home }),
+  setPlace: (place) => set({ place }),
   setExplode: (explode) => set({ explode }),
   setViewer: (viewer) => set({ viewer }),
   setSoundOn: (soundOn) => set({ soundOn }),
@@ -93,3 +98,6 @@ export const useJourney = create<JourneyState>((set) => ({
 /** Effective day progress: the held sun wins, otherwise the journey. */
 export const effectiveDay = (s: Pick<JourneyState, "journeyDay" | "sunOverride">) =>
   s.sunOverride ?? s.journeyDay;
+
+/** What explore has open: a featured home, the village heart, or nothing (the journey). */
+export const openPlace = (s: Pick<JourneyState, "mode" | "home" | "place">): Place | null => (s.mode === "explore" ? (s.home ?? s.place) : null);

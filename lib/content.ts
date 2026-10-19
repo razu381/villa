@@ -126,14 +126,19 @@ export const COPY = {
   },
 };
 
-export interface HomeContent {
-  id: "v3" | "v4";
+/** A place explore can open (its panel). */
+export interface PlaceContent {
+  id: "v3" | "v4" | "heart";
   name: string;
   kind: string;
   status: string;
   area: string;
   specs: string[];
   image: string;
+}
+
+export interface HomeContent extends PlaceContent {
+  id: "v3" | "v4";
 }
 
 export const HOMES: HomeContent[] = [
@@ -156,3 +161,14 @@ export const HOMES: HomeContent[] = [
     image: "/media/renders/villa-pool.jpg",
   },
 ];
+
+/** The village heart (pavilion and pool), open beside the two homes: the client's amenities as its specs. */
+export const HEART: PlaceContent = {
+  id: "heart",
+  name: "Village Heart",
+  kind: "Shared spaces",
+  status: "For residents",
+  area: "Pavilion and pool",
+  specs: AMENITIES.map((a) => a.title),
+  image: "/media/renders/village-pool.jpg",
+};

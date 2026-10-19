@@ -20,7 +20,7 @@ declare global {
  * Debug / screenshot params:
  *   ?t=3.4        jump to journey position 3.4
  *   ?snap=1       skip all damping (deterministic frames)
- *   ?home=v3|v4   explore mode on a home     ?sun=0.0–1.0  hold the sun
+ *   ?home=v3|v4|heart  explore mode on a place   ?sun=0.0–1.0  hold the sun
  *   ?rm=1         force reduced motion       ?tier=high|mid|low
  *   ?invite=demo  the invitation card, pre-filled (components/night/Invitation)
  *   ?yaw=90&pitch=10  an open home turned (degrees, lib/orbit.ts)   ?explode=0  …as the whole house
@@ -40,6 +40,9 @@ export function SmoothScroll() {
       store.setHome(home as HomeId);
       store.setMode("explore");
       store.setExplode(params.get("explode") === "0" ? 0 : 1);
+    } else if (home === "heart") {
+      store.setPlace("heart");
+      store.setMode("explore");
     }
     const sun = params.get("sun");
     if (sun != null) store.setSunOverride(clamp01(parseFloat(sun)));

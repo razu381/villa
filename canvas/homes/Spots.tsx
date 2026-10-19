@@ -16,7 +16,7 @@ import { useMemo, useRef } from "react";
 import { Vector3 } from "three";
 import { SPOT_ANCHORS, SPOT_VIEW } from "@/lib/anchors";
 import { SPOTS, type Spot } from "@/lib/places";
-import { useJourney, type HomeId } from "@/lib/store";
+import { openPlace, useJourney, type HomeId } from "@/lib/store";
 import { FEATURED, VILLA_POOLS, VILLAGE_HEART } from "@/lib/village";
 import { buildHomeData } from "./homeData";
 import { homesState } from "./state";
@@ -72,7 +72,7 @@ export function Spots() {
 
   useFrame((state, dt) => {
     const s = useJourney.getState();
-    const open = s.mode === "explore" ? s.home : null;
+    const open = openPlace(s);
     const { width: w, height: h } = state.size;
     const speed = camera.position.distanceTo(last.current) / Math.max(dt, 1e-3);
     last.current.copy(camera.position);

@@ -1,29 +1,35 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { COPY, HOMES } from "@/lib/content";
+import { COPY, HEART, HOMES, type PlaceContent } from "@/lib/content";
 import { turnHome } from "@/lib/orbit";
 import { PLACE_PHOTOS, photoIndex } from "@/lib/places";
-import { useJourney, type HomeId } from "@/lib/store";
+import { openPlace, useJourney, type Place } from "@/lib/store";
 import { UI } from "@/lib/ui-copy";
 import { useReveal } from "@/lib/ui-reveal";
 import { afterReveal, backToVillage, enterExplore, focusIntent, openPhotos } from "./explore";
 
+/** The places the panel switches between, in order. */
+const PLACES: PlaceContent[] = [...HOMES, HEART];
+
+/** The switch's short names (the homes by type, the heart in words). */
+const SWITCH: Record<Place, string> = { v3: "V3", v4: "V4", heart: "Village heart" };
+
 /**
- * The spec panel while exploring a home. No box: the words sit in a soft corner
- * light, the render framed in the brand arch is the hero of the panel, the specs
- * run beneath it in two hairline columns. A switch between the two homes and
- * "Back to the village". (Compact screens: a sheet above the sun arc.)
+ * The spec panel while exploring a home (or the village heart). No box: the
+ * words sit in a soft corner light, the render framed in the brand arch is the
+ * hero of the panel, the specs run beneath it in two hairline columns. A switch
+ * between the places and "Back to the village". (Compact screens: a sheet above
+ * the sun arc.)
  */
 export function HomePanel() {
-  const home = useJourney((s) => s.home);
-  const mode = useJourney((s) => s.mode);
-  // Keep the last home on screen while the panel reverses out.
-  const [shown, setShown] = useState<HomeId>("v3");
+  const place = useJourney(openPlace);
+  // Keep the last place on screen while the panel reverses out.
+  const [shown, setShown] = useState<Place>("v3");
   useEffect(() => {
-    if (home) setShown(home);
-  }, [home]);
-  const active = mode === "explore" && home != null;
+    if (place) setShown(place);
+  }, [place]);
+  const active = place != null;
 
   return (
     <div className="vl-explore" data-active={active ? "1" : "0"}>
@@ -35,7 +41,7 @@ export function HomePanel() {
 
 function BackControl() {
   const ref = useRef<HTMLDivElement>(null);
-  useReveal(ref, { when: (s) => s.mode === "explore" && s.home != null, delay: 0.3, interactive: true });
+  useReveal(ref, { when: (s) => openPlace(s) != null, delay: 0.3, interactive: true });
   return (
     <div ref={ref} className="vl-back-wrap">
       <button type="button" className="vl-back" onClick={backToVillage} data-r="fade">
@@ -48,14 +54,14 @@ function BackControl() {
   );
 }
 
-function PanelBody({ id }: { id: HomeId }) {
+function PanelBody({ id }: { id: Place }) {
   const ref = useRef<HTMLElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   // Compact screens keep the home in view: the spec list folds away behind a toggle.
   const [open, setOpen] = useState(false);
-  const h = HOMES.find((x) => x.id === id) ?? HOMES[0];
+  const h = PLACES.find((x) => x.id === id) ?? PLACES[0];
   useReveal(ref, {
-    when: (s) => s.mode === "explore" && s.home === id,
+    when: (s) => openPlace(s) === id,
     delay: 0.2,
     interactive: true,
     // Focus follows the visitor's choice once the panel is really on screen.
@@ -69,13 +75,13 @@ function PanelBody({ id }: { id: HomeId }) {
     <section ref={ref} className="vl-panel" aria-labelledby="vl-panel-title">
       <div className="vl-haze vl-haze--panel" data-r="scrim" aria-hidden="true" />
       <div className="vl-panel__switch" role="group" aria-label={UI.homes.choose} data-r="fade">
-        {HOMES.map((x) => (
+        {PLACES.map((x) => (
           <button key={x.id} type="button" aria-pressed={x.id === id} onClick={() => x.id !== id && enterExplore(x.id, { focusPanel: true })}>
-            {x.id.toUpperCase()}
+            {SWITCH[x.id]}
           </button>
         ))}
       </div>
-      <ViewControls />
+      <ViewControls floors={id !== "heart"} />
       <div className="vl-panel__head">
         <p className="vl-eyebrow" data-r="fade">
           <span className="vl-eyebrow__rule" aria-hidden="true" />
@@ -118,24 +124,26 @@ function PanelBody({ id }: { id: HomeId }) {
 }
 
 /**
- * The open home's view: the whole house or its open floors (store.explode), and
- * the 360° look (lib/orbit.ts): the scene itself is dragged, these buttons and
- * ← / → turn it a step for keyboards.
+ * The open place's view: for a home, the whole house or its open floors
+ * (store.explode); and the 360° look (lib/orbit.ts): the scene itself is
+ * dragged, these buttons and ← / → turn it a step for keyboards.
  */
-function ViewControls() {
+function ViewControls({ floors }: { floors: boolean }) {
   const explode = useJourney((s) => s.explode);
   const setExplode = useJourney((s) => s.setExplode);
   const open = explode >= 0.5;
   return (
     <div className="vl-panel__view" data-r="fade">
-      <div className="vl-panel__opts" role="group" aria-label={UI.homes.view}>
-        <button type="button" aria-pressed={!open} onClick={() => setExplode(0)}>
-          {UI.homes.whole}
-        </button>
-        <button type="button" aria-pressed={open} onClick={() => setExplode(1)}>
-          {UI.homes.floors}
-        </button>
-      </div>
+      {floors ? (
+        <div className="vl-panel__opts" role="group" aria-label={UI.homes.view}>
+          <button type="button" aria-pressed={!open} onClick={() => setExplode(0)}>
+            {UI.homes.whole}
+          </button>
+          <button type="button" aria-pressed={open} onClick={() => setExplode(1)}>
+            {UI.homes.floors}
+          </button>
+        </div>
+      ) : null}
       <div className="vl-turn" role="group" aria-label={UI.homes.turn}>
         {/* Left of the pair: once it fades, the buttons stay where the hand is. */}
         <span className="vl-turn__hint">{UI.homes.drag}</span>

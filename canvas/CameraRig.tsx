@@ -6,9 +6,8 @@ import { PerspectiveCamera, Quaternion, Vector3 } from "three";
 import { sampleCamera, type CameraSample } from "@/lib/camera";
 import { SPOT_ANCHORS } from "@/lib/anchors";
 import { orbit, spotFocus } from "@/lib/orbit";
-import { useJourney } from "@/lib/store";
-import { FEATURED } from "@/lib/village";
-import { HOME_SHOTS, STACK_MID } from "./homes/shots";
+import { openPlace, useJourney } from "@/lib/store";
+import { PLACE_CENTRE, PLACE_SHOTS } from "./homes/shots";
 import { damp } from "./Driver";
 
 /**
@@ -62,10 +61,11 @@ export function CameraRig() {
     let goalLift = sample.current.lift;
     let goalSlide = sample.current.slide;
 
-    const wantExplore = s.mode === "explore" && s.home ? 1 : 0;
+    const place = openPlace(s);
+    const wantExplore = place ? 1 : 0;
     explore.current = snap ? wantExplore : damp(explore.current, wantExplore, 2.4, d);
-    if (explore.current > 0.001 && s.home) {
-      const shot = HOME_SHOTS[s.home];
+    if (explore.current > 0.001 && place) {
+      const shot = PLACE_SHOTS[place];
       const k = explore.current;
       goalPos.current.lerp(tmp.fromArray(shot.pos), k);
       goalTarget.current.lerp(tmp.fromArray(shot.target), k);
@@ -104,10 +104,9 @@ export function CameraRig() {
       if (c[6]) fov.current = c[6];
     }
 
-    // The 360° look: turn the (damped) explore shot about the home's centre.
-    if (s.home) {
-      const h = FEATURED[s.home];
-      tmp.set(h.x, h.y + STACK_MID[s.home], h.z);
+    // The 360° look: turn the (damped) explore shot about the place's centre.
+    if (place) {
+      tmp.fromArray(PLACE_CENTRE[place]);
       if (snap) pivot.current.copy(tmp);
       else pivot.current.lerp(tmp, 1 - Math.exp(-3.2 * d));
     }
@@ -117,9 +116,9 @@ export function CameraRig() {
       orbit.yaw -= w;
       yaw.current -= w;
     }
-    if (s.home) {
-      // Elevation limits, measured on the home's own close-up shot.
-      off.fromArray(HOME_SHOTS[s.home].pos).sub(tmp);
+    if (place) {
+      // Elevation limits, measured on the place's own close-up shot.
+      off.fromArray(PLACE_SHOTS[place].pos).sub(tmp);
       const el = Math.atan2(off.y, Math.hypot(off.x, off.z));
       orbit.pitch = Math.min(ORBIT_MAX_EL - el, Math.max(ORBIT_MIN_EL - el, orbit.pitch));
     }

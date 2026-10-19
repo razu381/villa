@@ -96,7 +96,7 @@ export function Cursor() {
     };
     // The cards hide when exploring starts, the slider appears: re-check after the change settles.
     const unsub = useJourney.subscribe((s, p) => {
-      if (s.mode !== p.mode || s.home !== p.home) {
+      if (s.mode !== p.mode || s.home !== p.home || s.place !== p.place) {
         hide();
         window.clearTimeout(scrollTimer);
         scrollTimer = window.setTimeout(recheck, 900);

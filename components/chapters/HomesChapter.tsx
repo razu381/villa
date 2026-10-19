@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { COPY, HOMES } from "@/lib/content";
-import { useJourney, type HomeId } from "@/lib/store";
+import { useJourney, type Place } from "@/lib/store";
 import { UI } from "@/lib/ui-copy";
 import { useReveal } from "@/lib/ui-reveal";
 import { Pin } from "../ui/Pin";
@@ -66,12 +66,22 @@ function HomeCards() {
   const ref = useRef<HTMLDivElement>(null);
   useReveal(ref, { when: (s) => s.t >= 5.1 && s.t < 5.97 && s.mode === "journey", delay: 0.45, interactive: true });
   // Focus moves to the panel title once the panel is on screen (HomePanel).
-  const select = (id: HomeId) => enterExplore(id, { focusPanel: true });
+  const select = (id: Place) => enterExplore(id, { focusPanel: true });
   return (
     <div ref={ref} className="vl-cards" role="group" aria-label={UI.homes.choose}>
       <div className="vl-haze vl-haze--right" data-r="scrim" aria-hidden="true" />
       {HOMES.map((h, i) => (
-        <button key={h.id} type="button" className="vl-card" data-home={h.id} data-cursor="open" onClick={() => select(h.id)} data-r="fade" data-r-at={String(i * 0.14)}>
+        <button
+          key={h.id}
+          type="button"
+          className="vl-card"
+          data-home={h.id}
+          data-place={h.id}
+          data-cursor="open"
+          onClick={() => select(h.id)}
+          data-r="fade"
+          data-r-at={String(i * 0.14)}
+        >
           <span className="vl-card__media" aria-hidden="true">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={h.image} alt="" loading="lazy" decoding="async" />
@@ -92,6 +102,14 @@ function HomeCards() {
           </span>
         </button>
       ))}
+      {/* The shared spaces between the homes: a quieter third door. */}
+      <button type="button" className="vl-heart-link" data-place="heart" data-cursor="open" onClick={() => select("heart")} data-r="fade" data-r-at="0.3">
+        <span className="vl-heart-link__kind">{UI.homes.heartKind}</span>
+        {UI.homes.heart}
+        <svg viewBox="0 0 22 10" aria-hidden="true">
+          <path d="M0 5 H20 M16 1.5 L20 5 L16 8.5" />
+        </svg>
+      </button>
     </div>
   );
 }

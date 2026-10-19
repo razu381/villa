@@ -1,5 +1,6 @@
 import type { CameraKey, CameraShot } from "@/lib/camera";
-import type { HomeId } from "@/lib/store";
+import type { HomeId, Place } from "@/lib/store";
+import { FEATURED, VILLAGE_HEART } from "@/lib/village";
 
 /**
  * Camera keys for "Two ways to live" (t ∈ [5, 6)) while scrolling, and the
@@ -20,30 +21,48 @@ export const HOMES_KEYS: CameraKey[] = [
  * Explore: each exploded stack looked down on at ~30° so the open floors read
  * in plan, the low sun crossing the gaps from the left.
  *  - Landscape: the stack left of centre (the spec panel sits on the right).
+ *  - The village heart: the pavilion and the long pool from the south-west,
+ *    looking along them (they run 40 m east–west), the same lens and height.
  *  - Portrait (phones): centred, in the upper half above the bottom sheet.
  *    CameraRig dollies portrait screens back by √(1.6 / aspect) about the
  *    target; these shots are authored for that (≈ ×1.86 on a 390×844 phone).
  */
-const LANDSCAPE: Record<HomeId, CameraShot> = {
+const LANDSCAPE: Record<Place, CameraShot> = {
   v3: { pos: [-6.3, 40.5, 50.1], target: [-14.3, 12.5, 4.14], fov: 30 },
   v4: { pos: [-5.75, 41.1, 76.8], target: [11.5, 12, 29.8], fov: 30 },
+  heart: { pos: [-8.9, 43.9, 59.8], target: [33.8, 7, 8.9], fov: 30 },
 };
-const PORTRAIT: Record<HomeId, CameraShot> = {
+const PORTRAIT: Record<Place, CameraShot> = {
   v3: { pos: [-14.23, 26.72, 33.58], target: [-18.4, 5, 9.4], fov: 30 },
   v4: { pos: [-5.47, 25.86, 56.65], target: [3.2, 3.6, 33.0], fov: 30 },
+  heart: { pos: [6, 40, 68], target: [26.5, 5, 5], fov: 30 },
 };
 
-/** Vertical centre of each exploded stack above its pad (m): the veil's focus and the orbit's pivot. */
-export const STACK_MID: Record<HomeId, number> = { v3: 9.5, v4: 9.0 };
+/** Vertical centre of each exploded stack above its pad (m). */
+const STACK_MID: Record<HomeId, number> = { v3: 9.5, v4: 9.0 };
+
+/** What an open place turns about and the veil centres on (world): a home's exploded stack, the heart's pavilion and pool. */
+export const PLACE_CENTRE: Record<Place, [number, number, number]> = {
+  v3: [FEATURED.v3.x, FEATURED.v3.y + STACK_MID.v3, FEATURED.v3.z],
+  v4: [FEATURED.v4.x, FEATURED.v4.y + STACK_MID.v4, FEATURED.v4.z],
+  heart: [
+    (VILLAGE_HEART.pavilion.x + VILLAGE_HEART.pool.x) / 2,
+    VILLAGE_HEART.pavilion.y + 2,
+    (VILLAGE_HEART.pavilion.z + VILLAGE_HEART.pool.z) / 2,
+  ],
+};
 
 const portrait = () => typeof window !== "undefined" && window.innerWidth / Math.max(1, window.innerHeight) < 0.9;
 
-/** Explore-mode close-ups per home (exploded view framing), aspect-aware. */
-export const HOME_SHOTS: Record<HomeId, CameraShot> = {
+/** Explore-mode close-ups per place (a home's exploded view, the heart), aspect-aware. */
+export const PLACE_SHOTS: Record<Place, CameraShot> = {
   get v3() {
     return portrait() ? PORTRAIT.v3 : LANDSCAPE.v3;
   },
   get v4() {
     return portrait() ? PORTRAIT.v4 : LANDSCAPE.v4;
+  },
+  get heart() {
+    return portrait() ? PORTRAIT.heart : LANDSCAPE.heart;
   },
 };

@@ -3,7 +3,8 @@
 /**
  * While a home is open, the rest of the village recedes into the air; through
  * "Two ways to live" it does too, around both featured homes, so they read as
- * the chapter's subject.
+ * the chapter's subject. The open village heart is part of the village itself
+ * (nothing draws after the veil), so its air is lighter, thinnest over it.
  *
  * A camera-facing quad of the day's fog colour drawn over everything in the
  * opaque pass (renderOrder VEIL_ORDER, no depth test, blended) — and the
@@ -19,13 +20,13 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import { Color, CustomBlending, type Mesh, OneMinusSrcAlphaFactor, ShaderMaterial, SrcAlphaFactor, Vector2, Vector3 } from "three";
-import { useJourney } from "@/lib/store";
+import { openPlace, useJourney } from "@/lib/store";
 import { stagesFromT } from "@/lib/timeline";
 import { U } from "@/lib/uniforms";
 import { FEATURED } from "@/lib/village";
 import { damp } from "../Driver";
 import { rigView } from "../CameraRig";
-import { STACK_MID } from "./shots";
+import { PLACE_CENTRE } from "./shots";
 
 /** Opaque-pass order of the veil; the selected home draws after it. */
 export const VEIL_ORDER = 50;
@@ -38,6 +39,8 @@ const v = new Vector3();
 const stagesScratch = stagesFromT(0);
 /** The veil through "Two ways to live" (1 = as strong as while a home is open). */
 const JOURNEY_VEIL = 0.5;
+/** The village heart is the village itself (nothing draws after the veil): a lighter air. */
+const HEART_VEIL = 0.5;
 
 export function Veil() {
   const camera = useThree((s) => s.camera);
@@ -101,18 +104,17 @@ export function Veil() {
   useFrame((_, dtRaw) => {
     const s = useJourney.getState();
     const dt = Math.min(dtRaw, 1 / 20);
-    const open = s.mode === "explore" && s.home != null;
-    const want = open ? 1 : s.mode === "journey" ? stagesFromT(s.t, stagesScratch).homes * JOURNEY_VEIL : 0;
+    const place = openPlace(s);
+    const want = place ? (place === "heart" ? HEART_VEIL : 1) : s.mode === "journey" ? stagesFromT(s.t, stagesScratch).homes * JOURNEY_VEIL : 0;
     amt.current = s.snap ? want : damp(amt.current, want, 2.2, dt);
     const m = ref.current;
     if (!m) return;
     m.visible = amt.current > 0.003;
     mat.uniforms.uAmount.value = amt.current;
     if (!m.visible) return;
-    if (open && s.home) {
-      const h = FEATURED[s.home];
-      focus.current.set(h.x, h.y + STACK_MID[s.home], h.z);
-    } else if (!s.home) {
+    if (place) {
+      focus.current.fromArray(PLACE_CENTRE[place]);
+    } else if (!s.home && !s.place) {
       // Between the two homes.
       const a = FEATURED.v3;
       const b = FEATURED.v4;

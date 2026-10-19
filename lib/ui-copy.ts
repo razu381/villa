@@ -51,6 +51,9 @@ export const UI = {
     photos: "photos",
     /** The panel's render as a button. */
     openPhotos: "See the photos",
+    /** The third door under the two homes' cards. */
+    heart: "Village heart",
+    heartKind: "shared spaces",
   },
   /** The photo viewer over the 3D (components/homes/PlaceViewer.tsx). */
   viewer: {

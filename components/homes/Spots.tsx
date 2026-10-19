@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { SPOT_ANCHORS, SPOT_VIEW } from "@/lib/anchors";
 import { SPOTS } from "@/lib/places";
-import { useJourney } from "@/lib/store";
+import { openPlace, useJourney } from "@/lib/store";
 import { UI } from "@/lib/ui-copy";
 import { damp } from "@/lib/ui-time";
 import { showSpot } from "./explore";
@@ -42,7 +42,7 @@ export function Spots() {
       const dt = Math.min(0.1, (now - last) / 1000);
       last = now;
       const s = useJourney.getState();
-      const open = s.mode === "explore" ? s.home : null;
+      const open = openPlace(s);
       if (now - measured > 400) {
         keepOut = Array.from(document.querySelectorAll(KEEP_OUT), (el) => el.getBoundingClientRect());
         measured = now;

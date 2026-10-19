@@ -18,7 +18,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
 import { Raycaster, Vector2, Vector3 } from "three";
 import { markTurned, orbit, resetOrbit, turnHome } from "@/lib/orbit";
-import { useJourney, type HomeId } from "@/lib/store";
+import { openPlace, useJourney, type HomeId } from "@/lib/store";
 import { stagesFromT } from "@/lib/timeline";
 import { FeaturedHome } from "./FeaturedHome";
 import { Spots } from "./Spots";
@@ -158,7 +158,7 @@ export function Homes() {
     };
   }, [camera, gl]);
 
-  // The 360° look (lib/orbit.ts): while a home is open, dragging the scene turns it
+  // The 360° look (lib/orbit.ts): while a place is open, dragging the scene turns it
   // (a screen width ≈ a full turn, up and down within limits), ← / → turn it by a step.
   // Mouse and pen only; touch keeps native scrolling (which lets the home go).
   useEffect(() => {
@@ -168,7 +168,7 @@ export function Homes() {
     // (Not while its photos are open: the viewer owns the pointer and the arrows.)
     const open = () => {
       const s = useJourney.getState();
-      return s.mode === "explore" && s.home != null && !s.viewer;
+      return openPlace(s) != null && !s.viewer;
     };
     const overScene = (t: EventTarget | null) => !(t as Element | null)?.closest?.(CONTROLS);
     const label = (on: boolean) => {
@@ -213,8 +213,8 @@ export function Homes() {
       turnHome(e.key === "ArrowRight" ? 1 : -1);
     };
     const unsub = useJourney.subscribe((s, p) => {
-      if (s.mode === p.mode && s.home === p.home) return;
-      // A home opens, changes or closes: the view starts from its authored shot.
+      if (openPlace(s) === openPlace(p)) return;
+      // A place opens, changes or closes: the view starts from its authored shot.
       resetOrbit();
       drag = null;
       mark();
