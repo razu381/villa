@@ -21,7 +21,7 @@ export function SiteFooter() {
         ))}
       </ul>
       <p className="vl-footer__legal">
-        <a href="/classic" className="vl-link">
+        <a href="/" className="vl-link">
           {UI.nav.classic}
         </a>
         <span>{BRAND.disclaimer}</span>

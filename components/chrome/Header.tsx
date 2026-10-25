@@ -40,7 +40,7 @@ export function Header() {
       </a>
       <nav className="vl-header__nav" aria-label="Main">
         {/* A plain page load: leaving releases the 3D entirely. */}
-        <a href="/classic" className="vl-link vl-header__homes vl-header__classic">
+        <a href="/" className="vl-link vl-header__homes vl-header__classic">
           {UI.nav.classic}
         </a>
         <a

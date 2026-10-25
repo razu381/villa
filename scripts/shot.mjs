@@ -7,12 +7,13 @@
  *   --q "cam=x,y,z,tx,ty,tz,fov"  pins the camera for close-up inspection
  *   --info                         prints the WebGL renderer and stats (draw calls, triangles, programs)
  *   --base https://x.vercel.app    screenshot a deployed build instead of localhost
+ *   --path /3d-immersive           the route to load (default: the 3D's hidden route)
  *   --channel chrome|msedge        installed browser to drive (default chrome)
  *   --headed                       run a visible window (if headless frames come back black)
  *   --swiftshader                  software WebGL, as in the cloud container
  *   VL_CHROMIUM=/path/to/chromium  use that binary instead of an installed channel
  *
- * Loads http://localhost:PORT/?t=<t>&snap=1&<q> for each t, waits for
+ * Loads http://localhost:PORT/3d-immersive?t=<t>&snap=1&<q> for each t, waits for
  * window.__VL_READY, waits --wait ms more, saves PNGs and prints console errors.
  * Each PNG path is printed — open them with the Read tool to look at them.
  */
@@ -36,7 +37,7 @@ const extra = opt("q", "");
 const out = opt("out", "shots");
 const wait = parseInt(opt("wait", "1500"), 10);
 const prefix = opt("name", mobile ? "m" : "d");
-const pathName = opt("path", "/");
+const pathName = opt("path", "/3d-immersive");
 // --base https://example.vercel.app  screenshots a deployed build instead of localhost.
 const base = opt("base", `http://localhost:${port}`);
 const swiftshader = flag("swiftshader");

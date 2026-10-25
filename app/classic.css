@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Vila Leku — the classic site (/classic)
+   Vila Leku — the classic site (the home, /)
    The client's layout, made calmer: limestone paper, an architect's grid of
    hairlines, slow reveals. Day tone throughout (see the .vc tokens in globals).
    ========================================================================== */
@@ -256,9 +256,6 @@ html[data-rm="1"] .vc-leaf {
 .vc-nav__n {
   display: none;
 }
-.vc-nav__alt a {
-  opacity: 0.78;
-}
 /* The visit, inside the phone's menu sheet only. */
 .vc-nav__cta {
   display: none;
@@ -328,11 +325,6 @@ html[data-rm="1"] .vc-leaf {
   font-size: 11px;
   letter-spacing: 0.1em;
   color: var(--vc-mute);
-}
-.vc-header[data-docked="1"] .vc-nav__alt {
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid var(--vc-line);
 }
 
 .vc-header__visit {
@@ -2072,21 +2064,6 @@ html[data-rm="1"] .vc-map__halo {
     margin-left: auto;
     border-radius: 50%;
     background: var(--olive);
-  }
-  .vc-header .vc-nav__alt,
-  .vc-header[data-docked="1"] .vc-nav__alt {
-    margin-top: 16px;
-    padding-top: 0;
-    border-top: 0;
-  }
-  .vc-header .vc-nav__alt a,
-  .vc-header[data-docked="1"] .vc-nav__alt a {
-    padding: 8px 0;
-    border: 0;
-    font-family: var(--font-sans);
-    font-size: 15px;
-    letter-spacing: 0.02em;
-    opacity: 1;
   }
   .vc-nav__cta {
     display: block;

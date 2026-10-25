@@ -39,7 +39,7 @@ export function ClassicOffer() {
     <aside className="vl-offer" aria-label={UI.nav.classic}>
       <p>{UI.offer.text}</p>
       <div className="vl-offer__actions">
-        <a href="/classic" className="vl-btn vl-btn--solid">
+        <a href="/" className="vl-btn vl-btn--solid">
           {UI.offer.open}
         </a>
         <button

@@ -168,10 +168,7 @@ export function ClassicHeader() {
               </a>
             </li>
           ))}
-          <li className="vc-nav__alt" style={{ "--i": NAV.length } as React.CSSProperties}>
-            <a href="/">{CLASSIC.immersive}</a>
-          </li>
-          <li className="vc-nav__cta" style={{ "--i": NAV.length + 1 } as React.CSSProperties}>
+          <li className="vc-nav__cta" style={{ "--i": NAV.length } as React.CSSProperties}>
             <a
               href="#visit"
               className="vl-btn vl-btn--solid"

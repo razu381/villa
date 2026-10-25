@@ -104,11 +104,6 @@ export function ClassicFooter() {
                     {CLASSIC.footer.email}
                   </a>
                 </li>
-                <li>
-                  <a className="vl-link" href="/">
-                    {CLASSIC.immersive}
-                  </a>
-                </li>
               </ul>
               <a
                 className="vl-btn vl-btn--solid vc-footer__visit"

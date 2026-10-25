@@ -7,11 +7,13 @@ A scroll-driven 3D experience for Vila Leku (Leceia, Oeiras — by Phidias):
 
 ```bash
 npm install
-npm run dev        # http://localhost:3000
+npm run dev        # http://localhost:3000 (classic site) · http://localhost:3000/3d-immersive (the 3D, direct link only)
 npm run build && npm start
 ```
 
 ## Debug / screenshot parameters
+
+On the 3D route, `/3d-immersive`.
 
 | Param | Effect |
 |---|---|

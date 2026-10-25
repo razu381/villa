@@ -95,7 +95,7 @@ html[data-tier="high"]:not([data-rm="1"]) {
 }
 
 html[data-tone="day"],
-/* The classic site (/classic) is always in the day tone. */
+/* The classic site (the home, /) is always in the day tone. */
 .vc {
   --fg: #23271a;
   --fg-soft: #4c4f41;

@@ -1,5 +1,5 @@
 /**
- * The classic site (/classic): navigation, photos, contacts. The story copy it
+ * The classic site (the home, /): navigation, photos, contacts. The story copy it
  * shares with the 3D site lives in lib/content.ts. Photos are the client's
  * renders (SITE-IMAGENS, converted to JPEG) plus the 3D site's own media.
  */
@@ -55,7 +55,6 @@ export const NAV = [
 ] as const;
 
 export const CLASSIC = {
-  immersive: "Immersive 3D",
   visitCta: "Private visit",
   menu: "Menu",
   menuClose: "Close",
