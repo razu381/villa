@@ -12,7 +12,7 @@
  *                                                      tree pixels inside the open home
  *   options: --q "quality=3&rm=1"  extra query (variants)    --label name   output folder name
  *            --frames 12  --gap 120 (ms)  --settle 4000 (ms)  --step 0.004 (scroll, t per frame)
- *            --w 1536 --h 864 --dpr 1.25  --channel chrome|msedge  --headed  --base URL  --path /3d-immersive
+ *            --w 1536 --h 864 --dpr 1.25  --channel chrome|msedge  --headed  --base URL  --path /3d-immersive/
  *            --keep  also save each still target's first frame
  *
  * Still: N screenshots of the same frozen frame. A pixel "flickers" when its
@@ -35,7 +35,7 @@ const opt = (n, d) => {
 };
 const flag = (n) => args.includes(`--${n}`);
 const base = opt("base", `http://localhost:${process.env.PORT || "3000"}`);
-const pathName = opt("path", "/3d-immersive");
+const pathName = opt("path", "/3d-immersive/");
 const q = opt("q", "");
 const label = opt("label", q ? q.replace(/[^a-z0-9.=]+/gi, "_") : "default");
 const frames = parseInt(opt("frames", "12"), 10);

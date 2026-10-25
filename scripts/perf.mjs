@@ -2,7 +2,7 @@
 /**
  * Scroll-through performance probe (real GPU, same launch flags as shot.mjs).
  *
- *   node scripts/perf.mjs [--base http://localhost:3000] [--path /3d-immersive] [--dur 60] [--w 1536 --h 864 --dpr 1.25]
+ *   node scripts/perf.mjs [--base http://localhost:3000] [--path /3d-immersive/] [--dur 60] [--w 1536 --h 864 --dpr 1.25]
  *                         [--q "tier=mid"] [--channel chrome|msedge] [--headed]
  *
  * Cold load at t 0, waits for ready, then scrolls linearly to the end over --dur
@@ -16,7 +16,7 @@ import { chromium } from "playwright";
 const args = process.argv.slice(2);
 const opt = (n, d) => { const i = args.indexOf(`--${n}`); return i >= 0 ? args[i + 1] : d; };
 const base = opt("base", `http://localhost:${process.env.PORT || "3000"}`);
-const pathName = opt("path", "/3d-immersive");
+const pathName = opt("path", "/3d-immersive/");
 const dur = parseFloat(opt("dur", "60"));
 const w = +opt("w", "1536"), h = +opt("h", "864"), dpr = +opt("dpr", "1.25");
 const q = opt("q", "");

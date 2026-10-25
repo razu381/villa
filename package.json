@@ -5,8 +5,8 @@
   "description": "Vila Leku — immersive 3D pitch demo (Next.js + React Three Fiber)",
   "scripts": {
     "dev": "next dev -p 3000",
-    "build": "next build",
-    "start": "next start -p 3000",
+    "build": "next build && node scripts/export-images.mjs",
+    "start": "node scripts/serve-out.mjs 3000",
     "typecheck": "tsc --noEmit",
     "shot": "node scripts/shot.mjs"
   },

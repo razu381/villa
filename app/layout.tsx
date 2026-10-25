@@ -5,7 +5,7 @@ import "@fontsource-variable/instrument-sans/index.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://villa-bay-iota.vercel.app"),
+  metadataBase: new URL("https://vilaleku.com"),
   title: "Vila Leku — Living in harmony",
   description: "Vila Leku: a modern Castro. Townhouses and villas around a village heart in Leceia, Oeiras — by Phidias.",
   openGraph: {
