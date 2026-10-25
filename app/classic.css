@@ -24,6 +24,12 @@
   position: relative;
   z-index: 1;
 }
+/* Until the opening is over (Classic.tsx sets data-opened in idle time after
+   it), the sections under the hero skip layout: the first paint is the hero's. */
+.vc:not([data-opened]) .vc-main > :not(.vc-hero) {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 1000px;
+}
 .vc-wrap {
   padding-inline: var(--vc-gutter);
 }
@@ -351,6 +357,14 @@ html[data-rm="1"] .vc-leaf {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+/* The film fades in over its poster once frames flow (Hero adds .is-playing). */
+.vc-hero__media video {
+  opacity: 0;
+  transition: opacity 1.4s var(--ease-quart);
+}
+.vc-hero__media video.is-playing {
+  opacity: 1;
 }
 /* The header's light type over the film's sky. */
 .vc-hero::before {

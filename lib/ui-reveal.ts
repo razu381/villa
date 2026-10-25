@@ -3,6 +3,7 @@
 import { useEffect, useRef, type RefObject } from "react";
 import { gsap } from "gsap";
 import { SplitText } from "gsap/SplitText";
+import { afterOpening } from "./opening";
 import { useJourney, type JourneyState } from "./store";
 
 if (typeof window !== "undefined") gsap.registerPlugin(SplitText);
@@ -179,6 +180,7 @@ export function revealTimeline(root: HTMLElement, { delay = 0, interactive = fal
  * The same reveal, played once as the block scrolls into view (the classic
  * site, which has no journey `t`). Lines are un-split once played, so later
  * resizes reflow the text naturally. `?snap=1` shows everything at once.
+ * Built after the opening (lib/opening): the blocks are under the hero.
  */
 export function useInViewReveal(ref: RefObject<HTMLElement | null>, { delay = 0, margin = "-12%" }: { delay?: number; margin?: string } = {}) {
   useEffect(() => {
@@ -216,19 +218,22 @@ export function useInViewReveal(ref: RefObject<HTMLElement | null>, { delay = 0,
     const onResize = () => {
       if (Math.abs(window.innerWidth - lastW) < 2) return;
       lastW = window.innerWidth;
-      build();
+      if (tl) build();
     };
     window.addEventListener("resize", onResize);
-    const fonts = document.fonts?.ready ?? Promise.resolve();
-    fonts
-      .then(() => {
-        build();
-        io.observe(root);
-      })
-      .catch(build);
+    const cancel = afterOpening(() => {
+      const fonts = document.fonts?.ready ?? Promise.resolve();
+      fonts
+        .then(() => {
+          build();
+          if (!disposed) io.observe(root);
+        })
+        .catch(build);
+    });
 
     return () => {
       disposed = true;
+      cancel();
       io.disconnect();
       window.removeEventListener("resize", onResize);
       tl?.kill();

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { BRAND } from "@/lib/content";
 import { CLASSIC, NAV, PARTNERS } from "@/lib/classic-content";
+import { afterOpening } from "@/lib/opening";
 import { UI } from "@/lib/ui-copy";
 import { PhidiasMark, Wordmark } from "../ui/Brand";
 import { goTo } from "./ClassicHeader";
@@ -52,9 +53,14 @@ export function ClassicFooter() {
     const el = ref.current;
     const sp = spacer.current;
     if (!el || !sp || !fits || stillMode()) return;
-    const tl = gsap.timeline({ scrollTrigger: { trigger: sp, start: "top bottom", end: "bottom bottom", scrub: true, invalidateOnRefresh: true } });
-    tl.fromTo(el, { y: () => el.offsetHeight * 0.5 }, { y: 0, ease: "none" }, 0).fromTo(veil.current, { opacity: 1 }, { opacity: 0, ease: "none" }, 0);
+    let tl: gsap.core.Timeline | null = null;
+    const cancel = afterOpening(() => {
+      tl = gsap.timeline({ scrollTrigger: { trigger: sp, start: "top bottom", end: "bottom bottom", scrub: true, invalidateOnRefresh: true } });
+      tl.fromTo(el, { y: () => el.offsetHeight * 0.5 }, { y: 0, ease: "none" }, 0).fromTo(veil.current, { opacity: 1 }, { opacity: 0, ease: "none" }, 0);
+    });
     return () => {
+      cancel();
+      if (!tl) return;
       tl.scrollTrigger?.kill();
       tl.kill();
       gsap.set([el, veil.current], { clearProps: "transform,opacity" });

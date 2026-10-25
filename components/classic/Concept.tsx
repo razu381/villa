@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { CONCEPT } from "@/lib/content";
 import { CLASSIC, PHOTOS, PILLAR_PHOTOS } from "@/lib/classic-content";
+import { afterOpening } from "@/lib/opening";
 import { useInViewReveal } from "@/lib/ui-reveal";
 import { ARCH_PATH } from "../ui/Brand";
 import { gsap, stillMode } from "./env";
@@ -24,15 +25,18 @@ function InkText({ text }: { text: string }) {
   useEffect(() => {
     const el = ref.current;
     if (!el || stillMode()) return;
-    const words = el.querySelectorAll(".vc-ink__w");
-    const tw = gsap.fromTo(
-      words,
-      { opacity: 0.16 },
-      { opacity: 1, ease: "none", stagger: 0.5, scrollTrigger: { trigger: el, start: "top 82%", end: "bottom 48%", scrub: 0.6 } },
-    );
+    let tw: gsap.core.Tween | null = null;
+    const cancel = afterOpening(() => {
+      tw = gsap.fromTo(
+        el.querySelectorAll(".vc-ink__w"),
+        { opacity: 0.16 },
+        { opacity: 1, ease: "none", stagger: 0.5, scrollTrigger: { trigger: el, start: "top 82%", end: "bottom 48%", scrub: 0.6 } },
+      );
+    });
     return () => {
-      tw.scrollTrigger?.kill();
-      tw.kill();
+      cancel();
+      tw?.scrollTrigger?.kill();
+      tw?.kill();
     };
   }, []);
   return (
@@ -56,14 +60,18 @@ function ArchLine({ className }: { className: string }) {
       el.style.strokeDashoffset = "0";
       return;
     }
-    const tw = gsap.fromTo(
-      el,
-      { strokeDashoffset: 1 },
-      { strokeDashoffset: 0, ease: "none", scrollTrigger: { trigger: el.closest("section"), start: "top 75%", end: "center 35%", scrub: 1 } },
-    );
+    let tw: gsap.core.Tween | null = null;
+    const cancel = afterOpening(() => {
+      tw = gsap.fromTo(
+        el,
+        { strokeDashoffset: 1 },
+        { strokeDashoffset: 0, ease: "none", scrollTrigger: { trigger: el.closest("section"), start: "top 75%", end: "center 35%", scrub: 1 } },
+      );
+    });
     return () => {
-      tw.scrollTrigger?.kill();
-      tw.kill();
+      cancel();
+      tw?.scrollTrigger?.kill();
+      tw?.kill();
     };
   }, []);
   return (

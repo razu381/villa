@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AMENITIES } from "@/lib/content";
 import { AMENITY_PHOTOS, CLASSIC } from "@/lib/classic-content";
+import { afterOpening, openingNow } from "@/lib/opening";
 import { useInViewReveal } from "@/lib/ui-reveal";
 import { scrollToY } from "@/lib/ui-scroll";
 import { Eyebrow } from "./Concept";
@@ -68,9 +69,10 @@ export function VillageHeart() {
     setStill(s);
     const el = ref.current;
     if (!el || s) return;
+    // Built after the opening (lib/opening), off the film's first seconds.
     // Rebuilt (and its styles undone) when the window crosses the phone width.
     const mm = gsap.matchMedia();
-    mm.add({ phone: "(max-width: 820px)", wide: "(min-width: 821px)" }, (ctx) => {
+    const cancel = afterOpening(() => mm.add({ phone: "(max-width: 820px)", wide: "(min-width: 821px)" }, (ctx) => {
       const phone = !!ctx.conditions?.phone;
       const slides = el.querySelectorAll<HTMLElement>(".vc-heart__slide");
       const n = slides.length;
@@ -104,12 +106,16 @@ export function VillageHeart() {
       return () => {
         st.current = null;
       };
-    });
-    return () => mm.revert();
+    }));
+    return () => {
+      cancel();
+      mm.revert();
+    };
   }, []);
 
   /** Scroll to where amenity i is fully shown. */
   const show = (i: number) => {
+    openingNow();
     const t = st.current;
     if (!t) return;
     const n = AMENITIES.length;

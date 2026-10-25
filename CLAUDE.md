@@ -27,6 +27,7 @@ Before relying on `scripts/shot.mjs` locally, make it portable (resumeplanlocal.
 - **The day only moves forward.** Interactive modes override it via `sunOverride`.
 - **Per-frame code** reads the store with `useJourney.getState()` inside `useFrame`. Never use React state per frame. Don't allocate per frame.
 - **Anything the section plane can cut** must use `patchVillageMaterial` (`lib/materials.ts`), which handles clipping, the white-model → material sweep, the seam and poché.
+- **Classic site, the opening first:** setup under the hero (scroll reveals, pins, scrubs) goes through `afterOpening` (`lib/opening.ts`), so it never lands on the film's first seconds; anything that measures the page first calls `openingNow()` (see `goTo`). Until the opening is over the sections under the hero skip layout (`.vc:not([data-opened])` in `app/classic.css`).
 - **Pointer events:** `main.vl-journey` receives all pointer events; the R3F canvas gets none. For 3D interaction, raycast from document-level events (see `canvas/homes/Homes.tsx`).
 - **Contracts live in `lib/`:**
   - `timeline.ts`: chapters, `t`, stages incl. `plan`

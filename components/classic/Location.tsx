@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { BRAND, CONCEPT, LOCATION } from "@/lib/content";
 import { CLASSIC, MAP_MARKER, MAP_SPOTS, MAPS_LINK, PHOTOS } from "@/lib/classic-content";
+import { afterOpening } from "@/lib/opening";
 import { useInViewReveal } from "@/lib/ui-reveal";
 import { Wordmark } from "../ui/Brand";
 import { Eyebrow } from "./Concept";
@@ -33,10 +34,14 @@ export function Location() {
   useEffect(() => {
     const el = bandImg.current;
     if (!el || stillMode()) return;
-    const tw = gsap.fromTo(el, { scale: 1.12 }, { scale: 1, ease: "none", scrollTrigger: { trigger: el.parentElement, start: "top bottom", end: "bottom 40%", scrub: true } });
+    let tw: gsap.core.Tween | null = null;
+    const cancel = afterOpening(() => {
+      tw = gsap.fromTo(el, { scale: 1.12 }, { scale: 1, ease: "none", scrollTrigger: { trigger: el.parentElement, start: "top bottom", end: "bottom 40%", scrub: true } });
+    });
     return () => {
-      tw.scrollTrigger?.kill();
-      tw.kill();
+      cancel();
+      tw?.scrollTrigger?.kill();
+      tw?.kill();
     };
   }, []);
 

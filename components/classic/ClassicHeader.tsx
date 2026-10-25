@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { CLASSIC, NAV } from "@/lib/classic-content";
+import { openingNow } from "@/lib/opening";
 import { scrollToY } from "@/lib/ui-scroll";
 import { Wordmark } from "../ui/Brand";
 
@@ -9,6 +10,7 @@ import { Wordmark } from "../ui/Brand";
 export function goTo(id: string, focus?: string) {
   const el = document.getElementById(id);
   if (!el) return;
+  openingNow(); // the pin's scroll space must be in place before measuring
   const y = id === "top" ? 0 : el.getBoundingClientRect().top + window.scrollY - (id === "visit" ? 0 : 56);
   // Not on touch: focusing a field opens the keyboard and jumps the page to it.
   const field = focus && !window.matchMedia("(pointer: coarse)").matches ? focus : null;

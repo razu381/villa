@@ -111,7 +111,7 @@ export function AutoGallery({
             data-state={i === index ? "active" : i === prev ? "prev" : "idle"}
             aria-hidden={i !== index}
           >
-            <Pic photo={p} sizes={sizes} eager={i === 0} />
+            <Pic photo={p} sizes={sizes} />
           </figure>
         ))}
         {onOpen && (
