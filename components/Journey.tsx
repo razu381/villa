@@ -5,6 +5,7 @@ import { CHAPTERS } from "@/lib/timeline";
 import { SmoothScroll } from "./SmoothScroll";
 import { HeroMedia } from "./HeroMedia";
 import { ArcHaze, Chrome, ChromeTop } from "./chrome/Chrome";
+import { Loader } from "./chrome/Loader";
 import { HeroChapter } from "./chapters/HeroChapter";
 import { DrawingChapter } from "./chapters/DrawingChapter";
 import { ModelChapter } from "./chapters/ModelChapter";
@@ -48,6 +49,7 @@ export default function Journey() {
         <NightTail />
       </main>
       <Chrome />
+      <Loader />
     </>
   );
 }

@@ -39,6 +39,14 @@ export interface JourneyState {
   reducedMotion: boolean;
   /** 3D scene has rendered its first frames. */
   ready: boolean;
+  /**
+   * How far the opening picture has come (components/HeroMedia.tsx): 0 → 1, and
+   * 1 once the film is playing, or the poster stands in for it (reduced motion,
+   * autoplay refused, a film that fails).
+   */
+  heroLoad: number;
+  /** The loader has lifted (components/chrome/Loader.tsx): the opening may play its entrance. */
+  loaded: boolean;
   /** Not "live": the aerial still stands in for the canvas (canvas/Experience.tsx watchContext). */
   canvas: CanvasState;
   /**
@@ -59,6 +67,8 @@ export interface JourneyState {
   setTier: (t: Tier) => void;
   setReducedMotion: (v: boolean) => void;
   setReady: (v: boolean) => void;
+  setHeroLoad: (v: number) => void;
+  setLoaded: (v: boolean) => void;
   setCanvas: (v: CanvasState) => void;
   setSnap: (v: boolean) => void;
 }
@@ -76,6 +86,8 @@ export const useJourney = create<JourneyState>((set) => ({
   tier: "high",
   reducedMotion: false,
   ready: false,
+  heroLoad: 0,
+  loaded: false,
   canvas: "live",
   snap: false,
 
@@ -91,6 +103,8 @@ export const useJourney = create<JourneyState>((set) => ({
   setTier: (tier) => set({ tier }),
   setReducedMotion: (reducedMotion) => set({ reducedMotion }),
   setReady: (ready) => set({ ready }),
+  setHeroLoad: (heroLoad) => set({ heroLoad }),
+  setLoaded: (loaded) => set({ loaded }),
   setCanvas: (canvas) => set({ canvas }),
   setSnap: (snap) => set({ snap }),
 }));

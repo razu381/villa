@@ -12,14 +12,15 @@ import { Pin } from "../ui/Pin";
  * Chapter 0 — first light. The film plays behind (HeroMedia); over it the
  * wordmark in limestone, the place, one line and the signature. As the day
  * begins (t 0.1 → 0.42) the type drifts up and away; then the match cut.
+ * The entrance waits for the loader to lift (store `loaded`).
  */
 export function HeroChapter() {
   const exitRef = useRef<HTMLDivElement>(null);
   const blockRef = useRef<HTMLDivElement>(null);
   const cueRef = useRef<HTMLDivElement>(null);
 
-  useReveal(blockRef, { when: (s) => s.t < 0.5, delay: 0.35, reverseSpeed: 1 });
-  useReveal(cueRef, { when: (s) => s.t < 0.12, delay: 1.6 });
+  useReveal(blockRef, { when: (s) => s.loaded && s.t < 0.5, delay: 0.35, reverseSpeed: 1 });
+  useReveal(cueRef, { when: (s) => s.loaded && s.t < 0.12, delay: 1.6 });
 
   // Written only while the value changes (not on every scroll frame of the journey).
   const lastK = useRef<string | null>(null);

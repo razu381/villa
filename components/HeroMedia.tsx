@@ -28,12 +28,18 @@ import { useJourneyEffect } from "@/lib/ui-media";
 /** Where the village sits in the 1920 × 1080 aerial (the push-in aims here). */
 const PIN = { x: 1000, y: 470 };
 
+/** Film → still: the film is gone by heroFade 0.42. */
+const filmFade = (heroFade: number) => smooth(0, 0.42, heroFade);
+/** Whether the film is (partly) on screen at journey position t (the loader waits for it only then). */
+export const filmShownAt = (t: number) => filmFade(stagesFromT(t).heroFade) < 0.999;
+
 export function HeroMedia() {
   const filmRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const aerialRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<HTMLDivElement>(null);
   const photoRef = useRef<HTMLImageElement>(null);
+  const posterRef = useRef<HTMLImageElement>(null);
   const drawingRef = useRef<HTMLImageElement>(null);
   const scrimRef = useRef<HTMLDivElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -45,23 +51,66 @@ export function HeroMedia() {
   const last = useRef<{ k: number; kd: number; rm: boolean } | null>(null);
 
   // Pick the film for the screen, start it muted; reveal it only once frames flow.
+  // Each step reports to the store's heroLoad, which the loader traces (chrome/Loader).
   useEffect(() => {
     const v = videoRef.current;
-    if (!v) return;
+    const poster = posterRef.current;
+    if (!v || !poster) return;
     const s = useJourney.getState();
     const reduced = s.reducedMotion || window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduced) return; // the poster is the hero in reduced motion
+    const mark = (k: number) => {
+      if (k > useJourney.getState().heroLoad) useJourney.getState().setHeroLoad(k);
+    };
+    // The poster is the first picture; it is the whole hero in reduced motion, or
+    // when the film can't play.
+    let posterIn = poster.complete;
+    let filmOut = reduced;
+    const onPoster = () => {
+      posterIn = true;
+      mark(filmOut ? 1 : 0.25);
+    };
+    const onFilmOut = () => {
+      filmOut = true;
+      if (posterIn) mark(1);
+    };
+    if (posterIn) onPoster();
+    else {
+      poster.addEventListener("load", onPoster, { once: true });
+      poster.addEventListener("error", onPoster, { once: true });
+    }
+    const unPoster = () => {
+      poster.removeEventListener("load", onPoster);
+      poster.removeEventListener("error", onPoster);
+    };
+    if (reduced) return unPoster;
+
     const mobile = window.matchMedia("(max-width: 820px)").matches;
     const base = mobile ? "/media/hero-loop-mobile" : "/media/hero-loop";
     const webm = v.canPlayType('video/webm; codecs="vp9"') || v.canPlayType("video/webm");
+    const steps: [string, number][] = [
+      ["loadedmetadata", 0.45],
+      ["loadeddata", 0.65],
+      ["canplay", 0.8],
+    ];
+    const onStep = steps.map(([type, k]) => [type, () => mark(k)] as const);
+    onStep.forEach(([type, fn]) => v.addEventListener(type, fn));
+    const onPlaying = () => {
+      v.classList.add("is-playing");
+      mark(1);
+    };
+    v.addEventListener("playing", onPlaying);
+    v.addEventListener("error", onFilmOut);
     v.src = `${base}.${webm ? "webm" : "mp4"}`;
     v.muted = true;
-    const onPlaying = () => v.classList.add("is-playing");
-    v.addEventListener("playing", onPlaying);
     v.play()
       .then(() => (playing.current = true))
-      .catch(() => {});
-    return () => v.removeEventListener("playing", onPlaying);
+      .catch(onFilmOut);
+    return () => {
+      unPoster();
+      onStep.forEach(([type, fn]) => v.removeEventListener(type, fn));
+      v.removeEventListener("playing", onPlaying);
+      v.removeEventListener("error", onFilmOut);
+    };
   }, []);
 
   useEffect(() => () => cancelAnimationFrame(easing.current), []);
@@ -79,7 +128,7 @@ export function HeroMedia() {
     last.current = { k, kd, rm: reduced };
 
     // Film → still.
-    const kf = smooth(0, 0.42, k);
+    const kf = filmFade(k);
     film.style.opacity = String(1 - kf);
     film.style.visibility = kf >= 0.999 ? "hidden" : "visible";
 
@@ -183,7 +232,7 @@ export function HeroMedia() {
           <source srcSet="/media/hero-poster.avif" type="image/avif" />
           <source srcSet="/media/hero-poster.webp" type="image/webp" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="vl-heromedia__poster" src="/media/hero-poster.jpg" alt="" fetchPriority="high" />
+          <img ref={posterRef} className="vl-heromedia__poster" src="/media/hero-poster.jpg" alt="" fetchPriority="high" />
         </picture>
         <video ref={videoRef} className="vl-heromedia__video" muted loop playsInline preload="auto" disablePictureInPicture />
         <div className="vl-heromedia__scrim" />

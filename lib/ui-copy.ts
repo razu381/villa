@@ -8,6 +8,7 @@ const pillar = (title: string) => CONCEPT.pillars.find((p) => p.title === title)
 
 export const UI = {
   skip: "Skip to the homes",
+  loader: { label: "Loading Vila Leku", note: "before first light" },
   nav: { homes: "The homes", visit: "Private visit", classic: "Classic site" },
   offer: {
     text: "This device may show the classic site more smoothly.",

@@ -2421,6 +2421,99 @@ html[data-tone="night"] .vl-night .vl-text[data-place="top"] .vl-text__scrim {
   }
 }
 
+/* ------------------------------------------------------------- loader */
+
+/* Before the film (components/chrome/Loader.tsx): the three brand arches,
+   small to large, trace themselves on the film's ground as it loads; then the
+   layer fades off the opening. */
+.vl-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+  background: #2a2b22;
+  color: #e5e3d7;
+  /* Without JS the layer clears itself; Loader.tsx stands this down (.is-live). */
+  animation: vl-loader-failsafe 1s var(--ease-quart) 12s forwards;
+}
+.vl-loader.is-live {
+  animation: none;
+}
+.vl-loader[hidden] {
+  display: none;
+}
+.vl-loader.is-done {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 1.2s var(--ease-quart) 0.25s;
+}
+.vl-loader__arches {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  transition:
+    opacity 0.9s var(--ease-quart),
+    transform 1.4s var(--ease-out);
+}
+.vl-loader.is-done .vl-loader__arches {
+  opacity: 0;
+  transform: translate3d(0, -8px, 0);
+}
+html[data-rm="1"] .vl-loader.is-done .vl-loader__arches {
+  transform: none;
+}
+.vl-loader__arch {
+  display: block;
+  overflow: visible;
+}
+.vl-loader__arch.is-1 {
+  width: 24px;
+}
+.vl-loader__arch.is-2 {
+  width: 34px;
+}
+.vl-loader__arch.is-3 {
+  width: 48px;
+}
+.vl-loader__arch path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5px;
+  vector-effect: non-scaling-stroke;
+}
+.vl-loader__ghost {
+  opacity: 0.16;
+}
+.vl-loader__ink {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+.vl-loader__note {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.32em;
+  text-transform: lowercase;
+  opacity: 0.6;
+  transition: opacity 0.8s var(--ease-quart);
+}
+.vl-loader.is-done .vl-loader__note {
+  opacity: 0;
+}
+/* The scroll holds while the loader is up. */
+html.vl-loading {
+  overflow: hidden;
+}
+@keyframes vl-loader-failsafe {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
 /* --------------------------------------------------------- skip, grain */
 
 .vl-skip {

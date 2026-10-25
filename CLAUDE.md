@@ -48,5 +48,5 @@ Before relying on `scripts/shot.mjs` locally, make it portable (resumeplanlocal.
   - `world/`: terrain, landscape, houses (`houses/architecture.ts` header documents the builder API)
   - `section/`: garage, cars, life, anchors
   - `homes/`: featured V3/V4, interiors, veil, jewels; the village heart as a third place; photo spots (`Spots.tsx`)
-- `components/`: the HTML layer. Chapters, `HeroMedia` (film + match cut), chrome (sun arc / hold the sun, header, index, sound), homes panel, photo pins and viewer (`homes/Spots.tsx`, `homes/PlaceViewer.tsx`, `ui/Lightbox.tsx`, shared with the classic site), invitation.
+- `components/`: the HTML layer. Chapters, `HeroMedia` (film + match cut), chrome (loader, sun arc / hold the sun, header, index, sound), homes panel, photo pins and viewer (`homes/Spots.tsx`, `homes/PlaceViewer.tsx`, `ui/Lightbox.tsx`, shared with the classic site), invitation.
 - `public/media/`: hero loops, posters, renders, brand masks, audio. All cut from the client's film and site, pitch use only.
