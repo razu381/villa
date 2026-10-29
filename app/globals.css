@@ -18,6 +18,36 @@
 @property --veil { syntax: "<color>"; inherits: true; initial-value: rgba(20, 21, 17, 0.62); }
 
 :root {
+  /* Self-hosted (the client's delivery: normalidad.zip + Adventures Unlimited Script). */
+  @font-face {
+    font-family: "Normalidad Compact";
+    src: url("/fonts/normalidad-compact-400.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Normalidad Compact";
+    src: url("/fonts/normalidad-compact-500.woff2") format("woff2");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Normalidad Compact";
+    src: url("/fonts/normalidad-compact-700.woff2") format("woff2");
+    font-weight: 600 800;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: "Adventures Unlimited Script";
+    src: url("/fonts/adventures-script-400.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+
   /* Brand palette (sampled from vilaleku.com) */
   --limestone: #e5e3d7;
   --stone: #d2cfbc;
@@ -36,9 +66,11 @@
   --text-soft: #5d5e50;
   --text-on-dark: #f1eee4;
 
-  /* Type */
-  --font-display: "Instrument Serif", "Times New Roman", serif;
-  --font-sans: "Instrument Sans Variable", "Instrument Sans", system-ui, sans-serif;
+  /* Type — Normalidad for everything, the Adventures script as its own variable
+     (the client's VS3 notes: "Adventure" for the handwritten accents only). */
+  --font-display: "Normalidad Compact", "Instrument Sans", system-ui, sans-serif;
+  --font-sans: "Normalidad Compact", "Instrument Sans", system-ui, sans-serif;
+  --font-script: "Adventures Unlimited Script", "Normalidad Compact", cursive;
 
   /* Motion — one easing family (expo / quart out) */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);

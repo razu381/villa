@@ -1,8 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
-import "@fontsource/instrument-serif/400.css";
-import "@fontsource/instrument-serif/400-italic.css";
-import "@fontsource-variable/instrument-sans/index.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
