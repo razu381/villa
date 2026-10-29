@@ -82,11 +82,11 @@ export const CLASSIC = {
     marker: "About the place",
     close: "Close",
   },
-  gallery: { eyebrow: "Gallery", lead: "Explore", accent: "Vila Leku.", view: "View", close: "Close", of: "of" },
+  gallery: { eyebrow: "Gallery", lead: "Explore", accent: "Vila Leku.", view: "View", close: "Close", of: "of" },
   visit: {
     eyebrow: "Private visit",
     lead: "Come experience",
-    accent: "Vila Leku.",
+    accent: "Vila Leku.",
     body: [
       "Discover the homes, landscape and shared spaces with our dedicated Vila Leku advisor.",
       "Whether you are looking for a primary residence, a second home or a long-term investment, we are here to help you find the right place.",

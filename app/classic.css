@@ -318,7 +318,7 @@ html[data-rm="1"] .vc-leaf {
   align-items: stretch;
   gap: 0;
   min-width: 248px;
-  padding: 14px 0;
+  padding: 14px 26px;
   background: rgba(240, 238, 230, 0.95);
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
@@ -1710,6 +1710,7 @@ html[data-rm="1"] .vc-map__halo {
   flex-wrap: wrap;
   align-items: flex-end;
   gap: 24px 30px;
+  row-gap: 28px;
   margin-top: clamp(36px, 5.5vh, 72px);
 }
 .vc-visit__build {
@@ -1717,13 +1718,14 @@ html[data-rm="1"] .vc-map__halo {
   flex: none;
   align-items: flex-end;
   gap: 12px;
-  /* The client's note (VS3 p. 5): the three symbols one size. */
-  --vc-visit-a: clamp(120px, 10.5vw, 172px);
+  /* The client's note (VS3 p. 5): the three symbols one size — the arches and
+     the portrait share the portrait's own ratio, so all three are one height. */
+  --vc-visit-a: clamp(116px, 9.6vw, 160px);
 }
 .vc-visit__arch {
   display: block;
   overflow: visible;
-  aspect-ratio: 116 / 128;
+  aspect-ratio: 108 / 120;
 }
 .vc-visit__arch path {
   fill: none;
@@ -1753,8 +1755,10 @@ html[data-rm="1"] .vc-map__halo {
 }
 .vc-visit__clip {
   position: absolute;
-  /* The client's note (VS3 p. 5): the arch line must frame the whole photo. */
-  inset: 0;
+  /* The is-3 stroke is drawn 4 viewBox units (≈3.7% horizontal, 3.1% vertical)
+     inside its box; the photo fills just inside it, so the arch line frames
+     the photo's whole edge instead of crossing it (client note, VS3 p. 5). */
+  inset: 3.1% 3.7% 0 3.7%;
   clip-path: url(#vc-arch);
 }
 .vc-visit__photo {

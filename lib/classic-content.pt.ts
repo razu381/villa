@@ -42,11 +42,11 @@ export const CLASSIC_PT = {
     marker: "Sobre o lugar",
     close: "Fechar",
   },
-  gallery: { eyebrow: "Galeria", lead: "Explore", accent: "a Vila Leku.", view: "Ver", close: "Fechar", of: "de" },
+  gallery: { eyebrow: "Galeria", lead: "Explore", accent: "a Vila Leku.", view: "Ver", close: "Fechar", of: "de" },
   visit: {
     eyebrow: "Visita privada",
     lead: "Venha viver a",
-    accent: "Vila Leku.",
+    accent: "Vila Leku.",
     body: [
       "Descubra as casas, a paisagem e os espaços partilhados com a assessora dedicada da Vila Leku.",
       "Procura uma residência permanente, uma segunda casa ou um investimento de longo prazo: estamos aqui para ajudar a encontrar o lugar certo.",
