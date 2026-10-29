@@ -42,8 +42,8 @@ export const PHOTOS = {
   villagePool: p(`${R}village-pool.jpg`, 1600, 900, "The long natural pool and its pavilion"),
   shadows: p(`${R}shadows-play.jpg`, 1600, 900, "Children's shadows playing on a sunlit stone wall"),
   sunset: p("/media/sunset-aerial.jpg", 1920, 1080, "Golden hour over Oeiras and the village"),
-  advisor: p(`${C}advisor.jpg`, 1024, 1138, "Helen Morais, Vila Leku customer advisor"),
-  map: p(`${C}map.jpg`, 2400, 2016, "Illustrated map of the Lisbon coast with Vila Leku between Oeiras and Lisbon"),
+  advisor: p(`${C}advisor-vs3.jpg`, 1024, 1138, "Helen Morais, Vila Leku customer advisor"),
+  map: p(`${C}map-vs3.jpg`, 2400, 2016, "Illustrated map of the Lisbon coast with Vila Leku between Oeiras and Lisbon"),
 } satisfies Record<string, Photo>;
 
 export const NAV = [

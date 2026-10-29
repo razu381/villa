@@ -778,8 +778,8 @@ html[data-tone="day"] .vl-arc__svg {
   display: inline-block;
   aspect-ratio: 2496 / 338;
   background-color: currentColor;
-  -webkit-mask: url("/media/brand/wordmark.png") center / contain no-repeat;
-  mask: url("/media/brand/wordmark.png") center / contain no-repeat;
+  -webkit-mask: url("/media/brand/wordmark-vs3.png") center / contain no-repeat;
+  mask: url("/media/brand/wordmark-vs3.png") center / contain no-repeat;
 }
 .vl-phidias {
   display: inline-block;
