@@ -105,6 +105,17 @@ export function ClassicFooter() {
                     {copy.CLASSIC.footer.email}
                   </a>
                 </li>
+                {/* shortcut: social homepages are placeholders; replace when client profile URLs arrive. */}
+                <li>
+                  <a className="vl-link" href="https://www.facebook.com/" target="_blank" rel="noopener noreferrer">
+                    Facebook
+                  </a>
+                </li>
+                <li>
+                  <a className="vl-link" href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer">
+                    Instagram
+                  </a>
+                </li>
               </ul>
               <a
                 className="vl-btn vl-btn--solid vc-footer__visit"

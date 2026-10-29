@@ -52,12 +52,15 @@ export function Invitation({ preset }: { preset?: { home: VisitHome; at: number 
 
   useEffect(() => {
     setDays(visitDays(14, new Date(), copy.locale));
+  }, [copy.locale]);
+
+  useEffect(() => {
     if (debugParam("invite") === "demo") {
       setValues({ name: "Inês Almeida", email: "ines@example.com", phone: "", home: "v4", date: demoDate(), time: "evening" });
       setStatus("sent");
     }
     return () => window.clearTimeout(timer.current);
-  }, [copy.locale]);
+  }, []);
 
   useEffect(() => {
     if (!preset) return;

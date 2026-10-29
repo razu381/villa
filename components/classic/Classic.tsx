@@ -26,7 +26,7 @@ export default function Classic() {
 
   useEffect(() => {
     document.documentElement.dataset.rm = useJourney.getState().reducedMotion ? "1" : "0";
-    initLang(); // the saved choice, else the browser's language (lib/lang)
+    initLang(); // applies the enabled language (lib/lang)
     // Until the opening is over, the sections under the hero skip layout
     // (classic.css), so the first paint is the hero's alone. They are laid out
     // first thing after, before any scroll animation measures them.

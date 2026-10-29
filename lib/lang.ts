@@ -3,12 +3,15 @@
 import { create } from "zustand";
 
 /**
- * The classic site's language (the client's note, VS3 p. 1). The choice is the
- * visitor's (localStorage); without one, PT browsers get PT, everyone else EN.
+ * The classic site's language (the client's note, VS3 p. 1). While PT is
+ * paused, use English and retain the saved preference for later.
  * The server HTML stays "en" (a static export) — initLang() runs after mount.
  */
 
 export type Lang = "en" | "pt";
+
+// Enable when the Portuguese translation is ready; shared by the store and menu.
+export const PT_ENABLED = false;
 
 const KEY = "vl-lang";
 
@@ -27,13 +30,19 @@ interface LangState {
 export const useLang = create<LangState>((set) => ({
   lang: "en",
   setLang: (lang) => {
+    if (lang === "pt" && !PT_ENABLED) return;
     set({ lang });
     apply(lang);
   },
 }));
 
-/** After mount: the saved choice, else the browser's language. */
+/** After mount: English while PT is paused; otherwise the saved/browser choice. */
 export function initLang() {
+  if (!PT_ENABLED) {
+    useLang.setState({ lang: "en" });
+    document.documentElement.lang = "en";
+    return;
+  }
   let lang: Lang = "en";
   try {
     const saved = localStorage.getItem(KEY);

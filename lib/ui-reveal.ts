@@ -151,11 +151,17 @@ export function revealTimeline(root: HTMLElement, { delay = 0, interactive = fal
         t.fromTo(el, { scaleX: 0 }, { scaleX: 1, duration: 1.4, ease: "expo.inOut", transformOrigin: "0% 50%" }, pos);
         at = pos + 0.1;
         break;
-      case "draw":
-        // An SVG stroke (pathLength="1") drawing itself in.
-        t.fromTo(el, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 1.3, ease: "expo.inOut" }, pos);
+      case "draw": {
+        // Non-scaling strokes need their normalised dash length in screen units.
+        const length = () => {
+          const m = (el as unknown as SVGGraphicsElement).getScreenCTM();
+          return m ? Math.hypot(m.a, m.b) : 1;
+        };
+        t.fromTo(el, { strokeDasharray: length, strokeDashoffset: length }, { strokeDashoffset: 0, duration: 1.3, ease: "expo.inOut" }, pos);
+        t.set(el, { strokeDasharray: "none" }, pos + 1.3);
         at = pos + 0.45;
         break;
+      }
       case "mask":
         t.fromTo(el, { clipPath: "inset(0% 100% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 1.8, ease: "expo.inOut" }, pos);
         at = pos + 0.45;

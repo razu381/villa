@@ -280,6 +280,7 @@ html[data-rm="1"] .vc-leaf {
   gap: 10px;
   font-size: 12px;
   letter-spacing: 0.14em;
+  color: var(--vc-soft);
 }
 .vc-nav__lang-item {
   display: inline-flex;
@@ -292,13 +293,33 @@ html[data-rm="1"] .vc-leaf {
   background: none;
   font: inherit;
   letter-spacing: inherit;
-  color: var(--vc-mute);
+  color: inherit;
   transition: color 0.4s var(--ease-out);
 }
-.vc-nav__lang button:hover,
+.vc-nav__lang button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+.vc-nav__lang button[aria-pressed="true"] {
+  font-weight: 700;
+}
+.vc-nav__lang-item i {
+  font-style: normal;
+}
+.vc-nav__lang button:not(:disabled):hover,
 .vc-nav__lang button:focus-visible,
 .vc-nav__lang button[aria-pressed="true"] {
   color: var(--vc-ink);
+}
+@media (min-width: 821px) {
+  .vc-header[data-docked="0"] .vc-nav__lang {
+    padding: 2px 12px;
+    border: 1px solid rgba(229, 227, 215, 0.5);
+    border-radius: 999px;
+    background: rgba(229, 227, 215, 0.9);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
 }
 .vc-header[data-docked="1"] .vc-nav__lang {
   margin: 8px 0 -4px;
@@ -1606,11 +1627,11 @@ html[data-rm="1"] .vc-map__halo {
   animation: vc-cap-in 0.9s var(--ease-out) both;
 }
 .vc-gallery__cap b {
-  font-family: var(--font-display);
+  font-family: var(--font-script);
   font-weight: 400;
-  font-style: italic;
+  font-style: normal;
   font-size: clamp(20px, 1.7vw, 27px);
-  line-height: 1.1;
+  line-height: 1.3;
 }
 .vc-gallery__cap span {
   max-width: 24em;
@@ -1732,7 +1753,7 @@ html[data-rm="1"] .vc-map__halo {
   stroke: var(--sage);
   stroke-width: 4px;
   vector-effect: non-scaling-stroke;
-  stroke-dasharray: 1;
+  stroke-dasharray: none;
   stroke-dashoffset: 0;
 }
 /* Sized so the advisor's name stays beside the portrait on a laptop, in view
@@ -1755,10 +1776,8 @@ html[data-rm="1"] .vc-map__halo {
 }
 .vc-visit__clip {
   position: absolute;
-  /* The is-3 stroke is drawn 4 viewBox units (≈3.7% horizontal, 3.1% vertical)
-     inside its box; the photo fills just inside it, so the arch line frames
-     the photo's whole edge instead of crossing it (client note, VS3 p. 5). */
-  inset: 3.1% 3.7% 0 3.7%;
+  /* Match the SVG's four-unit viewBox padding on every edge. */
+  inset: 3.3333% 3.7037%;
   clip-path: url(#vc-arch);
 }
 .vc-visit__photo {
@@ -1801,12 +1820,34 @@ html[data-rm="1"] .vc-map__halo {
 
 /* The handover between sections (JoinVeil): the arriving section's shadow
    lifts off as it rises from beneath the one leaving. */
+section[data-join] {
+  position: relative;
+  isolation: isolate;
+}
+section[data-join] > :not(.vc-join) {
+  translate: 0 var(--vc-join-y, 0px);
+}
+.vc-concept {
+  position: relative;
+  z-index: 3;
+  background: var(--limestone);
+}
+.vc-heart {
+  z-index: 2;
+  background: var(--limestone);
+}
+.vc-location {
+  position: relative;
+  z-index: 1;
+  background: var(--vc-white);
+}
 .vc-join {
   position: absolute;
   inset: 0 0 auto 0;
   z-index: 6;
   height: clamp(90px, 18vh, 190px);
   background: linear-gradient(to bottom, rgba(35, 39, 26, 0.4), rgba(35, 39, 26, 0.16) 46%, rgba(35, 39, 26, 0));
+  opacity: 0;
   pointer-events: none;
 }
 html[data-rm="1"] .vc-join {
@@ -2293,10 +2334,10 @@ html[data-rm="1"] .vc-join {
     animation: vc-cap-in 0.9s var(--ease-out) both;
   }
   .vc-ag__cap-title {
-    font-family: var(--font-display);
-    font-style: italic;
+    font-family: var(--font-script);
+    font-style: normal;
     font-size: 22px;
-    line-height: 1.1;
+    line-height: 1.3;
   }
   .vc-ag__cap-line {
     font-size: 14.5px;

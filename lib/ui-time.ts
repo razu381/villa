@@ -70,7 +70,7 @@ export function isoDate(d: Date): string {
 export interface VisitDay {
   /** yyyy-mm-dd */
   value: string;
-  /** "sa" */
+  /** "sat" / "sáb" */
   weekday: string;
   /** "17" */
   day: string;
@@ -90,7 +90,7 @@ export function visitDays(n: number, from = new Date(), locale = "en-GB"): Visit
     const value = isoDate(d);
     out.push({
       value,
-      weekday: wd.format(d).slice(0, 2).toLowerCase(),
+      weekday: wd.format(d).slice(0, 3).toLowerCase(),
       day: String(d.getDate()),
       month: mo.format(d).toLowerCase(),
       label: formatVisitDate(value, locale),

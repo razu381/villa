@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { NAV } from "@/lib/classic-content";
 import { useCopy } from "@/lib/copy";
-import { useLang, type Lang } from "@/lib/lang";
+import { PT_ENABLED, useLang, type Lang } from "@/lib/lang";
 import { openingNow } from "@/lib/opening";
 import { scrollToY } from "@/lib/ui-scroll";
 import { Wordmark } from "../ui/Brand";
@@ -191,7 +191,7 @@ export function ClassicHeader() {
             {(["pt", "en"] as Lang[]).map((l, i) => (
               <span key={l} className="vc-nav__lang-item">
                 {i > 0 && <i aria-hidden="true">|</i>}
-                <button type="button" aria-pressed={lang === l} onClick={() => setLang(l)}>
+                <button type="button" disabled={l === "pt" && !PT_ENABLED} aria-pressed={lang === l} onClick={() => setLang(l)}>
                   {l.toUpperCase()}
                 </button>
               </span>
