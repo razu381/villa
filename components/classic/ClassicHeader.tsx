@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { CLASSIC, NAV } from "@/lib/classic-content";
+import { NAV } from "@/lib/classic-content";
+import { useCopy } from "@/lib/copy";
+import { useLang, type Lang } from "@/lib/lang";
 import { openingNow } from "@/lib/opening";
 import { scrollToY } from "@/lib/ui-scroll";
 import { Wordmark } from "../ui/Brand";
@@ -30,6 +32,9 @@ const SHEET = "(max-width: 820px)";
  * On a phone, "Menu" opens the whole screen: the sections, the 3D, the visit.
  */
 export function ClassicHeader() {
+  const copy = useCopy();
+  const lang = useLang((s) => s.lang);
+  const setLang = useLang((s) => s.setLang);
   const ref = useRef<HTMLElement>(null);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState<string | null>(null);
@@ -118,7 +123,7 @@ export function ClassicHeader() {
       <a
         href="#top"
         className="vc-header__leaf"
-        aria-label={CLASSIC.top}
+        aria-label={copy.CLASSIC.top}
         onClick={(e) => {
           e.preventDefault();
           goTo("top");
@@ -149,11 +154,11 @@ export function ClassicHeader() {
         }}
       >
         <button type="button" className="vc-nav__toggle" aria-expanded={open} aria-controls="vc-nav-list" onClick={() => setOpen((o) => !o)}>
-          <span>{open && sheet ? CLASSIC.menuClose : CLASSIC.menu}</span>
+          <span>{open && sheet ? copy.CLASSIC.menuClose : copy.CLASSIC.menu}</span>
           <span className="vc-nav__bars" aria-hidden="true" />
         </button>
         <ul id="vc-nav-list" className="vc-nav__list" onFocus={() => setOpen(true)}>
-          {NAV.map((n, i) => (
+          {copy.NAV.map((n, i) => (
             <li key={n.id} style={{ "--i": i } as React.CSSProperties}>
               <a
                 href={`#${n.id}`}
@@ -170,7 +175,7 @@ export function ClassicHeader() {
               </a>
             </li>
           ))}
-          <li className="vc-nav__cta" style={{ "--i": NAV.length } as React.CSSProperties}>
+          <li className="vc-nav__cta" style={{ "--i": copy.NAV.length } as React.CSSProperties}>
             <a
               href="#visit"
               className="vl-btn vl-btn--solid"
@@ -179,8 +184,18 @@ export function ClassicHeader() {
                 leave(() => goTo("visit", '#visit input[name="name"]'));
               }}
             >
-              {CLASSIC.visitCta}
+              {copy.CLASSIC.visitCta}
             </a>
+          </li>
+          <li className="vc-nav__lang" style={{ "--i": copy.NAV.length + 1 } as React.CSSProperties}>
+            {(["pt", "en"] as Lang[]).map((l, i) => (
+              <span key={l} className="vc-nav__lang-item">
+                {i > 0 && <i aria-hidden="true">|</i>}
+                <button type="button" aria-pressed={lang === l} onClick={() => setLang(l)}>
+                  {l.toUpperCase()}
+                </button>
+              </span>
+            ))}
           </li>
         </ul>
       </nav>
@@ -192,7 +207,7 @@ export function ClassicHeader() {
           goTo("visit", '#visit input[name="name"]');
         }}
       >
-        {CLASSIC.visitCta}
+        {copy.CLASSIC.visitCta}
       </a>
     </header>
   );

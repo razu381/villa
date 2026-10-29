@@ -273,6 +273,39 @@ html[data-rm="1"] .vc-leaf {
   display: none;
 }
 
+/* PT | EN (lib/lang), riding with the menu's items. */
+.vc-nav__lang {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+}
+.vc-nav__lang-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.vc-nav__lang button {
+  padding: 6px 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  letter-spacing: inherit;
+  color: var(--vc-mute);
+  transition: color 0.4s var(--ease-out);
+}
+.vc-nav__lang button:hover,
+.vc-nav__lang button:focus-visible,
+.vc-nav__lang button[aria-pressed="true"] {
+  color: var(--vc-ink);
+}
+.vc-header[data-docked="1"] .vc-nav__lang {
+  margin: 8px 0 -4px;
+  padding: 10px 0 0;
+  border-top: 1px solid var(--vc-line);
+}
+
 /* Docked: "Menu", and the list as a small panel that opens on hover. */
 .vc-header[data-docked="1"] .vc-nav__toggle {
   display: inline-flex;
@@ -2071,6 +2104,11 @@ html[data-rm="1"] .vc-join {
   }
   .vc-header .vc-nav__list .vc-nav__cta a.vl-btn:hover {
     color: var(--btn-fg);
+  }
+  .vc-header .vc-nav__lang {
+    margin-top: 22px;
+    justify-content: center;
+    font-size: 13px;
   }
 
   /* Concept: the text, then the arch photo set to the right. */

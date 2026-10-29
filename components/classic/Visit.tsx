@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ADVISOR, CLASSIC, PHOTOS, whatsappLink } from "@/lib/classic-content";
+import { PHOTOS, whatsappLink } from "@/lib/classic-content";
+import { useCopy } from "@/lib/copy";
 import type { VisitHome } from "@/lib/ui-copy";
 import { useInViewReveal } from "@/lib/ui-reveal";
 import { Invitation } from "../night/Invitation";
@@ -25,11 +26,12 @@ function Arch({ className = "", at }: { className?: string; at: number }) {
  * on to the footer still meets the advisor whole.
  */
 export function Visit() {
+  const copy = useCopy();
   const text = useRef<HTMLDivElement>(null);
   const arches = useRef<HTMLDivElement>(null);
   const form = useRef<HTMLDivElement>(null);
   const [preset, setPreset] = useState<{ home: VisitHome; at: number } | undefined>();
-  useInViewReveal(text);
+  useInViewReveal(text, undefined, [copy.locale]);
   useInViewReveal(arches, { margin: "0px" });
   useInViewReveal(form, { delay: 0.3 });
 
@@ -39,17 +41,17 @@ export function Visit() {
     return () => window.removeEventListener("vc:visit", on);
   }, []);
 
-  const [lead, tail] = CLASSIC.visit.title.split(" Vila ");
+  const { lead, accent } = copy.CLASSIC.visit;
   return (
     <section id="visit" className="vc-visit" aria-labelledby="vc-visit-title">
       <div className="vc-visit__inner vc-wrap">
         <div className="vc-visit__side">
-          <div ref={text}>
-            <Eyebrow n="06">{CLASSIC.visit.eyebrow}</Eyebrow>
+          <div ref={text} key={copy.locale}>
+            <Eyebrow n="06">{copy.CLASSIC.visit.eyebrow}</Eyebrow>
             <h2 id="vc-visit-title" className="vc-title" data-r="lines">
-              {lead} <em>Vila {tail}</em>
+              {lead} <em>{accent}</em>
             </h2>
-            {CLASSIC.visit.body.map((p) => (
+            {copy.CLASSIC.visit.body.map((p) => (
               <p key={p} className="vc-body vc-visit__p" data-r="fade">
                 {p}
               </p>
@@ -70,17 +72,17 @@ export function Visit() {
               </div>
             </div>
             <div className="vc-visit__contact" data-r="fade" data-r-at="1.2">
-              <p className="vc-visit__name">{ADVISOR.name}</p>
-              <p className="vc-visit__role">{ADVISOR.role}</p>
+              <p className="vc-visit__name">{copy.ADVISOR.name}</p>
+              <p className="vc-visit__role">{copy.ADVISOR.role}</p>
               <ul>
                 <li>
-                  <a className="vl-link" href={`tel:${ADVISOR.phone.replace(/\s/g, "")}`}>
-                    {ADVISOR.phone}
+                  <a className="vl-link" href={`tel:${copy.ADVISOR.phone.replace(/\s/g, "")}`}>
+                    {copy.ADVISOR.phone}
                   </a>
                 </li>
                 <li>
-                  <a className="vl-link" href={`mailto:${ADVISOR.email}`}>
-                    {ADVISOR.email}
+                  <a className="vl-link" href={`mailto:${copy.ADVISOR.email}`}>
+                    {copy.ADVISOR.email}
                   </a>
                 </li>
                 <li>

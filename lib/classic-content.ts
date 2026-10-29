@@ -52,7 +52,7 @@ export const NAV = [
   { id: "villas", label: "Villas" },
   { id: "location", label: "Location" },
   { id: "gallery", label: "Gallery" },
-] as const;
+];
 
 export const CLASSIC = {
   visitCta: "Request brochure",
@@ -61,10 +61,12 @@ export const CLASSIC = {
   top: "Vila Leku — back to the top",
   scroll: "Scroll",
   pillars: "Four pillars",
-  villageHeart: { eyebrow: "Village Heart", title: "A village shaped around life." },
+  concept: { eyebrow: "Concept" },
+  villageHeart: { eyebrow: "Village Heart", lead: "A village shaped", accent: "around life." },
   villas: {
     eyebrow: "Villas",
-    title: "Find your place.",
+    lead: "Find your",
+    accent: "place.",
     floors: "Three floors",
     whatsapp: "Request a private visit",
     interest: "Register your interest",
@@ -80,10 +82,11 @@ export const CLASSIC = {
     marker: "About the place",
     close: "Close",
   },
-  gallery: { eyebrow: "Gallery", title: "Explore Vila Leku.", view: "View", close: "Close", of: "of" },
+  gallery: { eyebrow: "Gallery", lead: "Explore", accent: "Vila Leku.", view: "View", close: "Close", of: "of" },
   visit: {
     eyebrow: "Private visit",
-    title: "Come experience Vila Leku.",
+    lead: "Come experience",
+    accent: "Vila Leku.",
     body: [
       "Discover the homes, landscape and shared spaces with our dedicated Vila Leku advisor.",
       "Whether you are looking for a primary residence, a second home or a long-term investment, we are here to help you find the right place.",

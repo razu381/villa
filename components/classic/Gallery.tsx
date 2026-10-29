@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { CLASSIC, GALLERY, type GalleryCategory } from "@/lib/classic-content";
+import { type GalleryCategory } from "@/lib/classic-content";
+import { useCopy } from "@/lib/copy";
 import { useInViewReveal } from "@/lib/ui-reveal";
 import { AutoGallery } from "./AutoGallery";
 import { Eyebrow } from "./Concept";
@@ -13,28 +14,29 @@ import { Lightbox } from "../ui/Lightbox";
  * onto the stage; step through it with the arrows, or open the viewer.
  */
 export function Gallery() {
-  const [cat, setCat] = useState<GalleryCategory>(GALLERY[0].id);
+  const copy = useCopy();
+  const [cat, setCat] = useState<GalleryCategory>(copy.GALLERY[0].id);
   const [index, setIndex] = useState(0);
   const [viewer, setViewer] = useState<number | null>(null);
   const head = useRef<HTMLDivElement>(null);
   const stage = useRef<HTMLDivElement>(null);
-  useInViewReveal(head);
+  useInViewReveal(head, undefined, [copy.locale]);
   useInViewReveal(stage, { delay: 0.15 });
 
-  const group = GALLERY.find((g) => g.id === cat) ?? GALLERY[0];
+  const group = copy.GALLERY.find((g) => g.id === cat) ?? copy.GALLERY[0];
   const item = group.items[index];
-  const [lead, tail] = CLASSIC.gallery.title.split(" Vila ");
+  const { lead, accent } = copy.CLASSIC.gallery;
   return (
     <section id="gallery" className="vc-gallery" aria-labelledby="vc-gallery-title">
       <JoinVeil />
       <div className="vc-gallery__inner vc-wrap">
-        <div ref={head} className="vc-gallery__side">
-          <Eyebrow n="05">{CLASSIC.gallery.eyebrow}</Eyebrow>
+        <div ref={head} className="vc-gallery__side" key={copy.locale}>
+          <Eyebrow n="05">{copy.CLASSIC.gallery.eyebrow}</Eyebrow>
           <h2 id="vc-gallery-title" className="vc-title vc-gallery__title" data-r="lines">
-            {lead} <em>Vila {tail}</em>
+            {lead} <em>{accent}</em>
           </h2>
-          <ul className="vc-cats" data-r="fade" aria-label={CLASSIC.gallery.eyebrow}>
-            {GALLERY.map((g) => (
+          <ul className="vc-cats" data-r="fade" aria-label={copy.CLASSIC.gallery.eyebrow}>
+            {copy.GALLERY.map((g) => (
               <li key={g.id}>
                 <button
                   type="button"
@@ -62,11 +64,11 @@ export function Gallery() {
               key={cat}
               photos={group.items.map((i) => i.photo)}
               sizes="(max-width: 820px) 100vw, 70vw"
-              label={`${CLASSIC.gallery.eyebrow}: ${group.label}`}
+              label={`${copy.CLASSIC.gallery.eyebrow}: ${group.label}`}
               onIndex={setIndex}
               onOpen={setViewer}
               captions={group.items}
-              labels={{ ...CLASSIC.villas, view: CLASSIC.gallery.view }}
+              labels={{ ...copy.CLASSIC.villas, view: copy.CLASSIC.gallery.view }}
             />
           </div>
         </div>
@@ -75,7 +77,7 @@ export function Gallery() {
         <Lightbox
           items={group.items}
           start={viewer}
-          labels={{ title: CLASSIC.gallery.title, prev: CLASSIC.villas.prev, next: CLASSIC.villas.next, close: CLASSIC.gallery.close }}
+          labels={{ title: `${lead} ${accent}`, prev: copy.CLASSIC.villas.prev, next: copy.CLASSIC.villas.next, close: copy.CLASSIC.gallery.close }}
           onClose={() => setViewer(null)}
         />
       )}

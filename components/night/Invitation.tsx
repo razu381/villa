@@ -1,13 +1,12 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { COPY } from "@/lib/content";
+import { useCopy, type Copy } from "@/lib/copy";
 import { useJourney } from "@/lib/store";
 import { sound } from "@/lib/audio";
-import { TIME_WORDS, UI, type VisitHome, type VisitRequest, type VisitTime } from "@/lib/ui-copy";
+import type { VisitHome, VisitRequest, VisitTime } from "@/lib/ui-copy";
 import { debugParam } from "@/lib/ui-media";
 import { formatVisitDate, isoDate, visitDays, type VisitDay } from "@/lib/ui-time";
-import { HOMES } from "@/lib/content";
 import { InvitationCard } from "./InvitationCard";
 
 type Status = "idle" | "sending" | "sent";
@@ -23,11 +22,11 @@ const demoDate = () => {
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-function validate(v: VisitRequest, days: VisitDay[]): Errors {
+function validate(v: VisitRequest, days: VisitDay[], ui: Copy["UI"]): Errors {
   const e: Errors = {};
-  if (v.name.trim().length < 2) e.name = UI.form.errors.name;
-  if (!EMAIL.test(v.email.trim())) e.email = UI.form.errors.email;
-  if (!v.date || !days.some((d) => d.value === v.date)) e.date = UI.form.errors.date;
+  if (v.name.trim().length < 2) e.name = ui.form.errors.name;
+  if (!EMAIL.test(v.email.trim())) e.email = ui.form.errors.email;
+  if (!v.date || !days.some((d) => d.value === v.date)) e.date = ui.form.errors.date;
   return e;
 }
 
@@ -38,6 +37,7 @@ function validate(v: VisitRequest, days: VisitDay[]): Errors {
  * the same choice count again.
  */
 export function Invitation({ preset }: { preset?: { home: VisitHome; at: number } } = {}) {
+  const copy = useCopy();
   const [status, setStatus] = useState<Status>("idle");
   const [values, setValues] = useState<VisitRequest>({ name: "", email: "", phone: "", home: "v3", date: "", time: "evening" });
   const [errors, setErrors] = useState<Errors>({});
@@ -51,13 +51,13 @@ export function Invitation({ preset }: { preset?: { home: VisitHome; at: number 
   const timer = useRef(0);
 
   useEffect(() => {
-    setDays(visitDays(14));
+    setDays(visitDays(14, new Date(), copy.locale));
     if (debugParam("invite") === "demo") {
       setValues({ name: "Inês Almeida", email: "ines@example.com", phone: "", home: "v4", date: demoDate(), time: "evening" });
       setStatus("sent");
     }
     return () => window.clearTimeout(timer.current);
-  }, []);
+  }, [copy.locale]);
 
   useEffect(() => {
     if (!preset) return;
@@ -69,14 +69,14 @@ export function Invitation({ preset }: { preset?: { home: VisitHome; at: number 
   const set = <K extends keyof VisitRequest>(k: K, v: VisitRequest[K]) => {
     const next = { ...values, [k]: v };
     setValues(next);
-    if (tried) setErrors(validate(next, days));
+    if (tried) setErrors(validate(next, days, copy.UI));
   };
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (status !== "idle") return;
     setTried(true);
-    const errs = validate(values, days);
+    const errs = validate(values, days, copy.UI);
     setErrors(errs);
     const firstBad = (["name", "email", "date"] as const).find((k) => errs[k]);
     if (firstBad) {
@@ -87,9 +87,11 @@ export function Invitation({ preset }: { preset?: { home: VisitHome; at: number 
     setStatus("sending");
     timer.current = window.setTimeout(() => {
       setStatus("sent");
-      const home = HOMES.find((h) => h.id === values.home);
+      const home = copy.HOMES.find((h) => h.id === values.home);
       setAnnounce(
-        `${UI.card.title} ${UI.card.for} ${values.name}: ${UI.card.visit} ${home ? "the " + home.name : UI.card.anyHome}, ${formatVisitDate(values.date)}, ${TIME_WORDS[values.time]}. ${COPY.night.confirmBody}`,
+        `${copy.UI.card.title} ${copy.UI.card.for} ${values.name}: ${copy.UI.card.visit} ${
+          home ? copy.UI.card.the + home.name : copy.UI.card.anyHome
+        }, ${formatVisitDate(values.date, copy.locale)}, ${copy.TIME_WORDS[values.time]}. ${copy.UI.card.confirmBody}`,
       );
       if (useJourney.getState().soundOn) sound.chime();
       // Keep the visitor's place: focus lands on the card (its label reads the invitation).
@@ -123,7 +125,7 @@ export function Invitation({ preset }: { preset?: { home: VisitHome; at: number 
         />
         <label htmlFor={id}>
           {label}
-          {optional && <span className="vl-field__opt"> · {UI.form.optional}</span>}
+          {optional && <span className="vl-field__opt"> · {copy.UI.form.optional}</span>}
         </label>
         <span className="vl-field__line" aria-hidden="true" />
         {err && (
@@ -160,16 +162,16 @@ export function Invitation({ preset }: { preset?: { home: VisitHome; at: number 
     <div className="vl-invite" data-status={status}>
       {status !== "sent" ? (
         <form ref={formRef} className="vl-form" onSubmit={submit} noValidate aria-busy={status === "sending"}>
-          <h3 className="vl-form__legend">{UI.form.legend}</h3>
+          <h3 className="vl-form__legend">{copy.UI.form.legend}</h3>
           <div className="vl-form__grid">
-            {field("name", UI.form.name, "text", "name")}
-            {field("email", UI.form.email, "email", "email")}
-            {field("phone", UI.form.phone, "tel", "tel", true)}
+            {field("name", copy.UI.form.name, "text", "name")}
+            {field("email", copy.UI.form.email, "email", "email")}
+            {field("phone", copy.UI.form.phone, "tel", "tel", true)}
           </div>
-          {choice<VisitHome>("home", UI.form.home, UI.form.homeOptions, values.home, (v) => set("home", v))}
+          {choice<VisitHome>("home", copy.UI.form.home, copy.UI.form.homeOptions, values.home, (v) => set("home", v))}
           <fieldset className="vl-choice vl-days" data-invalid={errors.date ? "1" : undefined} aria-describedby={errors.date ? dateErrId : undefined}>
             <legend>
-              {UI.form.date}
+              {copy.UI.form.date}
               {months && <span className="vl-days__month" aria-hidden="true">{months}</span>}
             </legend>
             <div className="vl-days__grid">
@@ -197,9 +199,9 @@ export function Invitation({ preset }: { preset?: { home: VisitHome; at: number 
               </span>
             )}
           </fieldset>
-          {choice<VisitTime>("time", UI.form.time, UI.form.timeOptions, values.time, (v) => set("time", v))}
+          {choice<VisitTime>("time", copy.UI.form.time, copy.UI.form.timeOptions, values.time, (v) => set("time", v))}
           <button type="submit" className="vl-btn vl-btn--solid vl-form__submit" disabled={status === "sending"}>
-            <span>{status === "sending" ? UI.form.sending : COPY.night.submit}</span>
+            <span>{status === "sending" ? copy.UI.form.sending : copy.UI.form.submit}</span>
             {status === "sending" && <span className="vl-btn__progress" aria-hidden="true" />}
           </button>
         </form>
@@ -207,7 +209,7 @@ export function Invitation({ preset }: { preset?: { home: VisitHome; at: number 
         <>
           <InvitationCard ref={cardRef} data={values} />
           <button type="button" className="vl-link vl-invite__edit" onClick={edit}>
-            {UI.form.edit}
+            {copy.UI.form.edit}
           </button>
         </>
       )}

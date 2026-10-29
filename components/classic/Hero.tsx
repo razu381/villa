@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { BRAND } from "@/lib/content";
-import { CLASSIC } from "@/lib/classic-content";
+import { useCopy } from "@/lib/copy";
 import { openUp } from "@/lib/opening";
 import { Wordmark } from "../ui/Brand";
 import { stillMode } from "./env";
@@ -15,6 +15,7 @@ const easeInOut = (k: number) => (k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k 
  * Scrolling away, the wordmark glides up into the header and docks there.
  */
 export function Hero() {
+  const copy = useCopy();
   const ref = useRef<HTMLElement>(null);
   const markRef = useRef<HTMLDivElement>(null);
   const tagRef = useRef<HTMLParagraphElement>(null);
@@ -167,7 +168,7 @@ export function Hero() {
       </p>
       <p className="vc-hero__cue" aria-hidden="true">
         <span />
-        {CLASSIC.scroll}
+        {copy.CLASSIC.scroll}
       </p>
     </section>
   );

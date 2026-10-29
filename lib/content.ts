@@ -50,7 +50,7 @@ export const AMENITIES = [
   { id: "aqua", title: "Aqua Garden", text: "A heated natural pool, seamlessly integrated into the land's natural contours." },
   { id: "fitness", title: "Fitness Studio", text: "Designed for movement and focus." },
   { id: "hub", title: "Residents' Hub", text: "An extension of your home, dedicated to productivity." },
-] as const;
+];
 
 /** The three floors of a home. (The source's "171 m² to 186 m²" waits on the client: see resumeplanlocal.md.) */
 export const VILLA_FLOORS = [
@@ -63,7 +63,9 @@ export const VILLA_FLOORS = [
 ];
 
 export const LOCATION = {
-  title: "Close to everything. Far from the noise.",
+  /** Title in two parts: lead in the plain face, accent in the script (components/classic). */
+  lead: "Close to everything.",
+  accent: "Far from the noise.",
   body: "Elevated position with panoramic views and natural privacy. Experience the silence of the hills while remaining just moments away from premium urban amenities.",
   groups: [
     { title: "Business & Innovation", places: [{ name: "Taguspark", min: 5 }, { name: "Lagoas Park", min: 7 }] },

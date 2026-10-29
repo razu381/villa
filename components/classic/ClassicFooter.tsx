@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { BRAND } from "@/lib/content";
-import { CLASSIC, COMPLAINTS_URL, NAV, PARTNERS } from "@/lib/classic-content";
+import { COMPLAINTS_URL } from "@/lib/classic-content";
+import { useCopy } from "@/lib/copy";
 import { afterOpening } from "@/lib/opening";
-import { UI } from "@/lib/ui-copy";
 import { PhidiasTagline, Wordmark } from "../ui/Brand";
 import { goTo } from "./ClassicHeader";
 import { gsap, stillMode } from "./env";
@@ -18,6 +18,7 @@ import { gsap, stillMode } from "./env";
  * it simply follows the page.
  */
 export function ClassicFooter() {
+  const copy = useCopy();
   const ref = useRef<HTMLElement>(null);
   const spacer = useRef<HTMLDivElement>(null);
   const veil = useRef<HTMLDivElement>(null);
@@ -74,13 +75,13 @@ export function ClassicFooter() {
           <Wordmark className="vc-footer__mark" label={BRAND.name} />
           <div className="vc-footer__cols">
             <div className="vc-footer__about">
-              <p>{CLASSIC.footer.line}</p>
-              <p className="vc-footer__place">{CLASSIC.footer.place}</p>
+              <p>{copy.CLASSIC.footer.line}</p>
+              <p className="vc-footer__place">{copy.CLASSIC.footer.place}</p>
             </div>
-            <nav className="vc-footer__col" aria-label={CLASSIC.footer.explore}>
-              <h3>{CLASSIC.footer.explore}</h3>
+            <nav className="vc-footer__col" aria-label={copy.CLASSIC.footer.explore}>
+              <h3>{copy.CLASSIC.footer.explore}</h3>
               <ul>
-                {NAV.map((n) => (
+                {copy.NAV.map((n) => (
                   <li key={n.id}>
                     <a
                       className="vl-link"
@@ -97,11 +98,11 @@ export function ClassicFooter() {
               </ul>
             </nav>
             <div className="vc-footer__col">
-              <h3>{CLASSIC.footer.contact}</h3>
+              <h3>{copy.CLASSIC.footer.contact}</h3>
               <ul>
                 <li>
-                  <a className="vl-link" href={`mailto:${CLASSIC.footer.email}`}>
-                    {CLASSIC.footer.email}
+                  <a className="vl-link" href={`mailto:${copy.CLASSIC.footer.email}`}>
+                    {copy.CLASSIC.footer.email}
                   </a>
                 </li>
               </ul>
@@ -113,14 +114,14 @@ export function ClassicFooter() {
                   goTo("visit", '#visit input[name="name"]');
                 }}
               >
-                {CLASSIC.visitCta}
+                {copy.CLASSIC.visitCta}
               </a>
             </div>
           </div>
         </div>
         <div className="vc-footer__base vc-wrap">
-          <ul className="vc-footer__partners" aria-label={CLASSIC.footer.company}>
-            {PARTNERS.map((p) => (
+          <ul className="vc-footer__partners" aria-label={copy.CLASSIC.footer.company}>
+            {copy.PARTNERS.map((p) => (
               <li key={p.name}>
                 <span>{p.role}</span>
                 <b>
@@ -138,13 +139,13 @@ export function ClassicFooter() {
           <p className="vc-footer__legal">
             <span className="vc-footer__legal-links">
               <a className="vl-link" href="/privacy/">
-                {CLASSIC.footer.privacy}
+                {copy.CLASSIC.footer.privacy}
               </a>
               <a className="vl-link" href={COMPLAINTS_URL} target="_blank" rel="noopener noreferrer">
-                {CLASSIC.footer.complaints}
+                {copy.CLASSIC.footer.complaints}
               </a>
             </span>
-            <span>{UI.footer.copyright}</span>
+            <span>{copy.UI.footer.copyright}</span>
           </p>
         </div>
         <div ref={veil} className="vc-footer__veil" aria-hidden="true" />

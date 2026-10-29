@@ -54,11 +54,11 @@ export function toneFor(s: Pick<JourneyState, "t" | "journeyDay" | "sunOverride"
 }
 
 /** Formats a yyyy-mm-dd value as "Saturday 14 November" (local date, no TZ drift). */
-export function formatVisitDate(value: string): string {
+export function formatVisitDate(value: string, locale = "en-GB"): string {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
   if (!m) return value;
   const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
-  return new Intl.DateTimeFormat("en-GB", { weekday: "long", day: "numeric", month: "long" }).format(d);
+  return new Intl.DateTimeFormat(locale, { weekday: "long", day: "numeric", month: "long" }).format(d);
 }
 
 /** yyyy-mm-dd for a local date. */
@@ -81,9 +81,9 @@ export interface VisitDay {
 }
 
 /** The next `n` days from tomorrow, for the visit-date strip (local dates). */
-export function visitDays(n: number, from = new Date()): VisitDay[] {
-  const wd = new Intl.DateTimeFormat("en-GB", { weekday: "short" });
-  const mo = new Intl.DateTimeFormat("en-GB", { month: "long" });
+export function visitDays(n: number, from = new Date(), locale = "en-GB"): VisitDay[] {
+  const wd = new Intl.DateTimeFormat(locale, { weekday: "short" });
+  const mo = new Intl.DateTimeFormat(locale, { month: "long" });
   const out: VisitDay[] = [];
   for (let i = 1; i <= n; i++) {
     const d = new Date(from.getFullYear(), from.getMonth(), from.getDate() + i);
@@ -93,7 +93,7 @@ export function visitDays(n: number, from = new Date()): VisitDay[] {
       weekday: wd.format(d).slice(0, 2).toLowerCase(),
       day: String(d.getDate()),
       month: mo.format(d).toLowerCase(),
-      label: formatVisitDate(value),
+      label: formatVisitDate(value, locale),
     });
   }
   return out;

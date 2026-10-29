@@ -71,14 +71,15 @@ export const UI = {
     homeOptions: [
       { id: "v3", label: "V3 Townhouse" },
       { id: "v4", label: "V4 Premium Villa" },
-    ] as const,
+    ] satisfies { id: VisitHome; label: string }[],
     date: "Preferred date",
     time: "Time of day",
+    submit: "Request your private visit",
     timeOptions: [
       { id: "morning", label: "Morning" },
       { id: "afternoon", label: "Afternoon" },
       { id: "evening", label: "Evening" },
-    ] as const,
+    ] satisfies { id: VisitTime; label: string }[],
     sending: "Preparing your invitation",
     errors: {
       name: "Please tell us your name.",
@@ -91,8 +92,11 @@ export const UI = {
     title: "An invitation",
     for: "for",
     visit: "to visit",
+    the: "the ",
+    thanks: "Thank you",
     anyHome: "the homes of Vila Leku",
     place: "Leceia · Oeiras",
+    confirmBody: "Your advisor will confirm your visit within one day.",
   },
   footer: {
     signature: "building harmony",
@@ -100,8 +104,8 @@ export const UI = {
   },
 };
 
-export type VisitHome = (typeof UI.form.homeOptions)[number]["id"];
-export type VisitTime = (typeof UI.form.timeOptions)[number]["id"];
+export type VisitHome = "v3" | "v4";
+export type VisitTime = "morning" | "afternoon" | "evening";
 
 export interface VisitRequest {
   name: string;

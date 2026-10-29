@@ -182,7 +182,12 @@ export function revealTimeline(root: HTMLElement, { delay = 0, interactive = fal
  * resizes reflow the text naturally. `?snap=1` shows everything at once.
  * Built after the opening (lib/opening): the blocks are under the hero.
  */
-export function useInViewReveal(ref: RefObject<HTMLElement | null>, { delay = 0, margin = "-12%" }: { delay?: number; margin?: string } = {}) {
+export function useInViewReveal(
+  ref: RefObject<HTMLElement | null>,
+  { delay = 0, margin = "-12%" }: { delay?: number; margin?: string } = {},
+  /** Extra rebuild triggers (e.g. a language switch that remounts the block). */
+  deps: React.DependencyList = [],
+) {
   useEffect(() => {
     const root = ref.current;
     if (!root) return;
@@ -239,5 +244,6 @@ export function useInViewReveal(ref: RefObject<HTMLElement | null>, { delay = 0,
       tl?.kill();
       splits.forEach((s) => s.revert());
     };
-  }, [ref, delay, margin]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ref, delay, margin, ...deps]);
 }

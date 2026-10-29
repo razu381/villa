@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { CONCEPT } from "@/lib/content";
-import { CLASSIC, PHOTOS, PILLAR_PHOTOS } from "@/lib/classic-content";
+import { PHOTOS, PILLAR_PHOTOS } from "@/lib/classic-content";
+import { useCopy } from "@/lib/copy";
 import { afterOpening } from "@/lib/opening";
 import { useInViewReveal } from "@/lib/ui-reveal";
 import { ARCH_PATH } from "../ui/Brand";
@@ -88,24 +88,26 @@ function ArchLine({ className }: { className: string }) {
  * the limestone walls, the solar roofs, cork and limestone up close.
  */
 export function Concept() {
+  const copy = useCopy();
   const intro = useRef<HTMLDivElement>(null);
   const frame = useRef<HTMLDivElement>(null);
   const pillars = useRef<HTMLDivElement>(null);
-  useInViewReveal(intro);
+  useInViewReveal(intro, undefined, [copy.locale]);
   useInViewReveal(frame, { delay: 0.2 });
   useInViewReveal(pillars, { margin: "-18%" });
 
-  const [lead, ...rest] = CONCEPT.title.split(": ");
+  // The title keeps its "name: phrase" shape in both languages.
+  const [lead, ...rest] = copy.CONCEPT.title.split(": ");
   return (
     <section id="concept" className="vc-concept" aria-labelledby="vc-concept-title">
       <ArchClip />
       <div className="vc-concept__intro vc-wrap">
-        <div ref={intro} className="vc-concept__text">
-          <Eyebrow n="01">Concept</Eyebrow>
+        <div ref={intro} className="vc-concept__text" key={copy.locale}>
+          <Eyebrow n="01">{copy.CLASSIC.concept.eyebrow}</Eyebrow>
           <h2 id="vc-concept-title" className="vc-title" data-r="lines">
             {lead}: <em>{rest.join(": ")}</em>
           </h2>
-          <InkText text={CONCEPT.intro} />
+          <InkText text={copy.CONCEPT.intro} />
         </div>
         <div className="vc-concept__visual">
           <ArchLine className="vc-concept__archline" />
@@ -120,10 +122,10 @@ export function Concept() {
       <div ref={pillars} className="vc-pillars">
         <p className="vc-eyebrow vc-wrap" data-r="fade">
           <span>—</span>
-          {CLASSIC.pillars}
+          {copy.CLASSIC.pillars}
         </p>
         <ol className="vc-pillars__list vc-wrap">
-          {CONCEPT.pillars.map((p, i) => (
+          {copy.CONCEPT.pillars.map((p, i) => (
             <li key={p.title} className="vc-pillar" style={{ "--pos": PILLAR_PHOTOS[i].pos } as React.CSSProperties}>
               <div className="vc-pillar__img" data-r="rise">
                 <span className="vc-pillar__zoom">

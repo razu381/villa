@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { BRAND, CONCEPT, LOCATION } from "@/lib/content";
+import { BRAND } from "@/lib/content";
 import { CLASSIC, MAP_MARKER, MAPS_LINK, PHOTOS } from "@/lib/classic-content";
+import { useCopy } from "@/lib/copy";
 import { afterOpening } from "@/lib/opening";
 import { useInViewReveal } from "@/lib/ui-reveal";
 import { Wordmark } from "../ui/Brand";
@@ -10,9 +11,13 @@ import { Eyebrow } from "./Concept";
 import { gsap, stillMode } from "./env";
 import { Pic } from "../ui/Pic";
 
-/** The few places the card names, by the client's own drive times. */
-const CARD_PLACES = ["Lisbon city centre", "Cascais", "Taguspark", "Beaches"];
-const minutesOf = (name: string) => LOCATION.groups.flatMap((g) => g.places).find((p) => p.name === name)?.min;
+/** The few places the card names, by the client's own drive times: [group, place] into LOCATION.groups (names differ by language). */
+const CARD_PLACES: [number, number][] = [
+  [3, 0], // Lisbon city centre
+  [3, 1], // Cascais
+  [0, 0], // Taguspark
+  [2, 2], // Beaches
+];
 
 /**
  * Location: the view first (the aerial render), then the client's illustrated
@@ -20,13 +25,14 @@ const minutesOf = (name: string) => LOCATION.groups.flatMap((g) => g.places).fin
  * place; the artwork's POI labels make the drive-time list plain text.
  */
 export function Location() {
+  const copy = useCopy();
   const text = useRef<HTMLDivElement>(null);
   const mapRef = useRef<HTMLDivElement>(null);
   const bandImg = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const markerBtn = useRef<HTMLButtonElement>(null);
   const card = useRef<HTMLDivElement>(null);
-  useInViewReveal(text);
+  useInViewReveal(text, undefined, [copy.locale]);
   useInViewReveal(mapRef, { delay: 0.15 });
 
   // The band's photo settles as it comes into view.
@@ -66,7 +72,7 @@ export function Location() {
     };
   }, [open]);
 
-  const [lead, tail] = LOCATION.title.split(". ");
+  const { lead, accent } = copy.LOCATION;
   return (
     <section id="location" className="vc-location" aria-labelledby="vc-location-title">
       <div className="vc-location__band">
@@ -74,22 +80,22 @@ export function Location() {
           <Pic photo={PHOTOS.aerialRender} sizes="100vw" className="vc-cover" />
         </div>
         <p className="vc-location__band-cap">
-          <b>{CLASSIC.location.band.title}</b>
-          <span>{CLASSIC.location.band.line}</span>
+          <b>{copy.CLASSIC.location.band.title}</b>
+          <span>{copy.CLASSIC.location.band.line}</span>
         </p>
       </div>
 
       <div className="vc-location__panel vc-wrap">
-        <div ref={text} className="vc-location__text">
-          <Eyebrow n="04">{CLASSIC.location.eyebrow}</Eyebrow>
+        <div ref={text} className="vc-location__text" key={copy.locale}>
+          <Eyebrow n="04">{copy.CLASSIC.location.eyebrow}</Eyebrow>
           <h2 id="vc-location-title" className="vc-title vc-location__title" data-r="lines">
-            {lead}. <em>{tail}</em>
+            {lead} <em>{accent}</em>
           </h2>
           <p className="vc-body" data-r="fade">
-            {LOCATION.body}
+            {copy.LOCATION.body}
           </p>
           <div className="vc-times" data-r="fade">
-            {LOCATION.groups.map((g) => (
+            {copy.LOCATION.groups.map((g) => (
               <div key={g.title} className="vc-times__group">
                 <h3>{g.title}</h3>
                 <ul>
@@ -105,7 +111,7 @@ export function Location() {
             ))}
           </div>
           <a className="vl-link vc-location__maps" href={MAPS_LINK} target="_blank" rel="noopener noreferrer" data-r="fade">
-            {CLASSIC.location.openMap} ↗
+            {copy.CLASSIC.location.openMap} ↗
           </a>
         </div>
 
@@ -127,7 +133,7 @@ export function Location() {
               onClick={() => setOpen((o) => !o)}
             >
               <span className="vc-map__halo" aria-hidden="true" />
-              <span className="vc-map__hint">{CLASSIC.location.marker}</span>
+              <span className="vc-map__hint">{copy.CLASSIC.location.marker}</span>
             </button>
           </div>
           <div
@@ -135,7 +141,7 @@ export function Location() {
             id="vc-map-card"
             className="vc-map__card"
             role="dialog"
-            aria-label={CLASSIC.location.marker}
+            aria-label={copy.CLASSIC.location.marker}
             tabIndex={-1}
             data-open={open ? "1" : "0"}
             // Beside the marker, high enough that the whole card stays on the map
@@ -144,20 +150,24 @@ export function Location() {
           >
             <Wordmark className="vc-map__card-mark" label={BRAND.name} />
             <p className="vc-map__card-place">{BRAND.place}</p>
-            <p className="vc-map__card-text">{LOCATION.body.split(". ")[0]}.</p>
-            <p className="vc-map__card-text">{CONCEPT.intro.split(",")[0]}.</p>
+            <p className="vc-map__card-text">{copy.LOCATION.body.split(". ")[0]}.</p>
+            <p className="vc-map__card-text">{copy.CONCEPT.intro.split(",")[0]}.</p>
             <ul className="vc-map__card-times">
-              {CARD_PLACES.map((n) => (
-                <li key={n}>
-                  <span>{n}</span>
-                  <b>{minutesOf(n)} min</b>
-                </li>
-              ))}
+              {CARD_PLACES.map(([g, p]) => {
+                const place = copy.LOCATION.groups[g]?.places[p];
+                if (!place) return null;
+                return (
+                  <li key={place.name}>
+                    <span>{place.name}</span>
+                    <b>{place.min} min</b>
+                  </li>
+                );
+              })}
             </ul>
             <a className="vl-link" href={MAPS_LINK} target="_blank" rel="noopener noreferrer">
-              {CLASSIC.location.openMap} ↗
+              {copy.CLASSIC.location.openMap} ↗
             </a>
-            <button type="button" className="vc-map__close" onClick={() => setOpen(false)} aria-label={CLASSIC.location.close}>
+            <button type="button" className="vc-map__close" onClick={() => setOpen(false)} aria-label={copy.CLASSIC.location.close}>
               <svg viewBox="0 0 16 16" aria-hidden="true">
                 <path d="m4 4 8 8M12 4l-8 8" />
               </svg>

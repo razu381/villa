@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { AMENITIES } from "@/lib/content";
-import { AMENITY_PHOTOS, CLASSIC } from "@/lib/classic-content";
+import { AMENITY_PHOTOS } from "@/lib/classic-content";
+import { useCopy } from "@/lib/copy";
 import { afterOpening, openingNow } from "@/lib/opening";
 import { useInViewReveal } from "@/lib/ui-reveal";
 import { scrollToY } from "@/lib/ui-scroll";
@@ -15,6 +15,8 @@ const HOLD = 0.45;
 const STEP = 1 + HOLD;
 /** Scroll (in screen heights) per photo change: unhurried, so each change reads. */
 const PER = 1.15;
+/** Amenity count (same in both languages; the photos' order). */
+const N = 4;
 
 /**
  * Village Heart: the four amenities as a pinned gallery (after Focal Glow's
@@ -38,12 +40,13 @@ const PER = 1.15;
  * rather than a pin, which lags a touch scroll by a frame.
  */
 export function VillageHeart() {
+  const copy = useCopy();
   const ref = useRef<HTMLElement>(null);
   const head = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
   const [still, setStill] = useState(false);
   const st = useRef<ScrollTrigger | null>(null);
-  useInViewReveal(head);
+  useInViewReveal(head, undefined, [copy.locale]);
 
   // Decode the photos ahead, so none is decoded mid-change.
   useEffect(() => {
@@ -119,31 +122,31 @@ export function VillageHeart() {
     openingNow();
     const t = st.current;
     if (!t) return;
-    const n = AMENITIES.length;
+    const n = N;
     const total = HOLD + (n - 1) * STEP + HOLD;
     const time = i === 0 ? 0 : HOLD + (i - 1) * STEP + 1.05;
     scrollToY(t.start + (t.end - t.start) * (time / total));
   };
 
-  const [lead, tail] = CLASSIC.villageHeart.title.split(" around ");
+  const { lead, accent } = copy.CLASSIC.villageHeart;
   return (
     <section
       ref={ref}
       id="village-heart"
       className={`vc-heart${still ? " is-still" : ""}`}
       aria-labelledby="vc-heart-title"
-      style={{ "--steps": (AMENITIES.length - 1) * PER } as React.CSSProperties}
+      style={{ "--steps": (N - 1) * PER } as React.CSSProperties}
     >
       <JoinVeil />
       <div className="vc-heart__inner vc-wrap">
-        <div ref={head} className="vc-heart__side">
-          <Eyebrow n="02">{CLASSIC.villageHeart.eyebrow}</Eyebrow>
+        <div ref={head} className="vc-heart__side" key={copy.locale}>
+          <Eyebrow n="02">{copy.CLASSIC.villageHeart.eyebrow}</Eyebrow>
           <h2 id="vc-heart-title" className="vc-title vc-heart__title" data-r="lines">
-            {lead} <em>around {tail}</em>
+            {lead} <em>{accent}</em>
           </h2>
           <div data-r="fade">
             <ol className="vc-heart__list">
-              {AMENITIES.map((a, i) => (
+              {copy.AMENITIES.map((a, i) => (
                 <li key={a.id} data-active={i === active ? "1" : "0"}>
                   <button type="button" onClick={() => show(i)} aria-current={i === active ? "true" : undefined}>
                     <span className="vc-heart__dot" aria-hidden="true" />
@@ -154,7 +157,7 @@ export function VillageHeart() {
               ))}
             </ol>
             <div className="vc-heart__detail" aria-live="polite">
-              {AMENITIES.map((a, i) => (
+              {copy.AMENITIES.map((a, i) => (
                 <p key={a.id} data-active={i === active ? "1" : "0"} aria-hidden={i !== active}>
                   {a.text}
                 </p>
@@ -168,8 +171,8 @@ export function VillageHeart() {
               <Pic photo={p} sizes="(max-width: 820px) 100vw, 64vw" />
               <figcaption className="vc-heart__cap">
                 <span>{String(i + 1).padStart(2, "0")}</span> / {String(AMENITY_PHOTOS.length).padStart(2, "0")}
-                <b>{AMENITIES[i].title}</b>
-                <i>{AMENITIES[i].text}</i>
+                <b>{copy.AMENITIES[i].title}</b>
+                <i>{copy.AMENITIES[i].text}</i>
               </figcaption>
             </figure>
           ))}

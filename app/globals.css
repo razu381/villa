@@ -68,8 +68,8 @@
 
   /* Type — Normalidad for everything, the Adventures script as its own variable
      (the client's VS3 notes: "Adventure" for the handwritten accents only). */
-  --font-display: "Normalidad Compact", "Instrument Sans", system-ui, sans-serif;
-  --font-sans: "Normalidad Compact", "Instrument Sans", system-ui, sans-serif;
+  --font-display: "Normalidad Compact", system-ui, sans-serif;
+  --font-sans: "Normalidad Compact", system-ui, sans-serif;
   --font-script: "Adventures Unlimited Script", "Normalidad Compact", cursive;
 
   /* Motion — one easing family (expo / quart out) */
