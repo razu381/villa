@@ -5,6 +5,7 @@ import { CLASSIC, GALLERY, type GalleryCategory } from "@/lib/classic-content";
 import { useInViewReveal } from "@/lib/ui-reveal";
 import { AutoGallery } from "./AutoGallery";
 import { Eyebrow } from "./Concept";
+import { JoinVeil } from "./JoinVeil";
 import { Lightbox } from "../ui/Lightbox";
 
 /**
@@ -25,6 +26,7 @@ export function Gallery() {
   const [lead, tail] = CLASSIC.gallery.title.split(" Vila ");
   return (
     <section id="gallery" className="vc-gallery" aria-labelledby="vc-gallery-title">
+      <JoinVeil />
       <div className="vc-gallery__inner vc-wrap">
         <div ref={head} className="vc-gallery__side">
           <Eyebrow n="05">{CLASSIC.gallery.eyebrow}</Eyebrow>

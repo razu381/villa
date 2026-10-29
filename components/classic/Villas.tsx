@@ -7,6 +7,7 @@ import { useInViewReveal } from "@/lib/ui-reveal";
 import { AutoGallery } from "./AutoGallery";
 import { goTo } from "./ClassicHeader";
 import { Eyebrow } from "./Concept";
+import { JoinVeil } from "./JoinVeil";
 import { Pic } from "../ui/Pic";
 
 type HomeId = "v3" | "v4";
@@ -50,6 +51,7 @@ export function Villas() {
 
   return (
     <section id="villas" className="vc-villas" aria-labelledby="vc-villas-title">
+      <JoinVeil />
       <div ref={head} className="vc-villas__head vc-wrap">
         <Eyebrow n="03">{CLASSIC.villas.eyebrow}</Eyebrow>
         <h2 id="vc-villas-title" className="vc-title" data-r="lines">

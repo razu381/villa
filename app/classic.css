@@ -988,7 +988,19 @@ html[data-rm="1"] .vc-ag__slide[data-state="active"] img {
 
 .vc-villas {
   position: relative;
-  padding-top: var(--vc-section);
+  /* The client's note (VS3 p. 3): the old dead space between Village Heart and
+     this head becomes a hairline, closer to the pin's end. */
+  padding-top: clamp(56px, 9vh, 104px);
+}
+/* The hairline the client drew in the gap: full content width. */
+.vc-villas::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: var(--vc-gutter);
+  right: var(--vc-gutter);
+  height: 1px;
+  background: var(--vc-line);
 }
 .vc-villas__head {
   display: grid;
@@ -1665,10 +1677,13 @@ html[data-rm="1"] .vc-map__halo {
   flex: none;
   align-items: flex-end;
   gap: 12px;
+  /* The client's note (VS3 p. 5): the three symbols one size. */
+  --vc-visit-a: clamp(120px, 10.5vw, 172px);
 }
 .vc-visit__arch {
   display: block;
   overflow: visible;
+  aspect-ratio: 116 / 128;
 }
 .vc-visit__arch path {
   fill: none;
@@ -1680,15 +1695,13 @@ html[data-rm="1"] .vc-map__halo {
 }
 /* Sized so the advisor's name stays beside the portrait on a laptop, in view
    with the title (wrapped below, it fell under the fold). */
-.vc-visit__arch.is-1 {
-  width: clamp(44px, 3.6vw, 70px);
-}
+.vc-visit__arch.is-1,
 .vc-visit__arch.is-2 {
-  width: clamp(64px, 5.4vw, 104px);
+  width: var(--vc-visit-a);
 }
 .vc-visit__portrait {
   position: relative;
-  width: clamp(140px, 12vw, 214px);
+  width: var(--vc-visit-a);
   aspect-ratio: 108 / 120;
 }
 .vc-visit__arch.is-3 {
@@ -1700,7 +1713,8 @@ html[data-rm="1"] .vc-map__halo {
 }
 .vc-visit__clip {
   position: absolute;
-  inset: 3.3% 3.7% 0 3.7%;
+  /* The client's note (VS3 p. 5): the arch line must frame the whole photo. */
+  inset: 0;
   clip-path: url(#vc-arch);
 }
 .vc-visit__photo {
@@ -1739,6 +1753,20 @@ html[data-rm="1"] .vc-map__halo {
   grid-column: 7 / -1;
   padding: clamp(28px, 3.2vw, 56px);
   background: var(--limestone);
+}
+
+/* The handover between sections (JoinVeil): the arriving section's shadow
+   lifts off as it rises from beneath the one leaving. */
+.vc-join {
+  position: absolute;
+  inset: 0 0 auto 0;
+  z-index: 6;
+  height: clamp(90px, 18vh, 190px);
+  background: linear-gradient(to bottom, rgba(35, 39, 26, 0.4), rgba(35, 39, 26, 0.16) 46%, rgba(35, 39, 26, 0));
+  pointer-events: none;
+}
+html[data-rm="1"] .vc-join {
+  display: none;
 }
 
 /* ------------------------------------------------------------- footer */
@@ -2396,14 +2424,12 @@ html[data-rm="1"] .vc-map__halo {
     width: 100%;
     gap: 10px;
   }
-  .vc-visit__arch.is-1 {
-    width: 17%;
-  }
+  .vc-visit__arch.is-1,
   .vc-visit__arch.is-2 {
-    width: 25%;
+    width: calc((100% - 20px) / 3);
   }
   .vc-visit__portrait {
-    width: 50%;
+    width: calc((100% - 20px) / 3);
   }
   .vc-visit__form {
     margin: 56px calc(var(--vc-gutter) * -1) 0;

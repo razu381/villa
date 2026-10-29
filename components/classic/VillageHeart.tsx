@@ -7,6 +7,7 @@ import { afterOpening, openingNow } from "@/lib/opening";
 import { useInViewReveal } from "@/lib/ui-reveal";
 import { scrollToY } from "@/lib/ui-scroll";
 import { Eyebrow } from "./Concept";
+import { JoinVeil } from "./JoinVeil";
 import { gsap, ScrollTrigger, stillMode } from "./env";
 import { Pic } from "../ui/Pic";
 
@@ -133,6 +134,7 @@ export function VillageHeart() {
       aria-labelledby="vc-heart-title"
       style={{ "--steps": (AMENITIES.length - 1) * PER } as React.CSSProperties}
     >
+      <JoinVeil />
       <div className="vc-heart__inner vc-wrap">
         <div ref={head} className="vc-heart__side">
           <Eyebrow n="02">{CLASSIC.villageHeart.eyebrow}</Eyebrow>
