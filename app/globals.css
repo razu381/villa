@@ -744,7 +744,7 @@ html[data-tone="day"] .vl-arc__svg {
 /* The wordmark and Phidias marks are white masks tinted with currentColor. */
 .vl-wordmark {
   display: inline-block;
-  aspect-ratio: 2496 / 340;
+  aspect-ratio: 2496 / 338;
   background-color: currentColor;
   -webkit-mask: url("/media/brand/wordmark.png") center / contain no-repeat;
   mask: url("/media/brand/wordmark.png") center / contain no-repeat;

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { BRAND, CONCEPT, LOCATION } from "@/lib/content";
-import { CLASSIC, MAP_MARKER, MAP_SPOTS, MAPS_LINK, PHOTOS } from "@/lib/classic-content";
+import { CLASSIC, MAP_MARKER, MAPS_LINK, PHOTOS } from "@/lib/classic-content";
 import { afterOpening } from "@/lib/opening";
 import { useInViewReveal } from "@/lib/ui-reveal";
 import { Wordmark } from "../ui/Brand";
@@ -15,15 +15,14 @@ const CARD_PLACES = ["Lisbon city centre", "Cascais", "Taguspark", "Beaches"];
 const minutesOf = (name: string) => LOCATION.groups.flatMap((g) => g.places).find((p) => p.name === name)?.min;
 
 /**
- * Location: the view first (the aerial render), then the client's map. Its
- * Vila Leku marker opens a card about the place (the client's note), and the
- * drive-time list lights the map: a ring on the place and a line from home.
+ * Location: the view first (the aerial render), then the client's illustrated
+ * map (mapa12). Its own VilaLeku pill is the marker and opens a card about the
+ * place; the artwork's POI labels make the drive-time list plain text.
  */
 export function Location() {
   const text = useRef<HTMLDivElement>(null);
   const mapRef = useRef<HTMLDivElement>(null);
   const bandImg = useRef<HTMLDivElement>(null);
-  const [hot, setHot] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const markerBtn = useRef<HTMLButtonElement>(null);
   const card = useRef<HTMLDivElement>(null);
@@ -67,7 +66,6 @@ export function Location() {
     };
   }, [open]);
 
-  const spot = hot ? MAP_SPOTS[hot] : null;
   const [lead, tail] = LOCATION.title.split(". ");
   return (
     <section id="location" className="vc-location" aria-labelledby="vc-location-title">
@@ -90,25 +88,16 @@ export function Location() {
           <p className="vc-body" data-r="fade">
             {LOCATION.body}
           </p>
-          <div className="vc-times" data-r="fade" onMouseLeave={() => setHot(null)}>
+          <div className="vc-times" data-r="fade">
             {LOCATION.groups.map((g) => (
               <div key={g.title} className="vc-times__group">
                 <h3>{g.title}</h3>
                 <ul>
                   {g.places.map((p) => (
                     <li key={p.name}>
-                      <button
-                        type="button"
-                        data-hot={hot === p.name ? "1" : undefined}
-                        data-mapped={MAP_SPOTS[p.name] ? "1" : undefined}
-                        onMouseEnter={() => setHot(p.name)}
-                        onFocus={() => setHot(p.name)}
-                        onBlur={() => setHot(null)}
-                      >
-                        <span>{p.name}</span>
-                        <i aria-hidden="true" />
-                        <b>{p.min} min</b>
-                      </button>
+                      <span>{p.name}</span>
+                      <i aria-hidden="true" />
+                      <b>{p.min} min</b>
                     </li>
                   ))}
                 </ul>
@@ -123,12 +112,6 @@ export function Location() {
         <div ref={mapRef} className="vc-map">
           <div className="vc-map__frame" data-r="rise">
             <Pic photo={PHOTOS.map} sizes="(max-width: 820px) 100vw, 60vw" />
-            <svg className="vc-map__lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-              {spot && <line key={hot} x1={MAP_MARKER.x} y1={MAP_MARKER.y} x2={spot.x} y2={spot.y} pathLength={1} />}
-            </svg>
-            {Object.entries(MAP_SPOTS).map(([name, s]) => (
-              <span key={name} className="vc-map__spot" data-on={hot === name ? "1" : undefined} style={{ left: `${s.x}%`, top: `${s.y}%` }} aria-hidden="true" />
-            ))}
             <button
               ref={markerBtn}
               type="button"

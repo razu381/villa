@@ -1295,38 +1295,23 @@ html[data-rm="1"] .vc-ag__slide[data-state="active"] img {
   padding: 0;
   list-style: none;
 }
-.vc-times button {
+.vc-times li {
   display: flex;
   align-items: baseline;
   gap: 10px;
-  width: 100%;
   padding: 6px 0;
-  border: 0;
-  background: none;
-  text-align: left;
   font-size: 14.5px;
   color: var(--vc-soft);
-  cursor: default;
-  transition: color 0.4s var(--ease-out);
 }
-.vc-times button[data-mapped] {
-  cursor: pointer;
-}
-.vc-times button i {
+.vc-times li i {
   flex: 1;
   border-bottom: 1px dotted rgba(35, 39, 26, 0.3);
   transform: translateY(-4px);
 }
-.vc-times button b {
+.vc-times li b {
   font-weight: 500;
   font-variant-numeric: tabular-nums;
   color: var(--vc-ink);
-}
-.vc-times button[data-hot] {
-  color: var(--vc-ink);
-}
-.vc-times button[data-hot][data-mapped] i {
-  border-bottom-color: var(--olive);
 }
 .vc-location__maps {
   display: inline-block;
@@ -1340,52 +1325,13 @@ html[data-rm="1"] .vc-ag__slide[data-state="active"] img {
 }
 .vc-map__frame {
   position: relative;
-  aspect-ratio: 1222 / 975;
+  aspect-ratio: 2400 / 2016;
   overflow: hidden;
 }
 .vc-map__frame > img {
   display: block;
   width: 100%;
   height: 100%;
-}
-.vc-map__lines {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
-.vc-map__lines line {
-  stroke: var(--olive);
-  stroke-width: 1.5;
-  vector-effect: non-scaling-stroke;
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-  animation: vc-draw 0.9s var(--ease-out) forwards;
-}
-@keyframes vc-draw {
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-.vc-map__spot {
-  position: absolute;
-  width: 38px;
-  height: 38px;
-  margin: -19px 0 0 -19px;
-  border: 1.5px solid var(--olive);
-  border-radius: 50%;
-  background: rgba(71, 79, 31, 0.1);
-  opacity: 0;
-  transform: scale(0.6);
-  transition:
-    opacity 0.5s var(--ease-out),
-    transform 0.8s var(--ease-out);
-  pointer-events: none;
-}
-.vc-map__spot[data-on] {
-  opacity: 1;
-  transform: none;
 }
 .vc-map__marker {
   position: absolute;

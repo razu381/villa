@@ -42,8 +42,8 @@ export const PHOTOS = {
   villagePool: p(`${R}village-pool.jpg`, 1600, 900, "The long natural pool and its pavilion"),
   shadows: p(`${R}shadows-play.jpg`, 1600, 900, "Children's shadows playing on a sunlit stone wall"),
   sunset: p("/media/sunset-aerial.jpg", 1920, 1080, "Golden hour over Oeiras and the village"),
-  advisor: p(`${C}advisor.jpg`, 1024, 1280, "Helen Morais, Vila Leku customer advisor"),
-  map: p(`${C}map.jpg`, 1222, 975, "Map of the Lisbon coast with Vila Leku between Oeiras and Lisbon"),
+  advisor: p(`${C}advisor.jpg`, 1024, 1138, "Helen Morais, Vila Leku customer advisor"),
+  map: p(`${C}map.jpg`, 2400, 2016, "Illustrated map of the Lisbon coast with Vila Leku between Oeiras and Lisbon"),
 } satisfies Record<string, Photo>;
 
 export const NAV = [
@@ -148,18 +148,12 @@ export const VILLA_NAMES: Record<"v3" | "v4", string> = { v3: "V3 Townhouse", v4
 export const FLOOR_PHOTOS: Photo[] = [PHOTOS.living, PHOTOS.bedroomMaster, PHOTOS.streetEntrance];
 
 /**
- * Map hotspots, as % of the map image (client layout p. 7). Places the map
- * doesn't show have no spot; their list rows simply don't light the map.
+ * The VilaLeku marker on the client's illustrated map (mapa12): the artwork's
+ * own green pill + dot, measured against the full 5700×4788 image. The POI
+ * labels and travel pills are baked into the artwork, so there are no other
+ * hotspots (the drive-time list is plain text).
  */
-export const MAP_MARKER = { x: 53.4, y: 52.2, box: { l: 47, t: 36.4, r: 59.8, b: 47.2 } };
-export const MAP_SPOTS: Record<string, { x: number; y: number }> = {
-  Taguspark: { x: 64.4, y: 60.4 },
-  "Lagoas Park": { x: 74.9, y: 61.7 },
-  "Oeiras Parque": { x: 47.4, y: 58.1 },
-  Beaches: { x: 43.2, y: 80.2 },
-  "Lisbon city centre": { x: 91.9, y: 47.2 },
-  Cascais: { x: 12.2, y: 43.9 },
-};
+export const MAP_MARKER = { x: 63.4, y: 51.4, box: { l: 57.2, t: 39.0, r: 69.6, b: 51.4 } };
 
 export type GalleryCategory = "architecture" | "interiors" | "landscape" | "amenities";
 
