@@ -17,37 +17,37 @@
 @property --glass-solid { syntax: "<color>"; inherits: true; initial-value: rgba(28, 30, 24, 0.9); }
 @property --veil { syntax: "<color>"; inherits: true; initial-value: rgba(20, 21, 17, 0.62); }
 
-:root {
-  /* Self-hosted (the client's delivery: normalidad.zip + Adventures Unlimited Script). */
-  @font-face {
-    font-family: "Normalidad Compact";
-    src: url("/fonts/normalidad-compact-400.woff2") format("woff2");
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
-  }
-  @font-face {
-    font-family: "Normalidad Compact";
-    src: url("/fonts/normalidad-compact-500.woff2") format("woff2");
-    font-weight: 500;
-    font-style: normal;
-    font-display: swap;
-  }
-  @font-face {
-    font-family: "Normalidad Compact";
-    src: url("/fonts/normalidad-compact-700.woff2") format("woff2");
-    font-weight: 600 800;
-    font-style: normal;
-    font-display: swap;
-  }
-  @font-face {
-    font-family: "Adventures Unlimited Script";
-    src: url("/fonts/adventures-script-400.woff2") format("woff2");
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
-  }
+/* Self-hosted (the client's delivery: normalidad.zip + Adventures Unlimited Script). */
+@font-face {
+  font-family: "Normalidad Compact";
+  src: url("/fonts/normalidad-compact-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Normalidad Compact";
+  src: url("/fonts/normalidad-compact-500.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Normalidad Compact";
+  src: url("/fonts/normalidad-compact-700.woff2") format("woff2");
+  font-weight: 600 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Adventures Unlimited Script";
+  src: url("/fonts/adventures-script-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
 
+:root {
   /* Brand palette (sampled from vilaleku.com) */
   --limestone: #e5e3d7;
   --stone: #d2cfbc;
