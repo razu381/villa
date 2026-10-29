@@ -50,6 +50,8 @@ Also received outside `updated client assets/`: `new assets/logo-phidias/logo-ph
 
 ## 2. Implementation work — nonpublic preview approved
 
+**Status 2026-10-29: implemented** (commits `b3369e8`…`4041024`): items 1–8, 10–20 and §3 and §4 in full; §5.5 checks passed (typecheck, `npm run build`, static export verified: fonts, map WebP set, icon.png, privacy route, GTM script + noscript, 3D route smoke). Item 9 (footer socials) stays blocked on §1 (icons + URLs). §2b optional additions not in this pass.
+
 Keep related changes together. Typecheck + classic desktop/mobile screenshots before landing; smoke-check the 3D route for shared changes. §1 tracks pending inputs without blocking unrelated work or the approved empty privacy page. Run the production export check in §5 before publishing the preview.
 
 1. **Favicon → the leaf.** Crop the emblem from `Grafismos-Site/FAVICON.png` (olive outline on transparent — keep alpha; pad square). Replaces `app/icon.svg` (arch "L" mark).
