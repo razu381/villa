@@ -1831,16 +1831,6 @@ html[data-rm="1"] .vc-map__halo {
   padding-block: clamp(52px, 8vh, 92px) clamp(36px, 5.5vh, 60px);
   background: var(--sage);
 }
-.vc-footer__arches {
-  position: absolute;
-  right: var(--vc-gutter);
-  top: clamp(52px, 8vh, 92px);
-  height: clamp(80px, 7.6vw, 140px);
-  width: auto;
-  max-width: 34%;
-  fill: rgba(229, 227, 215, 0.24);
-  pointer-events: none;
-}
 .vc-footer__mark {
   position: relative;
   display: block;
@@ -1928,12 +1918,9 @@ html[data-rm="1"] .vc-map__halo {
 .vc-footer__dev {
   display: flex;
   align-items: center;
-  gap: 14px;
-  font-size: 12px;
-  letter-spacing: 0.24em;
 }
 .vc-footer__phidias {
-  width: 50px;
+  width: 72px;
   color: #e9e6da;
 }
 .vc-footer__legal {
@@ -1945,6 +1932,10 @@ html[data-rm="1"] .vc-map__halo {
   border-top: 1px solid rgba(233, 230, 218, 0.18);
   font-size: 12px;
   opacity: 0.68;
+}
+.vc-footer__legal-links {
+  display: flex;
+  gap: 26px;
 }
 
 /* ------------------------------------------------------------ phones */
@@ -2476,9 +2467,6 @@ html[data-rm="1"] .vc-map__halo {
   /* Footer: the wordmark across, the links in two columns, the partners below. */
   .vc-footer__top {
     padding-block: 64px 44px;
-  }
-  .vc-footer__arches {
-    display: none;
   }
   .vc-footer__mark {
     width: 100%;

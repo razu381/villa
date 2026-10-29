@@ -17,6 +17,7 @@ const easeInOut = (k: number) => (k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k 
 export function Hero() {
   const ref = useRef<HTMLElement>(null);
   const markRef = useRef<HTMLDivElement>(null);
+  const tagRef = useRef<HTMLParagraphElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [still, setStill] = useState(false);
   const [phase, setPhase] = useState(0);
@@ -99,6 +100,18 @@ export function Hero() {
       if (root && root.dataset.grid !== "1" && (s || p > 0.3)) root.dataset.grid = "1";
       const docked = p >= 1 ? "1" : "0";
       if (header.dataset.mark !== docked) header.dataset.mark = docked;
+      // The client's note: as the wordmark rises to the menu, the tagline goes
+      // with it (the CSS's slow fade-in stays untouched until the dock begins).
+      const tag = tagRef.current;
+      if (tag) {
+        if (p > 0.001) {
+          tag.style.transitionDuration = "0.15s";
+          tag.style.opacity = String(Math.max(0, 1 - p / 0.35));
+        } else if (tag.style.opacity) {
+          tag.style.opacity = "";
+          tag.style.transitionDuration = "";
+        }
+      }
       if (s || p === lastP) return;
       lastP = p;
       const e = easeInOut(p);
@@ -149,7 +162,9 @@ export function Hero() {
           <Wordmark className="vc-hero__wordmark" label={BRAND.name} />
         </div>
       </div>
-      <p className="vc-hero__tagline">{BRAND.tagline}</p>
+      <p ref={tagRef} className="vc-hero__tagline">
+        {BRAND.tagline}
+      </p>
       <p className="vc-hero__cue" aria-hidden="true">
         <span />
         {CLASSIC.scroll}

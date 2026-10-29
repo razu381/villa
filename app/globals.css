@@ -756,6 +756,13 @@ html[data-tone="day"] .vl-arc__svg {
   -webkit-mask: url("/media/brand/phidias.png") center / contain no-repeat;
   mask: url("/media/brand/phidias.png") center / contain no-repeat;
 }
+.vl-phidias-tag {
+  display: inline-block;
+  aspect-ratio: 720 / 578;
+  background-color: currentColor;
+  -webkit-mask: url("/media/brand/phidias-tagline.png") center / contain no-repeat;
+  mask: url("/media/brand/phidias-tagline.png") center / contain no-repeat;
+}
 
 /* Text link with a hairline that draws in. */
 .vl-link {

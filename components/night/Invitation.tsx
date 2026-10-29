@@ -39,7 +39,7 @@ function validate(v: VisitRequest, days: VisitDay[]): Errors {
  */
 export function Invitation({ preset }: { preset?: { home: VisitHome; at: number } } = {}) {
   const [status, setStatus] = useState<Status>("idle");
-  const [values, setValues] = useState<VisitRequest>({ name: "", email: "", phone: "", home: "any", date: "", time: "golden" });
+  const [values, setValues] = useState<VisitRequest>({ name: "", email: "", phone: "", home: "v3", date: "", time: "evening" });
   const [errors, setErrors] = useState<Errors>({});
   const [tried, setTried] = useState(false);
   const [announce, setAnnounce] = useState("");
@@ -53,7 +53,7 @@ export function Invitation({ preset }: { preset?: { home: VisitHome; at: number 
   useEffect(() => {
     setDays(visitDays(14));
     if (debugParam("invite") === "demo") {
-      setValues({ name: "Inês Almeida", email: "ines@example.com", phone: "", home: "v4", date: demoDate(), time: "golden" });
+      setValues({ name: "Inês Almeida", email: "ines@example.com", phone: "", home: "v4", date: demoDate(), time: "evening" });
       setStatus("sent");
     }
     return () => window.clearTimeout(timer.current);

@@ -71,14 +71,13 @@ export const UI = {
     homeOptions: [
       { id: "v3", label: "V3 Townhouse" },
       { id: "v4", label: "V4 Premium Villa" },
-      { id: "any", label: "Not sure yet" },
     ] as const,
     date: "Preferred date",
     time: "Time of day",
     timeOptions: [
       { id: "morning", label: "Morning" },
       { id: "afternoon", label: "Afternoon" },
-      { id: "golden", label: "Golden hour" },
+      { id: "evening", label: "Evening" },
     ] as const,
     sending: "Preparing your invitation",
     errors: {
@@ -116,5 +115,5 @@ export interface VisitRequest {
 export const TIME_WORDS: Record<VisitTime, string> = {
   morning: "in the morning",
   afternoon: "in the afternoon",
-  golden: "at golden hour",
+  evening: "in the evening",
 };

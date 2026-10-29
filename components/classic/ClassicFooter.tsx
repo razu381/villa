@@ -2,13 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { BRAND } from "@/lib/content";
-import { CLASSIC, NAV, PARTNERS } from "@/lib/classic-content";
+import { CLASSIC, COMPLAINTS_URL, NAV, PARTNERS } from "@/lib/classic-content";
 import { afterOpening } from "@/lib/opening";
 import { UI } from "@/lib/ui-copy";
-import { PhidiasMark, Wordmark } from "../ui/Brand";
+import { PhidiasTagline, Wordmark } from "../ui/Brand";
 import { goTo } from "./ClassicHeader";
 import { gsap, stillMode } from "./env";
-import { ARCH_BOX } from "../ui/Pic";
 
 /**
  * The footer (the client: a fixed footer, with no logos but Vila Leku and
@@ -72,11 +71,6 @@ export function ClassicFooter() {
       <div ref={spacer} className="vc-footer-spacer" style={{ height: fits ? h : 0 }} aria-hidden="true" />
       <footer ref={ref} className="vc-footer" data-on={on || !fits ? "1" : "0"} data-fixed={fits ? "1" : "0"}>
         <div className="vc-footer__top vc-wrap">
-          <svg className="vc-footer__arches" viewBox="0 0 3.3 1" preserveAspectRatio="xMaxYMax meet" aria-hidden="true">
-            {[0, 1.15, 2.3].map((x) => (
-              <path key={x} d={ARCH_BOX} transform={`translate(${x} 0)`} />
-            ))}
-          </svg>
           <Wordmark className="vc-footer__mark" label={BRAND.name} />
           <div className="vc-footer__cols">
             <div className="vc-footer__about">
@@ -129,17 +123,27 @@ export function ClassicFooter() {
             {PARTNERS.map((p) => (
               <li key={p.name}>
                 <span>{p.role}</span>
-                <b>{p.name}</b>
+                <b>
+                  <a className="vl-link" href={p.url} target="_blank" rel="noopener noreferrer">
+                    {p.name}
+                  </a>
+                </b>
                 <i>{p.note}</i>
               </li>
             ))}
           </ul>
           <div className="vc-footer__dev">
-            <PhidiasMark className="vc-footer__phidias" />
-            <span>{UI.footer.signature}</span>
+            <PhidiasTagline className="vc-footer__phidias" />
           </div>
           <p className="vc-footer__legal">
-            <span>{BRAND.disclaimer}</span>
+            <span className="vc-footer__legal-links">
+              <a className="vl-link" href="/privacy/">
+                {CLASSIC.footer.privacy}
+              </a>
+              <a className="vl-link" href={COMPLAINTS_URL} target="_blank" rel="noopener noreferrer">
+                {CLASSIC.footer.complaints}
+              </a>
+            </span>
             <span>{UI.footer.copyright}</span>
           </p>
         </div>

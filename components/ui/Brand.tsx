@@ -12,6 +12,11 @@ export function PhidiasMark({ className = "" }: { className?: string }) {
   return <span className={`vl-phidias ${className}`} role="img" aria-label="Phidias" />;
 }
 
+/** The developer's full lockup (emblem, wordmark, "building harmony" tagline) — the client's own file, white on transparent, tinted via currentColor like the others. */
+export function PhidiasTagline({ className = "" }: { className?: string }) {
+  return <span className={`vl-phidias-tag ${className}`} role="img" aria-label="Phidias — building harmony" />;
+}
+
 /** One brand arch as a path in a 100 × 112 box (superellipse n ≈ 2.4, fitted to brand/arches.png). */
 export const ARCH_PATH = (() => {
   const w = 100;

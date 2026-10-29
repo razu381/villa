@@ -55,7 +55,7 @@ export const NAV = [
 ] as const;
 
 export const CLASSIC = {
-  visitCta: "Private visit",
+  visitCta: "Request brochure",
   menu: "Menu",
   menuClose: "Close",
   top: "Vila Leku — back to the top",
@@ -96,15 +96,20 @@ export const CLASSIC = {
     company: "Partners",
     contact: "Contact",
     email: "info@phidias.com",
+    privacy: "Privacy Policy",
+    complaints: "Livro de Reclamações",
   },
 };
 
-/** Partners as text only (the client: no logos besides Vila Leku and Phidias). */
+/** Partners as words (the client: no logos besides Vila Leku and Phidias), linked
+ *  to their public sites (found online 2026-10, still awaiting client confirm). */
 export const PARTNERS = [
-  { role: "Contractor", name: "FCM", note: "Excellence in construction" },
-  { role: "Financier", name: "BPI", note: "Solid financial backing" },
-  { role: "Real estate agent", name: "Porta da Frente", note: "Exclusive partner" },
+  { role: "Contractor", name: "FCM", note: "Excellence in construction", url: "https://www.fcm.pt" },
+  { role: "Financier", name: "BPI", note: "Solid financial backing", url: "https://www.bpi.pt" },
+  { role: "Real estate agent", name: "Porta da Frente", note: "Exclusive partner", url: "https://www.portadafrente.com" },
 ];
+
+export const COMPLAINTS_URL = "https://www.livroreclamacoes.pt";
 
 /** From the client's layout (p. 11). Name, phone and email wait on the client's confirmation. */
 export const ADVISOR = {
