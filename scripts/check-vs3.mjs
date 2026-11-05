@@ -45,8 +45,8 @@ try {
     assert.ok(complete, "The finished arches must paint their entire path at every size");
     const caption = width > 820 ? ".vc-gallery__cap b" : ".vc-ag__cap-title";
     const font = await page.locator(caption).first().evaluate((el) => ({ family: getComputedStyle(el).fontFamily, style: getComputedStyle(el).fontStyle }));
-    assert.ok(font.family.includes("Adventures Unlimited Script"));
-    assert.equal(font.style, "normal");
+    assert.ok(font.family.includes("Instrument Serif"));
+    assert.equal(font.style, "italic");
     assert.ok(await page.locator(".vc-join").evaluateAll((els) => els.every((el) => getComputedStyle(el).opacity === "0")));
 
     await page.goto(base, { waitUntil: "load" });
