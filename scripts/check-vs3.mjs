@@ -20,6 +20,10 @@ try {
     await page.goto(`${base}/?snap=1`, { waitUntil: "load" });
     await page.evaluate(() => document.fonts.ready);
     await page.waitForSelector('.vc[data-opened="1"]');
+    await page.locator("#concept img").first().evaluate(async (img) => {
+      img.loading = "eager";
+      await img.decode();
+    });
     assert.equal(await page.locator("html").getAttribute("lang"), "en", "Saved PT and Portuguese browsers must still use English while PT is paused");
     assert.ok(await page.getByRole("button", { name: "PT", exact: true, includeHidden: true }).isDisabled());
     assert.equal(await page.getByRole("button", { name: "EN", exact: true, includeHidden: true }).getAttribute("aria-pressed"), "true");
